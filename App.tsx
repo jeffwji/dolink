@@ -8,7 +8,7 @@ import * as Font from 'expo-font'
 import { Ionicons } from '@expo/vector-icons'
 
 import Main from './Main'   // 自适应到 main.android 或 main.ios 文件
-import SignInSignUp from './SignInSignUp'
+import Login from './Login'
 
 const MainNavigator = createStackNavigator(
   {
@@ -20,8 +20,8 @@ const MainNavigator = createStackNavigator(
         header: null   //首页面去掉导航栏
       }
     },
-    SignInSignUp: {
-      screen: SignInSignUp,
+    Login: {
+      screen: Login,
       navigationOptions: {
         title: "首页面",
         tabBarLabel: "Home page",
@@ -30,7 +30,7 @@ const MainNavigator = createStackNavigator(
     }
   },
   {
-    initialRouteName: "SignInSignUp"
+    initialRouteName: "Login"
   }
 )
 
