@@ -1,5 +1,7 @@
 import React from 'react'
 
+import base64 from 'react-native-base64'
+
 import {
     StyleSheet,
     Platform,
@@ -19,9 +21,16 @@ import {
   Text
 } from 'native-base'
 
+import GLOBAL, {BASE_URL, API} from './Global'
+
 export default class Login extends React.Component {
   constructor(props) {
     super(props)
+
+    this.state = {
+      username: '',
+      password: ''
+    }
   }
 
   render() {
@@ -37,18 +46,23 @@ export default class Login extends React.Component {
         <Form>
           <FormItem floatingLabel>
             <Label>Email</Label>
-            <Input />
+            <Input autoCapitalize = 'none'
+              onChangeText={ (text) => {
+                this.setState({username: text.toLowerCase()})
+            }}/>
           </FormItem>
           <FormItem floatingLabel last>
             <Label>Password</Label>
-            <Input secureTextEntry={true} />
+            <Input secureTextEntry={true}
+              autoCapitalize = 'none'
+              onChangeText={ (text) => {
+                this.setState({password: text})
+            }}/>
           </FormItem>
 
           <Button full primary style={{ paddingBottom: 4 }}
             onPress={() => {
-              if (navigate) {
-                  navigate("Main")
-                }
+              this._login(this.state.username, this.state.password)
             }}
           >
             <Text> Sign In </Text>
@@ -67,6 +81,40 @@ export default class Login extends React.Component {
       </Container>
     )
   }
+
+  _login = (username, password)=> {
+    const {navigate} = this.props.navigation
+
+    GLOBAL.isLogin = false
+
+    fetch(BASE_URL + API.login, {
+      method: 'GET',
+      headers: {
+        Authorization: 'Basic ' +  base64.encode(this.state.username + ':' + this.state.password)
+      }
+    })
+    .then( response => {
+      const statusCode = response.status
+      const text = response.text()
+      return Promise.all([statusCode, text]).then(res => ({
+        statusCode: res[0],
+        text: res[1]
+      }))
+    })
+    .then( data => {
+      const { statusCode, text } = data
+      if(statusCode == 200) {
+        GLOBAL.isLogin = true
+        GLOBAL.token = text
+        navigate('Main')
+      } else {
+        throw "Fail to login"
+      }
+    })
+    .catch( error => {
+      alert(error)
+   })
+  }    
 }
 
 

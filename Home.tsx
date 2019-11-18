@@ -1,5 +1,7 @@
 import React from 'react'
 
+import GLOBAL from './Global'
+
 import {
     Alert              // 对话框
   } from 'react-native'
@@ -47,7 +49,7 @@ export default class Home extends React.Component {
 
         <Content>
           <Text>
-            This is Home Section
+            {GLOBAL.token}
           </Text>
         </Content>
       </Container>

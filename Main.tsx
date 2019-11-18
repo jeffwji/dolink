@@ -54,11 +54,11 @@ export default class Main extends React.Component {
   _renderContent() {
     if(this.state.selectedTab === 'Home') {
       return (
-          <Home/>
+          <Home navigation={this.props.navigation}/>
       )
     } else if(this.state.selectedTab === 'Person'){
       return (
-          <Person/>
+          <Person navigation={this.props.navigation}/>
       )
     }
   }

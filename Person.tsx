@@ -19,6 +19,8 @@ export default class Home extends React.Component {
   }
 
   render() {
+    const {navigate} = this.props.navigation
+    
     return (
       <Container>
         <Header>
@@ -34,9 +36,13 @@ export default class Home extends React.Component {
         </Header>
 
         <Content>
-          <Text>
-            This is Person Section
-          </Text>
+          <Button onPress={() => {
+              if (navigate) {
+                  navigate("Login")
+                }
+            }}>
+            <Text> Logout </Text>
+          </Button>
         </Content>
       </Container>
     )
