@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons'
 
 import Main from './Main'   // 自适应到 main.android 或 main.ios 文件
 import Login from './Login'
+import SignUp from './SignUp'
 
 /**
  * 定义缺省的导航栈
@@ -30,10 +31,16 @@ const MainNavigator = createStackNavigator(
         header: null   //首页面去掉导航栏
       }
     },
+    SignUp: {
+      screen: SignUp,
+      navigationOptions: (navigation) => ({
+        title: "Sign up",
+        tabBarLabel: "Sign Up"
+      })
+    },
     Login: {
       screen: Login,
       navigationOptions: (navigation) => ({
-        //gesturesEnabled: false,    // 登录成功后不允许返回登陆界面(Android 无效，参见下面的 defaultGetStateForAction)
         title: "首页面",
         tabBarLabel: "Home page",
         header: null   //首页面去掉导航栏

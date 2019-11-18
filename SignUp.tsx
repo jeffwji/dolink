@@ -13,9 +13,7 @@ import {
   Text
 } from 'native-base'
 
-import GLOBAL from './Global'
-
-export default class Person extends React.Component {
+export default class SignUp extends React.Component {
   constructor(props) {
     super(props)
   }
@@ -38,14 +36,8 @@ export default class Person extends React.Component {
         </Header>
 
         <Content>
-          <Button onPress={() => {
-            GLOBAL.isLogin = false
-            GLOBAL.token = ''
-            if (navigate) {
-              navigate("Login")
-            }
-          }}>
-            <Text> Logout </Text>
+          <Button>
+            <Text> Sign up!! </Text>
           </Button>
         </Content>
       </Container>

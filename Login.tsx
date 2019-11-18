@@ -40,7 +40,7 @@ export default class Login extends React.Component {
       <Container style={styles.container}>
         <Header>
           <Body>
-            <Title>Best App Ever!</Title>
+            <Title>doLink</Title>
           </Body>
         </Header>
         <Form>
@@ -71,7 +71,7 @@ export default class Login extends React.Component {
           <Button full light primary
             onPress={() => {
               if (navigate) {
-                  navigate("Main")
+                  navigate("SignUp")
                 }
             }}
           >
