@@ -48,7 +48,7 @@ const MainNavigator = createStackNavigator(
     }
   },
   {
-    initialRouteName: "Login"
+    initialRouteName: "Main"
   }
 )
 

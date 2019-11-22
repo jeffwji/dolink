@@ -17,13 +17,34 @@ import {
 import Home from './Home'
 import Person from './Person'
 
+import 
+  GLOBAL
+  from './Global'
+
 export default class Main extends React.Component {
   constructor(props) {
     super(props);
+
+    const didBlurSubscription = this.props.navigation.addListener(
+      'didFocus', payload => {
+        console.log('Main: didFocus')
+
+        if (GLOBAL.token == ''){
+          const {navigate} = this.props.navigation
+          navigate("Login")
+        } else if(this.state.selectedTab == 'Person') {
+          this.setState({selectedTab: 'Home'})
+        }
+      }
+    )
     
     this.state = {
       selectedTab: 'Home'
     };
+  }
+
+  componentWillMount() {
+    console.log('Main: componentWillMount')
   }
 
   render() {

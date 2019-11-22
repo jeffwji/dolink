@@ -39,8 +39,6 @@ export default class Person extends React.Component {
 
         <Content>
           <Button onPress={() => {
-            GLOBAL.isLogin = false
-            GLOBAL.token = ''
             if (navigate) {
               navigate("Login")
             }

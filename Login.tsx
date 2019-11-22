@@ -33,6 +33,15 @@ export default class Login extends React.Component {
     }
   }
 
+  componentDidMount() {
+    console.log("Login: componentDidMount")
+    GLOBAL.isLogin = false
+    GLOBAL.token = ''
+    this.setState({
+      password: ''
+    })
+  }
+
   render() {
     const {navigate} = this.props.navigation
     
@@ -49,7 +58,7 @@ export default class Login extends React.Component {
             <Input autoCapitalize = 'none'
               onChangeText={ (text) => {
                 this.setState({username: text.toLowerCase()})
-            }}/>
+              }}/>
           </FormItem>
           <FormItem floatingLabel last>
             <Label>Password</Label>
