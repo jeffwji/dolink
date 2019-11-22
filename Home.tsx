@@ -49,12 +49,8 @@ export default class Home extends React.Component {
     console.log("Home: componentDidMount")
 
     if (GLOBAL.token != '') {
-      this._onRefresh()
+      this._refreshTravelPlan()
     }
-    //else {
-    //  const {navigate} = this.props.navigation
-    //  navigate("Login")
-    //}
   }
 
   render() {
@@ -110,7 +106,7 @@ export default class Home extends React.Component {
         refreshing={this.state.isRefreshing}
         onRefresh={
           // 调用刷新函数
-          this._onRefresh
+          this._refreshTravelPlan
         }
         tintColor={'#FF0000'}
         title={'Is refresing data, please wait...'}
@@ -123,7 +119,7 @@ export default class Home extends React.Component {
     return query(BASE_URL+API.plans, 'GET', GLOBAL.token)
   }
 
-  _onRefresh = () => {
+  _refreshTravelPlan = () => {
     // 刷新数据
     this.setState({isRefreshing: true})
 

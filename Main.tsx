@@ -18,7 +18,8 @@ import Home from './Home'
 import Person from './Person'
 
 import 
-  GLOBAL
+  GLOBAL,
+  {BASE_URL, API, query}
   from './Global'
 
 export default class Main extends React.Component {
@@ -43,8 +44,26 @@ export default class Main extends React.Component {
     };
   }
 
+  _retrievelUserInfo() {
+    return query(BASE_URL + API.userInfo, 'GET', GLOBAL.token)
+  }
+
   componentWillMount() {
     console.log('Main: componentWillMount')
+
+    this._retrievelUserInfo().then( data => {
+      const { json, statusCode } = data
+      
+      if(statusCode === 200) {
+        console.log(json.Result)
+        GLOBAL.userInfo = json.Result
+      }
+      else {
+        alert(json.Status)
+      }
+    }).catch( error => {
+      alert(error)
+    })
   }
 
   render() {

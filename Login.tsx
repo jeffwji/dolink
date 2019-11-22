@@ -96,21 +96,24 @@ export default class Login extends React.Component {
 
     GLOBAL.isLogin = false
 
-    query(BASE_URL + API.login, 'GET', base64.encode(this.state.username + ':' + this.state.password))
-    .then( data => {
-      const { json, statusCode } = data
-      if(statusCode == 200) {
-        GLOBAL.isLogin = true
-        GLOBAL.token = json.Result
-        navigate('Main')
-      } else {
-        throw "Fail to login"
-      }
-    })
-    .catch( error => {
-      alert(error)
-   })
-  }    
+    this._queryToken(username, password)
+      .then( data => {
+        const { json, statusCode } = data
+        if(statusCode == 200) {
+          GLOBAL.isLogin = true
+          GLOBAL.token = json.Result
+          navigate('Main')
+        } else {
+          throw "Fail to login"
+        }
+      }).catch( error => {
+        alert(error)
+      })
+  }
+
+  _queryToken(username, password) {
+    return query(BASE_URL + API.login, 'GET', base64.encode(username + ':' + password))
+  }
 }
 
 
