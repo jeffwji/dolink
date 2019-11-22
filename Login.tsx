@@ -3,10 +3,11 @@ import React from 'react'
 import base64 from 'react-native-base64'
 
 import {
-    StyleSheet,
-    Platform,
-    StatusBar
-  } from 'react-native'
+  Alert,
+  StyleSheet,
+  Platform,
+  StatusBar
+} from 'react-native'
 
 import {
   Container,
@@ -104,10 +105,11 @@ export default class Login extends React.Component {
           GLOBAL.token = json.Result
           navigate('Main')
         } else {
-          throw "Fail to login"
+          Alert.alert("Fail to login", null, null)
         }
       }).catch( error => {
-        alert(error)
+        // error.text().then( errorMessage => {Alert.alert(errorMessage, 'Main', null)})
+        Alert.alert("Fail to login", null, null)
       })
   }
 

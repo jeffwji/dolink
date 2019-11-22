@@ -1,6 +1,7 @@
 import React from 'react'
 
 import {
+  Alert,
   StyleSheet,
   Platform,
   StatusBar
@@ -59,10 +60,10 @@ export default class Main extends React.Component {
         GLOBAL.userInfo = json.Result
       }
       else {
-        alert(json.Status)
+        Alert.alert(json.Status, 'Main', null)
       }
     }).catch( error => {
-      alert(error)
+      error.text().then( errorMessage => {Alert.alert(errorMessage, 'Main', null)})
     })
   }
 

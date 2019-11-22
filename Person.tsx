@@ -79,7 +79,7 @@ export default class Person extends React.Component {
           </Button>
 
         <Content refreshControl={this._renderRefreshControl()} >
-        {this.state.travelPlans.map( (plan) => this._renderRow(plan) )}
+          {this.state.travelPlans.map( (plan) => this._renderRow(plan) )}
         </Content>
       </Container>
     )

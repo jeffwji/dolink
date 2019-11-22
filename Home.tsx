@@ -9,10 +9,10 @@ import
   } from './Global'
 
 import {
-    Alert,              // 对话框
-    RefreshControl,
-    StyleSheet
-  } from 'react-native'
+  Alert,              // 对话框
+  RefreshControl,
+  StyleSheet
+} from 'react-native'
 
 import {
   Container,
@@ -131,7 +131,7 @@ export default class Home extends React.Component {
         })
       }
     }).catch( error => {
-      alert(error)
+      Alert.alert(error, 'Home', null)
     })
 
     this.setState({isRefreshing: false})
