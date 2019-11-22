@@ -21,7 +21,7 @@ import {
   Text
 } from 'native-base'
 
-import GLOBAL, {BASE_URL, API} from './Global'
+import GLOBAL, {BASE_URL, API, query} from './Global'
 
 export default class Login extends React.Component {
   constructor(props) {
@@ -96,25 +96,12 @@ export default class Login extends React.Component {
 
     GLOBAL.isLogin = false
 
-    fetch(BASE_URL + API.login, {
-      method: 'GET',
-      headers: {
-        Authorization: 'Basic ' +  base64.encode(this.state.username + ':' + this.state.password)
-      }
-    })
-    .then( response => {
-      const statusCode = response.status
-      const text = response.text()
-      return Promise.all([statusCode, text]).then(res => ({
-        statusCode: res[0],
-        text: res[1]
-      }))
-    })
+    query(BASE_URL + API.login, 'GET', base64.encode(this.state.username + ':' + this.state.password))
     .then( data => {
-      const { statusCode, text } = data
+      const { json, statusCode } = data
       if(statusCode == 200) {
         GLOBAL.isLogin = true
-        GLOBAL.token = text
+        GLOBAL.token = json.Result
         navigate('Main')
       } else {
         throw "Fail to login"
@@ -134,4 +121,3 @@ const styles = StyleSheet.create({
       paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0  // React Native 在 Android 上的绘图区域包括 System bar, 需要去除。
     },
   })
-  

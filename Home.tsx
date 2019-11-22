@@ -128,9 +128,10 @@ export default class Home extends React.Component {
     this.setState({isRefreshing: true})
 
     this._getRecentPlans().then( data => {
-      if(data.Status == 'Ok') {
+      const { json } = data
+      if(json.Status == 'Ok') {
         this.setState({
-          travelPlans: data.Result
+          travelPlans: json.Result
         })
       }
     }).catch( error => {
