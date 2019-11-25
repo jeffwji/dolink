@@ -36,6 +36,7 @@ export default class Login extends React.Component {
 
   componentDidMount() {
     console.log("Login: componentDidMount")
+
     GLOBAL.isLogin = false
     GLOBAL.token = ''
     this.setState({

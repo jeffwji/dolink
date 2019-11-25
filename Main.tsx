@@ -20,7 +20,7 @@ import Person from './Person'
 
 import 
   GLOBAL,
-  {BASE_URL, API, query}
+  {BASE_URL, API, query, askPermission}
   from './Global'
 
 export default class Main extends React.Component {
@@ -51,6 +51,8 @@ export default class Main extends React.Component {
 
   componentWillMount() {
     console.log('Main: componentWillMount')
+
+    askPermission('NOTIFICATIONS')
 
     this._retrievelUserInfo().then( data => {
       const { json, statusCode } = data

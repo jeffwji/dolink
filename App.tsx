@@ -4,8 +4,6 @@ import {
   Platform
 } from 'react-native'
 
-import * as Permissions from 'expo-permissions'
-
 import {createAppContainer} from 'react-navigation'
 import {createStackNavigator} from 'react-navigation-stack'
 
@@ -63,19 +61,18 @@ const defaultGetStateForAction = AppWithNavigator.router.getStateForAction
 AppWithNavigator.router.getStateForAction = (action, state) => {
   if (Platform.OS === "android") {
     // Do not allow to go back from Home
-    if (action.type === 'Navigation/BACK'
-          && state 
+    if (action.type === 'Navigation/BACK' && state 
           && (state.routes[state.index].routeName === 'Home' || state.routes[state.index].routeName === 'Login')
         ) {
       return null;
     }
 
     // Do not allow to go back to Login
-    if (action.type === 'Navigation/BACK' && state) {
+    /*if (action.type === 'Navigation/BACK' && state) {
       const newRoutes = state.routes.filter(r => r.routeName !== 'Login');
       const newIndex = newRoutes.length - 1;
       return defaultGetStateForAction(action, { index: newIndex, routes: newRoutes });
-    }
+    }*/
   }
 
   return defaultGetStateForAction(action, state);
