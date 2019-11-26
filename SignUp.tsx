@@ -4,8 +4,22 @@
 // https://article.itxueyuan.com/5pOZB
 
 import * as React from 'react';
-import { Button, Image, View, StyleSheet } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
+import { Image, ScrollView, View, StyleSheet, Alert } from 'react-native';
+import {
+  Container,
+  Content,
+  Form, 
+  Item, 
+  Label, 
+  Input, 
+  Icon,
+  Button,
+  Text,
+  DatePicker } from 'native-base'
+import * as ImagePicker from 'expo-image-picker'
+import CountryPicker from 'react-native-country-picker-modal'
+import OptionsMenu from "react-native-options-menu"
+import RadioGroup from 'react-native-radio-buttons-group'
 
 import {askPermission} from './Global'
 
@@ -14,26 +28,146 @@ export default class SignUp extends React.Component {
     super(props)
 
     this.state = {
-      image: null,
+      password_icon: "eye-off",
+      isSecure: true,
+      avatar: null,
+      username: '',
+      password: '',
+      firstName: '',
+      lastName: '',
+      birthYear: '',
+      birthMonth: '',
+      birthDay: '',
+      gender: 1,
+      countryCode: 'US',
+      country: '',
+      genderOptions: [
+        {
+          label: 'Male',
+          value: 1
+        },
+        {
+          label: 'Female',
+          value: 0
+        }
+      ],
+      avatarOptions: [
+        "Select from garllary",
+        "Take photo",
+        "Cancel"
+      ]
     }
   }
 
   render() {
+    const myIcon = (<Image style={styles.avatar} source={{ uri: this.state.avatar }} />)
+
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <Image style={styles.image} source={{ uri: this.state.image }} />
-        <Button
-          title="Pickup from camera roll"
-          style={styles.button}
-          onPress={this._pickImage}
-        />
-        <Button
-          title="Take a photo"
-          style={styles.button}
-          onPress={this._takePhoto}
-        />
-      </View>
+      <ScrollView contentContainerStyle={styles.container}>
+        <Form>
+          <OptionsMenu
+            customButton={myIcon}
+            destructiveIndex={1}
+            options={this.state.avatarOptions}
+            actions={[this._pickImage, this._takePhoto, this._cancel]}/>
+
+          <Item floatingLabel>
+            <Label>Email</Label>
+            <Input autoCapitalize = 'none'
+              onChangeText={ (text) => {
+                this.setState({username: text.toLowerCase()})
+              }}/>
+          </Item>
+
+          <Item floatingLabel last>
+            <Label>Password</Label>
+            <Input secureTextEntry={this.state.isSecure}
+              autoCapitalize = 'none'
+              onChangeText={ (text) => {
+                this.setState({password: text})
+            }}/>
+            <Icon name={this.state.password_icon} 
+              onPress={() => this._changePasswordIcon()} 
+            />
+          </Item>
+
+          <Item floatingLabel last>
+            <Label>First name</Label>
+            <Input onChangeText={ (text) => {
+                this.setState({firstName: text})
+            }}/>
+          </Item>
+
+          <Item floatingLabel last>
+            <Label>Last name</Label>
+            <Input onChangeText={ (text) => {
+                this.setState({lastName: text})
+            }}/>
+          </Item>
+
+          <Label>BirthDate</Label>
+          <DatePicker 
+            style={{ width: 200 }} 
+            date={this.state.birthDate} 
+            mode="date" 
+            placeHolderText="select date"
+            animationType={"fade"}
+            format="YYYY-MM-DD" 
+            minDate="1916-01-01"
+            maxDate="2019-12-31" 
+            confirmBtnText="Confirm" 
+            cancelBtnText="Cancel" 
+            onDateChange={date => this._dateChangedHandler(date)}
+          />
+
+          <View style={styles.row}>
+            <Text>Gender</Text>
+            <RadioGroup flexDirection='row'
+              radioButtons={this.state.genderOptions} 
+              onPress={gender => this._selectGender(gender)} 
+            />
+          </View>
+
+          <View style={styles.row}>
+            <Label>Country</Label>
+            <CountryPicker 
+                countryCode={this.state.countryCode}
+                withFlag={true}
+                withCountryNameButton={true}
+                onSelect={country => this._onCountrySelected(country)}
+            />
+          </View>
+
+          <Button transparent
+              onPress={ () =>
+                Alert.alert('!!')
+            }
+          >
+            <Text>Sign me up!</Text>
+          </Button>
+        </Form>
+      </ScrollView>
     );
+  }
+
+  _onCountrySelected(country) {
+    this.setState({ countryCode: country.cca2})
+    this.setState({country: country})
+  }
+
+  _selectGender(gender) {
+    this.setState({gender: gender.value})
+  }
+
+  _dateChangedHandler(date) {
+    this.setState({birthDate : date})
+  }
+
+  _changePasswordIcon() {
+    this.setState(prevState => ({
+      password_icon: prevState.password_icon === 'eye' ? 'eye-off': 'eye',
+      isSecure: !prevState.isSecure
+    }))
   }
 
   _pickImage = async () => {
@@ -45,8 +179,6 @@ export default class SignUp extends React.Component {
         quality: 1
       });
   
-      console.log(result);
-  
       if (!result.cancelled) {
         this.setState({ image: result.uri });
       }
@@ -56,23 +188,23 @@ export default class SignUp extends React.Component {
   _takePhoto = async () => {
     if(await askPermission('CAMERA')) {
       let result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.All,
         allowsEditing: true,
-        aspect: [4, 3]
+        aspect: [4, 3],
+        quality: 1
       });
-  
-      console.log(result);
-  
+      
       if (!result.cancelled) {
         this.setState({ image: result.uri });
       }
     }
   };
+
+  _cancel = async () => {}
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row' },
-
-  image: { width: 300, height: 300, backgroundColor: 'gray' },
+  avatar: { width: 300, height: 300, backgroundColor: 'gray' },
 
   button: {
     padding: 13,
