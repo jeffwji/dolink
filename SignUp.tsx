@@ -6,8 +6,6 @@
 import * as React from 'react';
 import { Image, ScrollView, View, StyleSheet, Alert } from 'react-native';
 import {
-  Container,
-  Content,
   Form, 
   Item, 
   Label, 
@@ -21,7 +19,7 @@ import CountryPicker from 'react-native-country-picker-modal'
 import OptionsMenu from "react-native-options-menu"
 import RadioGroup from 'react-native-radio-buttons-group'
 
-import {askPermission} from './Global'
+import {askPermission, uploadImage} from './Global'
 
 export default class SignUp extends React.Component {
   constructor(props) {
@@ -52,7 +50,7 @@ export default class SignUp extends React.Component {
         }
       ],
       avatarOptions: [
-        "Select from garllary",
+        "Select from gallery",
         "Take photo",
         "Cancel"
       ]
@@ -60,7 +58,9 @@ export default class SignUp extends React.Component {
   }
 
   render() {
-    const myIcon = (<Image style={styles.avatar} source={{ uri: this.state.avatar }} />)
+    const myIcon = (<Image 
+      style={styles.avatar} 
+      source={{ uri: this.state.avatar }} />)
 
     return (
       <ScrollView contentContainerStyle={styles.container}>
@@ -105,20 +105,22 @@ export default class SignUp extends React.Component {
             }}/>
           </Item>
 
-          <Label>BirthDate</Label>
-          <DatePicker 
-            style={{ width: 200 }} 
-            date={this.state.birthDate} 
-            mode="date" 
-            placeHolderText="select date"
-            animationType={"fade"}
-            format="YYYY-MM-DD" 
-            minDate="1916-01-01"
-            maxDate="2019-12-31" 
-            confirmBtnText="Confirm" 
-            cancelBtnText="Cancel" 
-            onDateChange={date => this._dateChangedHandler(date)}
-          />
+          <View style={styles.row}>
+            <Label>BirthDate</Label>
+            <DatePicker 
+              style={{ width: 200 }} 
+              date={this.state.birthDate} 
+              mode="date" 
+              placeHolderText="select date"
+              animationType={"fade"}
+              format="YYYY-MM-DD" 
+              minDate="1916-01-01"
+              maxDate="2019-12-31" 
+              confirmBtnText="Confirm" 
+              cancelBtnText="Cancel" 
+              onDateChange={date => this._dateChangedHandler(date)}
+            />
+          </View>
 
           <View style={styles.row}>
             <Text>Gender</Text>
@@ -131,17 +133,24 @@ export default class SignUp extends React.Component {
           <View style={styles.row}>
             <Label>Country</Label>
             <CountryPicker 
-                countryCode={this.state.countryCode}
-                withFlag={true}
-                withCountryNameButton={true}
-                onSelect={country => this._onCountrySelected(country)}
+              countryCode={this.state.countryCode}
+              withFlag={true}
+              withCountryNameButton={true}
+              onSelect={country => this._onCountrySelected(country)}
             />
           </View>
 
           <Button transparent
-              onPress={ () =>
-                Alert.alert('!!')
-            }
+              onPress={ () => {
+                uploadImage(this.state.avatar)
+                  .then(data => {
+                    const { json, statusCode } = data
+                    console.log("Photo id: " + json[0]) 
+                  })
+                  .catch(error => {
+                    console.log("Error: " + error)
+                  })
+            } }
           >
             <Text>Sign me up!</Text>
           </Button>
@@ -156,7 +165,8 @@ export default class SignUp extends React.Component {
   }
 
   _selectGender(gender) {
-    this.setState({gender: gender.value})
+    console.log(gender)
+    this.setState({gender: gender})
   }
 
   _dateChangedHandler(date) {
@@ -180,7 +190,7 @@ export default class SignUp extends React.Component {
       });
   
       if (!result.cancelled) {
-        this.setState({ image: result.uri });
+        this.setState({ avatar: result.uri });
       }
     }
   };
@@ -195,16 +205,21 @@ export default class SignUp extends React.Component {
       });
       
       if (!result.cancelled) {
-        this.setState({ image: result.uri });
+        this.setState({ avatar: result.uri });
       }
     }
   };
 
   _cancel = async () => {}
-}
 
 const styles = StyleSheet.create({
   avatar: { width: 300, height: 300, backgroundColor: 'gray' },
+
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white'
+  },
 
   button: {
     padding: 13,

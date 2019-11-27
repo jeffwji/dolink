@@ -40,6 +40,33 @@ module.exports = {
     })
   },
 
+  uploadImage(path) {
+    const photo = {
+      uri: path,
+      type: 'image/jpeg',
+      name: 'avatar.jpg',
+    }
+
+    const body = new FormData()
+    body.append('file', photo)
+
+    return fetch('http://192.168.10.112:8080/file', {
+      method: 'POST',
+      body
+    }).then(resp => {
+      if(resp.status == 200) {
+        const statusCode = resp.status
+        const json = resp.json()
+        return Promise.all([statusCode, json]).then(data => ({
+          json: data[1],
+          statusCode: data[0]
+        }))
+      }
+      else
+        throw 'Response with error code: ' + resp.status
+    })
+  },
+
   async askPermission(setting) {
     const PERMISSIONS = {
       NOTIFOCATIONS: Permissions.NOTIFICATIONS,
