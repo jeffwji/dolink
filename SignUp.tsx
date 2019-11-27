@@ -211,6 +211,7 @@ export default class SignUp extends React.Component {
   };
 
   _cancel = async () => {}
+}
 
 const styles = StyleSheet.create({
   avatar: { width: 300, height: 300, backgroundColor: 'gray' },
