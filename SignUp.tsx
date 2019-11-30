@@ -12,33 +12,32 @@ import {
   Input, 
   Icon,
   Button,
-  Text,
-  DatePicker } from 'native-base'
+  Text} from 'native-base'
 import * as ImagePicker from 'expo-image-picker'
 import CountryPicker from 'react-native-country-picker-modal'
 import OptionsMenu from "react-native-options-menu"
 import RadioGroup from 'react-native-radio-buttons-group'
+import DatePicker from 'react-native-datepicker'
 
-import {askPermission, uploadImage} from './Global'
+import GLOBAL, {askPermission, uploadImage, query} from './Global'
 
 export default class SignUp extends React.Component {
   constructor(props) {
     super(props)
 
     this.state = {
-      password_icon: "eye-off",
-      isSecure: true,
       avatar: null,
       username: '',
       password: '',
       firstName: '',
       lastName: '',
-      birthYear: '',
-      birthMonth: '',
-      birthDay: '',
+      birthDay: null,
       gender: 1,
       countryCode: 'US',
       country: '',
+
+      password_icon: "eye-off",
+      isSecure: true,
       genderOptions: [
         {
           label: 'Male',
@@ -94,14 +93,14 @@ export default class SignUp extends React.Component {
           <Item floatingLabel last>
             <Label>First name</Label>
             <Input onChangeText={ (text) => {
-                this.setState({firstName: text})
+              this.setState({firstName: text})
             }}/>
           </Item>
 
           <Item floatingLabel last>
             <Label>Last name</Label>
             <Input onChangeText={ (text) => {
-                this.setState({lastName: text})
+              this.setState({lastName: text})
             }}/>
           </Item>
 
@@ -109,8 +108,8 @@ export default class SignUp extends React.Component {
             <Label>BirthDate</Label>
             <DatePicker 
               style={{ width: 200 }} 
-              date={this.state.birthDate} 
-              mode="date" 
+              date={this.state.birthDay} 
+              mode="date"
               placeHolderText="select date"
               animationType={"fade"}
               format="YYYY-MM-DD" 
@@ -145,7 +144,14 @@ export default class SignUp extends React.Component {
                 uploadImage(this.state.avatar)
                   .then(data => {
                     const { json, statusCode } = data
-                    console.log("Photo id: " + json[0]) 
+                    return this._register(json[0])
+                  })
+                  .then(data => {
+                    const { json, statusCode } = data
+                    if (statusCode === 200)
+                      console.log('Register success!')
+                    else
+                      throw ('Register failed with code: ' + statusCode)
                   })
                   .catch(error => {
                     console.log("Error: " + error)
@@ -159,6 +165,24 @@ export default class SignUp extends React.Component {
     );
   }
 
+  _register(avatorId) {
+    return query(
+      GLOBAL.BASE_URL + GLOBAL.API.register, 
+      'POST', 
+      GLOBAL.token,
+      {
+        'avatar': avatorId,
+        'username': this.state.username,
+        'password': this.state.password,
+        'firstName': this.state.firstName,
+        'lastName': this.state.lastName,
+        'birthday': this.state.birthDay,
+        'country': this.state.countryCode,
+        'gender': this.state.gender
+      }
+    )
+  }
+
   _onCountrySelected(country) {
     this.setState({ countryCode: country.cca2})
     this.setState({country: country})
@@ -169,8 +193,8 @@ export default class SignUp extends React.Component {
     this.setState({gender: gender})
   }
 
-  _dateChangedHandler(date) {
-    this.setState({birthDate : date})
+  _dateChangedHandler(date:Date) {
+    this.setState({birthDay : date})
   }
 
   _changePasswordIcon() {

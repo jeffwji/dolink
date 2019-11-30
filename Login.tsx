@@ -115,7 +115,7 @@ export default class Login extends React.Component {
   }
 
   _queryToken(username, password) {
-    return query(BASE_URL + API.login, 'GET', base64.encode(username + ':' + password))
+    return query(BASE_URL + API.login, 'GET', base64.encode(username + ':' + password), null)
   }
 }
 
