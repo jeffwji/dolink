@@ -24,32 +24,16 @@ module.exports = {
   token: '',
 
   query(url, method, token, formData) {
-    console.log(url, method, token, formData)
-
     const re = /^[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$/
     const t = (typeof token !== 'undefined')?token.trim():''
 
-    //const instance = axios.create({
-    //  httpsAgent: new https.Agent({  
-    //    rejectUnauthorized: false
-    //  })
-    //});
-
-    axios({
+    return axios({
       method: method,
       url: url,
       data: formData,
       headers: {
         Authorization: (t!=='')?((re.test(t)?'Bearer ':'Basic ') + t):t
       }
-    })
-    .then( resp => {
-      const statusCode = resp.status
-      const json = resp  //.json()
-      return Promise.all([statusCode, json]).then(data => ({
-        json: data[1],
-        statusCode: data[0]
-      }))
     })
   },
 
@@ -67,16 +51,12 @@ module.exports = {
       method: 'POST',
       body
     }).then(resp => {
-      if(resp.status == 200) {
-        const statusCode = resp.status
-        const json = resp.json()
-        return Promise.all([statusCode, json]).then(data => ({
-          json: data[1],
-          statusCode: data[0]
-        }))
-      }
-      else
-        throw 'Response with error code: ' + resp.status
+      const status = resp.status
+      const data = resp.json()
+      return Promise.all([status, data]).then(p => ({
+        data: p[1],
+        status: p[0]
+      }))
     })
   },
 

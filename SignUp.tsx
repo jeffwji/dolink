@@ -20,20 +20,28 @@ import RadioGroup from 'react-native-radio-buttons-group'
 import DatePicker from 'react-native-datepicker'
 
 import GLOBAL, {askPermission, uploadImage, query} from './Global'
+import Login from './Login'
 
 export default class SignUp extends React.Component {
   constructor(props) {
     super(props)
 
     this.state = {
-      avatar: null,
+      avatar: require('./assets/avatar.jpg'),
       username: '',
+      usernameMsg: 'usernameMsg',
       password: '',
+      passwordMsg: 'passwordMsg',
       firstName: '',
+      firstNameMsg: 'firstNameMsg',
       lastName: '',
+      lastNameMsg: 'lastNameMsg',
       birthDay: null,
+      birthDayMsg: 'birthDayMsg',
       gender: 1,
+      genderMsg: 'genderMsg',
       countryCode: 'US',
+      countryMsg: 'countryMsg',
       country: '',
 
       password_icon: "eye-off",
@@ -45,7 +53,7 @@ export default class SignUp extends React.Component {
         },
         {
           label: 'Female',
-          value: 0
+          value: 2
         }
       ],
       avatarOptions: [
@@ -59,7 +67,7 @@ export default class SignUp extends React.Component {
   render() {
     const myIcon = (<Image 
       style={styles.avatar} 
-      source={{ uri: this.state.avatar }} />)
+      source={this.state.avatar } />)
 
     return (
       <ScrollView contentContainerStyle={styles.container}>
@@ -76,6 +84,7 @@ export default class SignUp extends React.Component {
               onChangeText={ (text) => {
                 this.setState({username: text.toLowerCase()})
               }}/>
+            <Label>{this.state.usernameMsg}</Label>
           </Item>
 
           <Item floatingLabel last>
@@ -85,6 +94,7 @@ export default class SignUp extends React.Component {
               onChangeText={ (text) => {
                 this.setState({password: text})
             }}/>
+            <Label>{this.state.passwordMsg}</Label>
             <Icon name={this.state.password_icon} 
               onPress={() => this._changePasswordIcon()} 
             />
@@ -95,6 +105,7 @@ export default class SignUp extends React.Component {
             <Input onChangeText={ (text) => {
               this.setState({firstName: text})
             }}/>
+            <Label>{this.state.firstNameMsg}</Label>
           </Item>
 
           <Item floatingLabel last>
@@ -102,6 +113,7 @@ export default class SignUp extends React.Component {
             <Input onChangeText={ (text) => {
               this.setState({lastName: text})
             }}/>
+            <Label>{this.state.lastNameMsg}</Label>
           </Item>
 
           <View style={styles.row}>
@@ -110,7 +122,7 @@ export default class SignUp extends React.Component {
               style={{ width: 200 }} 
               date={this.state.birthDay} 
               mode="date"
-              placeHolderText="select date"
+              placeholder="select date"
               animationType={"fade"}
               format="YYYY-MM-DD" 
               minDate="1916-01-01"
@@ -119,14 +131,18 @@ export default class SignUp extends React.Component {
               cancelBtnText="Cancel" 
               onDateChange={date => this._dateChangedHandler(date)}
             />
+            <Label>{this.state.birthDayMsg}</Label>
           </View>
 
           <View style={styles.row}>
             <Text>Gender</Text>
             <RadioGroup flexDirection='row'
               radioButtons={this.state.genderOptions} 
-              onPress={gender => this._selectGender(gender)} 
+              onPress={ gender =>
+                this._selectGender(gender)
+              } 
             />
+            <Label>{this.state.genderMsg}</Label>
           </View>
 
           <View style={styles.row}>
@@ -137,25 +153,41 @@ export default class SignUp extends React.Component {
               withCountryNameButton={true}
               onSelect={country => this._onCountrySelected(country)}
             />
+            <Label>{this.state.countryMsg}</Label>
           </View>
 
           <Button transparent
               onPress={ () => {
-                uploadImage(this.state.avatar)
-                  .then(data => {
-                    const { json, statusCode } = data
-                    return this._register(json[0])
-                  })
-                  .then(data => {
-                    const { json, statusCode } = data
-                    if (statusCode === 200)
-                      console.log('Register success!')
-                    else
-                      throw ('Register failed with code: ' + statusCode)
-                  })
-                  .catch(error => {
-                    console.log("Error: " + error)
-                  })
+                const {navigate} = this.props.navigation
+                const uploadAvatar = async (avatar) =>{
+                  if (avatar.uri != undefined) {
+                    return uploadImage(avatar.uri)
+                      .then(resp => {
+                        const { data, status } = resp
+                        if(status == 200)
+                          return this._register(data[0])
+                        else
+                          throw "Can't upload avatar"
+                      })
+                  } else {
+                    return this._register(null)
+                  }
+                }
+
+                uploadAvatar(this.state.avatar).then(resp => {
+                      const {data, status } = resp
+                      console.log(JSON.stringify(data))
+                      if (status === 201)
+                        (new Login(this.props)).login(this.state.username, this.state.password)
+                      else {
+                        console.log('Register failed with code: ' + status)
+                        return false
+                      }
+                    })
+                    .catch(error => {
+                      console.log("data: " + JSON.stringify(error.response.data))
+                      return false
+                    })
             } }
           >
             <Text>Sign me up!</Text>
@@ -184,13 +216,14 @@ export default class SignUp extends React.Component {
   }
 
   _onCountrySelected(country) {
-    this.setState({ countryCode: country.cca2})
+    this.setState({countryCode: country.cca2})
     this.setState({country: country})
   }
 
   _selectGender(gender) {
-    console.log(gender)
-    this.setState({gender: gender})
+    gender.map(g => {
+      if (g.selected) this.setState({gender: g.value})
+    })
   }
 
   _dateChangedHandler(date:Date) {
@@ -209,12 +242,11 @@ export default class SignUp extends React.Component {
       let result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.All,
         allowsEditing: true,
-        aspect: [4, 3],
         quality: 1
       });
   
       if (!result.cancelled) {
-        this.setState({ avatar: result.uri });
+        this.setState({ avatar: {uri: result.uri} });
       }
     }
   };
@@ -224,12 +256,11 @@ export default class SignUp extends React.Component {
       let result = await ImagePicker.launchCameraAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.All,
         allowsEditing: true,
-        aspect: [4, 3],
         quality: 1
       });
       
       if (!result.cancelled) {
-        this.setState({ avatar: result.uri });
+        this.setState({ avatar: {uri: result.uri} });
       }
     }
   };
@@ -238,7 +269,7 @@ export default class SignUp extends React.Component {
 }
 
 const styles = StyleSheet.create({
-  avatar: { width: 300, height: 300, backgroundColor: 'gray' },
+  avatar: { width: 200, height: 200, backgroundColor: 'gray' },
 
   row: {
     flexDirection: 'row',

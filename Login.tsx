@@ -73,7 +73,7 @@ export default class Login extends React.Component {
 
           <Button full primary style={{ paddingBottom: 4 }}
             onPress={() => {
-              this._login(this.state.username, this.state.password)
+              this.login(this.state.username, this.state.password)
             }}
           >
             <Text> Sign In </Text>
@@ -93,24 +93,24 @@ export default class Login extends React.Component {
     )
   }
 
-  _login = (username, password)=> {
+  login(username, password) {
     const {navigate} = this.props.navigation
 
     GLOBAL.isLogin = false
 
     this._queryToken(username, password)
-      .then( data => {
-        const { json, statusCode } = data
-        if(statusCode == 200) {
+      .then( resp => {
+        //const { json, statusCode } = resp
+        if(resp.status == 200) {
           GLOBAL.isLogin = true
-          GLOBAL.token = json.Result
+          GLOBAL.token = resp.data.Result
           navigate('Main')
         } else {
           Alert.alert("Fail to login", null, null)
         }
-      }).catch( error => {
-        // error.text().then( errorMessage => {Alert.alert(errorMessage, 'Main', null)})
-        Alert.alert("Fail to login", null, null)
+      })
+      .catch( error => {
+        Alert.alert(null, "Login failed", null)
       })
   }
 
@@ -121,9 +121,9 @@ export default class Login extends React.Component {
 
 
 const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: "#fff",
-      paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0  // React Native 在 Android 上的绘图区域包括 System bar, 需要去除。
-    },
-  })
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0  // React Native 在 Android 上的绘图区域包括 System bar, 需要去除。
+  },
+})
