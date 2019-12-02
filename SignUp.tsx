@@ -29,19 +29,19 @@ export default class SignUp extends React.Component {
     this.state = {
       avatar: require('./assets/avatar.jpg'),
       username: '',
-      usernameMsg: 'usernameMsg',
+      usernameMsg: '',
       password: '',
-      passwordMsg: 'passwordMsg',
+      passwordMsg: '',
       firstName: '',
-      firstNameMsg: 'firstNameMsg',
+      firstNameMsg: '',
       lastName: '',
-      lastNameMsg: 'lastNameMsg',
-      birthDay: null,
-      birthDayMsg: 'birthDayMsg',
+      lastNameMsg: '',
+      birthday: null,
+      birthdayMsg: '',
       gender: 1,
-      genderMsg: 'genderMsg',
+      genderMsg: '',
       countryCode: 'US',
-      countryMsg: 'countryMsg',
+      countryMsg: '',
       country: '',
 
       password_icon: "eye-off",
@@ -64,6 +64,10 @@ export default class SignUp extends React.Component {
     }
   }
 
+  componentDidMount() {
+    this._resetMessage()
+  }
+
   render() {
     const myIcon = (<Image 
       style={styles.avatar} 
@@ -79,48 +83,44 @@ export default class SignUp extends React.Component {
             actions={[this._pickImage, this._takePhoto, this._cancel]}/>
 
           <Item floatingLabel>
-            <Label>Email</Label>
+            <Label>{this.state.usernameMsg}</Label>
             <Input autoCapitalize = 'none'
               onChangeText={ (text) => {
                 this.setState({username: text.toLowerCase()})
               }}/>
-            <Label>{this.state.usernameMsg}</Label>
           </Item>
 
           <Item floatingLabel last>
-            <Label>Password</Label>
+            <Label>{this.state.passwordMsg}</Label>
             <Input secureTextEntry={this.state.isSecure}
               autoCapitalize = 'none'
               onChangeText={ (text) => {
                 this.setState({password: text})
             }}/>
-            <Label>{this.state.passwordMsg}</Label>
             <Icon name={this.state.password_icon} 
               onPress={() => this._changePasswordIcon()} 
             />
           </Item>
 
           <Item floatingLabel last>
-            <Label>First name</Label>
+            <Label>{this.state.firstNameMsg}</Label>
             <Input onChangeText={ (text) => {
               this.setState({firstName: text})
             }}/>
-            <Label>{this.state.firstNameMsg}</Label>
           </Item>
 
           <Item floatingLabel last>
-            <Label>Last name</Label>
+            <Label>{this.state.lastNameMsg}</Label>
             <Input onChangeText={ (text) => {
               this.setState({lastName: text})
             }}/>
-            <Label>{this.state.lastNameMsg}</Label>
           </Item>
 
           <View style={styles.row}>
             <Label>BirthDate</Label>
             <DatePicker 
               style={{ width: 200 }} 
-              date={this.state.birthDay} 
+              date={this.state.birthday} 
               mode="date"
               placeholder="select date"
               animationType={"fade"}
@@ -131,7 +131,7 @@ export default class SignUp extends React.Component {
               cancelBtnText="Cancel" 
               onDateChange={date => this._dateChangedHandler(date)}
             />
-            <Label>{this.state.birthDayMsg}</Label>
+            <Label>{this.state.birthdayMsg}</Label>
           </View>
 
           <View style={styles.row}>
@@ -159,7 +159,7 @@ export default class SignUp extends React.Component {
           <Button transparent
               onPress={ () => {
                 const {navigate} = this.props.navigation
-                const uploadAvatar = async (avatar) =>{
+                const doRegister = async (avatar) =>{
                   if (avatar.uri != undefined) {
                     return uploadImage(avatar.uri)
                       .then(resp => {
@@ -174,18 +174,18 @@ export default class SignUp extends React.Component {
                   }
                 }
 
-                uploadAvatar(this.state.avatar).then(resp => {
+                doRegister(this.state.avatar).then(resp => {
                       const {data, status } = resp
                       console.log(JSON.stringify(data))
                       if (status === 201)
                         (new Login(this.props)).login(this.state.username, this.state.password)
                       else {
                         console.log('Register failed with code: ' + status)
-                        return false
                       }
                     })
                     .catch(error => {
                       console.log("data: " + JSON.stringify(error.response.data))
+                      return this._showMessage(error.response.data.Result.errors)
                       return false
                     })
             } }
@@ -197,7 +197,33 @@ export default class SignUp extends React.Component {
     );
   }
 
+  _showMessage(errors) {
+    errors.map(error => {
+      error.messages.map( msg => {
+        console.log(this.state[error.path.substring(1) + "Msg"])
+
+        this.setState({
+          [error.path.substring(1) + "Msg"]: msg
+        })
+      })
+    })
+  }
+
+  _resetMessage() {
+    this.setState({
+      usernameMsg: 'Email',
+      passwordMsg: 'Password',
+      firstNameMsg: 'First name',
+      lastNameMsg: 'Last name',
+      birthdayMsg: '',
+      genderMsg: '',
+      countryMsg: '',
+    })
+  }
+
   _register(avatorId) {
+    this._resetMessage()
+
     return query(
       GLOBAL.BASE_URL + GLOBAL.API.register, 
       'POST', 
@@ -208,7 +234,7 @@ export default class SignUp extends React.Component {
         'password': this.state.password,
         'firstName': this.state.firstName,
         'lastName': this.state.lastName,
-        'birthday': this.state.birthDay,
+        'birthday': this.state.birthday,
         'country': this.state.countryCode,
         'gender': this.state.gender
       }
@@ -227,7 +253,7 @@ export default class SignUp extends React.Component {
   }
 
   _dateChangedHandler(date:Date) {
-    this.setState({birthDay : date})
+    this.setState({birthday : date})
   }
 
   _changePasswordIcon() {

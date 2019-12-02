@@ -123,11 +123,11 @@ export default class Home extends React.Component {
     // 刷新数据
     this.setState({isRefreshing: true})
 
-    this._getRecentPlans().then( data => {
-      const { json } = data
-      if(json.Status == 'Ok') {
+    this._getRecentPlans().then( resp => {
+      const { data, status } = resp
+      if(status == '200') {
         this.setState({
-          travelPlans: json.Result
+          travelPlans: data.Result
         })
       }
     }).catch( error => {
