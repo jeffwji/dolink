@@ -50,22 +50,18 @@ export default class Main extends React.Component {
   }
 
   componentWillMount() {
-    console.log('Main: componentWillMount')
+    const {navigate} = this.props.navigation
 
     askPermission('NOTIFICATIONS')
 
-    this._retrievelUserInfo().then( data => {
-      const { json, statusCode } = data
+    this._retrievelUserInfo().then( resp => {
+      const { data, status } = resp
       
-      if(statusCode === 200) {
-        console.log(json.Result)
-        GLOBAL.userInfo = json.Result
-      }
-      else {
-        Alert.alert(json.Status, 'Main', null)
+      if(status === 200) {
+        GLOBAL.userInfo = data.Result
       }
     }).catch( error => {
-      error.text().then( errorMessage => {Alert.alert(errorMessage, 'Main', null)})
+      navigate('Login')
     })
   }
 
