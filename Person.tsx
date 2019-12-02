@@ -2,7 +2,8 @@ import React from 'react'
 
 import {
   Container,
-  Header, 
+  Header,
+  Footer,
   Title, 
   Content, 
   Button, 
@@ -46,8 +47,6 @@ export default class Person extends React.Component {
   }
 
   componentDidMount () {
-    console.log("pERSON: componentDidMount")
-
     if (GLOBAL.token != '') {
       this._refreshTravelPlan()
     }
@@ -70,6 +69,11 @@ export default class Person extends React.Component {
           <Right />
         </Header>
 
+        <Content refreshControl={this._renderRefreshControl()} >
+          {this.state.travelPlans.map( (plan) => this._renderRow(plan) )}
+        </Content>
+
+        <Footer>
           <Button onPress={() => {
             if (navigate) {
               navigate("Login")
@@ -77,10 +81,7 @@ export default class Person extends React.Component {
           }}>
             <Text> Logout </Text>
           </Button>
-
-        <Content refreshControl={this._renderRefreshControl()} >
-          {this.state.travelPlans.map( (plan) => this._renderRow(plan) )}
-        </Content>
+        </Footer>
       </Container>
     )
   }

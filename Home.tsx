@@ -59,7 +59,7 @@ export default class Home extends React.Component {
         <Header searchBar rounded>
           <Item>
             <Icon name='ios-search' />
-            <Input placeholder='Search' 
+            <Input placeholder='Key words' 
               onChangeText={ (text) => {
                 this.setState({searchText: text})
                 console.log('Input is: ' + this.state.searchText)

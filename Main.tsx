@@ -17,6 +17,8 @@ import {
 
 import Home from './Home'
 import Person from './Person'
+import Find from './Find'
+import Chat from './Chat'
 
 import 
   GLOBAL,
@@ -78,6 +80,21 @@ export default class Main extends React.Component {
               }}>
               <Icon name='ios-home' />
             </Button>
+            <Button active={this.state.selectedTab === 'Chat'}
+              onPress={() => {
+                this.setState({ selectedTab: 'Chat'})
+              }}>
+              <Icon name='chatboxes' />
+            </Button>
+            <Button style={styles.addButton} active>
+              <Icon active name="add" style={{color:'darkgrey'}}/>
+            </Button>
+            <Button active={this.state.selectedTab === 'Find'}
+              onPress={() => {
+                this.setState({ selectedTab: 'Find'})
+              }}>
+              <Icon name='ios-search' />
+            </Button>
             <Button active={this.state.selectedTab==='Person'}
               onPress={() => {
                 this.setState({selectedTab: 'Person'})
@@ -99,6 +116,14 @@ export default class Main extends React.Component {
       return (
           <Person navigation={this.props.navigation}/>
       )
+    }else if(this.state.selectedTab === 'Chat'){
+      return (
+          <Chat navigation={this.props.navigation}/>
+      )
+    }else if(this.state.selectedTab === 'Find'){
+      return (
+          <Find navigation={this.props.navigation}/>
+      )
     }
   }
 }
@@ -109,5 +134,15 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0  // React Native 在 Android 上的绘图区域包括 System bar, 需要去除。
   },
+
+  addButton: {
+    height:  Platform.OS === "android" ? 70:84,
+    width: Platform.OS === "android" ? 70:84,
+    borderRadius:Platform.OS === "android" ? 35:42,
+    bottom: 8,
+    borderWidth:1,
+    borderColor:'lightgrey',
+    backgroundColor:'#f5f5f5'
+  }
 })
 

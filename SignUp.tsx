@@ -4,8 +4,17 @@
 // https://article.itxueyuan.com/5pOZB
 
 import * as React from 'react';
-import { Image, ScrollView, View, StyleSheet, Alert } from 'react-native';
+import { 
+  Image,
+  ScrollView,
+  View,
+  StyleSheet,
+  Alert
+} from 'react-native';
 import {
+  Container,
+  Content,
+  Header,
   Form, 
   Item, 
   Label, 
@@ -74,126 +83,131 @@ export default class SignUp extends React.Component {
       source={this.state.avatar } />)
 
     return (
-      <ScrollView contentContainerStyle={styles.container}>
-        <Form>
-          <OptionsMenu
-            customButton={myIcon}
-            destructiveIndex={1}
-            options={this.state.avatarOptions}
-            actions={[this._pickImage, this._takePhoto, this._cancel]}/>
+      <Container>
+        <Content contentContainerStyle={styles.container}>
+          <Form>
+            <OptionsMenu
+              style={styles.avatorMenu}
+              customButton={myIcon}
+              destructiveIndex={1}
+              options={this.state.avatarOptions}
+              actions={[this._pickImage, this._takePhoto, this._cancel]}/>
 
-          <Item floatingLabel>
-            <Label>{this.state.usernameMsg}</Label>
-            <Input autoCapitalize = 'none'
-              onChangeText={ (text) => {
-                this.setState({username: text.toLowerCase()})
+            <Item floatingLabel>
+              <Label>{this.state.usernameMsg}</Label>
+              <Input autoCapitalize = 'none'
+                onChangeText={ (text) => {
+                  this.setState({username: text.toLowerCase()})
+                }}/>
+            </Item>
+
+            <Item floatingLabel last>
+              <Label>{this.state.passwordMsg}</Label>
+              <Input secureTextEntry={this.state.isSecure}
+                autoCapitalize = 'none'
+                onChangeText={ (text) => {
+                  this.setState({password: text})
               }}/>
-          </Item>
+              <Icon name={this.state.password_icon} 
+                onPress={() => this._changePasswordIcon()} 
+              />
+            </Item>
 
-          <Item floatingLabel last>
-            <Label>{this.state.passwordMsg}</Label>
-            <Input secureTextEntry={this.state.isSecure}
-              autoCapitalize = 'none'
-              onChangeText={ (text) => {
-                this.setState({password: text})
-            }}/>
-            <Icon name={this.state.password_icon} 
-              onPress={() => this._changePasswordIcon()} 
-            />
-          </Item>
+            <Item floatingLabel last>
+              <Label>{this.state.firstNameMsg}</Label>
+              <Input onChangeText={ (text) => {
+                this.setState({firstName: text})
+              }}/>
+            </Item>
 
-          <Item floatingLabel last>
-            <Label>{this.state.firstNameMsg}</Label>
-            <Input onChangeText={ (text) => {
-              this.setState({firstName: text})
-            }}/>
-          </Item>
+            <Item floatingLabel last>
+              <Label>{this.state.lastNameMsg}</Label>
+              <Input onChangeText={ (text) => {
+                this.setState({lastName: text})
+              }}/>
+            </Item>
 
-          <Item floatingLabel last>
-            <Label>{this.state.lastNameMsg}</Label>
-            <Input onChangeText={ (text) => {
-              this.setState({lastName: text})
-            }}/>
-          </Item>
+            <View style={styles.row}>
+              <Label>BirthDate: </Label>
+              <View style={styles.col}>
+                <DatePicker 
+                  style={{ width: 200 }} 
+                  date={this.state.birthday} 
+                  mode="date"
+                  placeholder="select date"
+                  animationType={"fade"}
+                  format="YYYY-MM-DD" 
+                  minDate="1916-01-01"
+                  maxDate="2019-12-31" 
+                  confirmBtnText="Confirm" 
+                  cancelBtnText="Cancel" 
+                  onDateChange={date => this._dateChangedHandler(date)}
+                />
+                <Label>{this.state.birthdayMsg}</Label>
+              </View>
+            </View>
 
-          <View style={styles.row}>
-            <Label>BirthDate</Label>
-            <DatePicker 
-              style={{ width: 200 }} 
-              date={this.state.birthday} 
-              mode="date"
-              placeholder="select date"
-              animationType={"fade"}
-              format="YYYY-MM-DD" 
-              minDate="1916-01-01"
-              maxDate="2019-12-31" 
-              confirmBtnText="Confirm" 
-              cancelBtnText="Cancel" 
-              onDateChange={date => this._dateChangedHandler(date)}
-            />
-            <Label>{this.state.birthdayMsg}</Label>
-          </View>
+            <View style={styles.row}>
+              <Text>Gender: </Text>
+              <RadioGroup flexDirection='row'
+                radioButtons={this.state.genderOptions} 
+                onPress={ gender =>
+                  this._selectGender(gender)
+                } 
+              />
+              <Label>{this.state.genderMsg}</Label>
+            </View>
 
-          <View style={styles.row}>
-            <Text>Gender</Text>
-            <RadioGroup flexDirection='row'
-              radioButtons={this.state.genderOptions} 
-              onPress={ gender =>
-                this._selectGender(gender)
-              } 
-            />
-            <Label>{this.state.genderMsg}</Label>
-          </View>
+            <View style={styles.row}>
+              <Label>Country: </Label>
+              <CountryPicker 
+                countryCode={this.state.countryCode}
+                withFlag={true}
+                withCountryNameButton={true}
+                onSelect={country => this._onCountrySelected(country)}
+              />
+              <Label>{this.state.countryMsg}</Label>
+            </View>
 
-          <View style={styles.row}>
-            <Label>Country</Label>
-            <CountryPicker 
-              countryCode={this.state.countryCode}
-              withFlag={true}
-              withCountryNameButton={true}
-              onSelect={country => this._onCountrySelected(country)}
-            />
-            <Label>{this.state.countryMsg}</Label>
-          </View>
-
-          <Button transparent
-              onPress={ () => {
-                const {navigate} = this.props.navigation
-                const doRegister = async (avatar) =>{
-                  if (avatar.uri != undefined) {
-                    return uploadImage(avatar.uri)
-                      .then(resp => {
-                        const { data, status } = resp
-                        if(status == 200)
-                          return this._register(data[0])
-                        else
-                          throw "Can't upload avatar"
-                      })
-                  } else {
-                    return this._register(null)
+            <Button
+                onPress={ () => {
+                  const {navigate} = this.props.navigation
+                  const doRegister = async (avatar) =>{
+                    if (avatar.uri != undefined) {
+                      return uploadImage(avatar.uri)
+                        .then(resp => {
+                          const { data, status } = resp
+                          if(status == 200)
+                            return this._register(data[0])
+                          else
+                            throw "Can't upload avatar"
+                        })
+                    } else {
+                      return this._register(null)
+                    }
                   }
-                }
 
-                doRegister(this.state.avatar).then(resp => {
-                      const {data, status } = resp
-                      console.log(JSON.stringify(data))
-                      if (status === 201)
-                        (new Login(this.props)).login(this.state.username, this.state.password)
-                      else {
-                        console.log('Register failed with code: ' + status)
-                      }
-                    })
-                    .catch(error => {
-                      console.log("data: " + JSON.stringify(error.response.data))
-                      return this._showMessage(error.response.data.Result.errors)
-                      return false
-                    })
-            } }
-          >
-            <Text>Sign me up!</Text>
-          </Button>
-        </Form>
-      </ScrollView>
+                  doRegister(this.state.avatar).then(resp => {
+                        const {data, status } = resp
+                        console.log(JSON.stringify(data))
+                        if (status === 201)
+                          (new Login(this.props)).login(this.state.username, this.state.password)
+                        else {
+                          console.log('Register failed with code: ' + status)
+                        }
+                      })
+                      .catch(error => {
+                        console.log("data: " + JSON.stringify(error.response.data))
+                        return this._showMessage(error.response.data.Result.errors)
+                        return false
+                      })
+              } }
+            >
+              <Text>Sign me up!</Text>
+            </Button>
+          </Form>
+        </Content>
+      </Container>
     );
   }
 
@@ -268,6 +282,7 @@ export default class SignUp extends React.Component {
       let result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.All,
         allowsEditing: true,
+        aspect: [1, 1],
         quality: 1
       });
   
@@ -282,6 +297,7 @@ export default class SignUp extends React.Component {
       let result = await ImagePicker.launchCameraAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.All,
         allowsEditing: true,
+        aspect: [1, 1],
         quality: 1
       });
       
@@ -295,10 +311,25 @@ export default class SignUp extends React.Component {
 }
 
 const styles = StyleSheet.create({
-  avatar: { width: 200, height: 200, backgroundColor: 'gray' },
+  avatorMenu: {
+    alignItems: 'center'
+  },
+
+  avatar: {
+    width: 200,
+    height: 200,
+    backgroundColor: 'gray',
+    alignItems: 'center'
+  },
 
   row: {
     flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white'
+  },
+
+  col: {
+    flexDirection: 'column',
     alignItems: 'center',
     backgroundColor: 'white'
   },

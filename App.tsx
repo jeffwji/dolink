@@ -14,6 +14,9 @@ import { Ionicons } from '@expo/vector-icons'
 import Main from './Main'   // 自适应到 main.android 或 main.ios 文件
 import Login from './Login'
 import SignUp from './SignUp'
+import Chat from './Chat'
+import Find from './Find'
+import GLOBAL from './Global'
 
 /**
  * 定义缺省的导航栈
@@ -43,10 +46,26 @@ const MainNavigator = createStackNavigator(
         tabBarLabel: "Home page",
         header: null   //首页面去掉导航栏
       })
+    },
+    Chat: {
+      screen: Chat,
+      navigationOptions: (navigation) => ({
+        title: "Chat",
+        tabBarLabel: "Chat page",
+        header: null
+      })
+    },
+    Find: {
+      screen: Find,
+      navigationOptions: (navigation) => ({
+        title: "Find",
+        tabBarLabel: "Find page",
+        header: null
+      })
     }
   },
   {
-    initialRouteName: "Login"
+    initialRouteName: GLOBAL.token==''?"Login":"Main"
   }
 )
 
