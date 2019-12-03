@@ -1,7 +1,6 @@
 import React from 'react'
 
 import {
-  Alert,
   StyleSheet,
   Platform,
   StatusBar
@@ -19,6 +18,7 @@ import Home from './Home'
 import Person from './Person'
 import Find from './Find'
 import Chat from './Chat'
+import EditPlan from './EditPlan'
 
 import 
   GLOBAL,
@@ -68,6 +68,8 @@ export default class Main extends React.Component {
   }
 
   render() {
+    const {navigate} = this.props.navigation
+
     return (
       <Container style={styles.container}>
         {this._renderContent() }
@@ -86,7 +88,13 @@ export default class Main extends React.Component {
               }}>
               <Icon name='chatboxes' />
             </Button>
-            <Button style={styles.addButton} active>
+            <Button 
+              style={styles.addButton} 
+              active
+              onPress={() => {
+                navigate('EditPlan')
+              }}
+            >
               <Icon active name="add" style={{color:'darkgrey'}}/>
             </Button>
             <Button active={this.state.selectedTab === 'Find'}

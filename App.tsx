@@ -16,6 +16,7 @@ import Login from './Login'
 import SignUp from './SignUp'
 import Chat from './Chat'
 import Find from './Find'
+import EditPlan from './EditPlan'
 import GLOBAL from './Global'
 
 /**
@@ -60,6 +61,14 @@ const MainNavigator = createStackNavigator(
       navigationOptions: (navigation) => ({
         title: "Find",
         tabBarLabel: "Find page",
+        header: null
+      })
+    },
+    EditPlan: {
+      screen: EditPlan,
+      navigationOptions: (navigation) => ({
+        title: "New",
+        tabBarLabel: "Add new paln",
         header: null
       })
     }
