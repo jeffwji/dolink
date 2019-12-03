@@ -69,7 +69,7 @@ export default class EditPlan extends React.Component {
                   {cancelable: false},
                 );
               } else {
-                goBack()
+                goBack(null)
               }
             }}>
               <Icon name='Back' />
