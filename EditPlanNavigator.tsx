@@ -10,7 +10,7 @@ import Main from './Main'
  * 
  * 参考：https://medium.com/async-la/react-navigation-stacks-tabs-and-drawers-oh-my-92edd606e4db
  */
-const EditNavigator = createStackNavigator(
+const EditPlanNavigator = createStackNavigator(
   {
     EditPlan: {
       screen: EditPlan,
@@ -26,4 +26,4 @@ const EditNavigator = createStackNavigator(
   }
 )
 
-export default EditNavigator
+export default EditPlanNavigator

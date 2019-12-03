@@ -16,7 +16,7 @@ import Login from './Login'
 import SignUp from './SignUp'
 import Chat from './Chat'
 import Find from './Find'
-import PlanNavigator from './Plan'
+import EditPlanNavigator from './EditPlanNavigator'
 import GLOBAL from './Global'
 
 /**
@@ -51,8 +51,8 @@ const MainNavigator = createStackNavigator(
       })
     },
     // 攻略的编辑界面有它自己的 navigation。
-    PlanNavigator: {
-      screen: PlanNavigator,
+    EditPlanNavigator: {
+      screen: EditPlanNavigator,
       navigationOptions: (navigation) => ({
         title: "New",
         tabBarLabel: "Add new paln",
