@@ -18,7 +18,6 @@ import Home from './Home'
 import Person from './Person'
 import Find from './Find'
 import Chat from './Chat'
-import EditPlan from './EditPlan'
 
 import 
   GLOBAL,
