@@ -32,7 +32,7 @@ export default class EditPlan extends React.Component {
     super(props)
 
     this.state = {
-      modified: true
+      modified: false
     }
   }
 
@@ -54,11 +54,13 @@ export default class EditPlan extends React.Component {
                   [
                     {text: 'Save and go back', onPress: () => {
                       console.log('Save and go back')
-                      goBack()
+                      // null 参数表示无条件跳回之前的页面（主导航栈）, 否则 goBack 将缺省以本页面做为参考点，尝试跳往（当前导航栈的）前一页面，而不是跳回主导航栈。
+                      // 参考：https://stackoverflow.com/questions/45489343/react-navigation-back-and-goback-not-working
+                      goBack(null)
                     }},
                     {text: 'Go back without save', onPress: () => {
                       console.log('Go back without save')
-                      goBack()
+                      goBack(null)
                     }},
                     { text: 'Cancel', style: 'Cancel', onPress: () => {
                       console.log('Cancel Pressed')

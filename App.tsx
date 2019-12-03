@@ -16,11 +16,13 @@ import Login from './Login'
 import SignUp from './SignUp'
 import Chat from './Chat'
 import Find from './Find'
-import EditPlan from './EditPlan'
+import PlanNavigator from './Plan'
 import GLOBAL from './Global'
 
 /**
  * 定义缺省的导航栈
+ * 
+ * 参考：https://medium.com/async-la/react-navigation-stacks-tabs-and-drawers-oh-my-92edd606e4db
  */
 const MainNavigator = createStackNavigator(
   {
@@ -28,7 +30,7 @@ const MainNavigator = createStackNavigator(
       screen: Main,     // createStackNavigator 会将 `this`(MainNavigator) 作为 `navigation` 参数传递给 Main
       navigationOptions: {
         gesturesEnabled: false,    // 登录成功后不允许返回登陆界面(Android 无效，参见下面的 defaultGetStateForAction)
-        title: "首页面",
+        title: "Home",
         tabBarLabel: "Home page",
         header: null   //首页面去掉导航栏
       }
@@ -43,29 +45,14 @@ const MainNavigator = createStackNavigator(
     Login: {
       screen: Login,
       navigationOptions: (navigation) => ({
-        title: "首页面",
-        tabBarLabel: "Home page",
-        header: null   //首页面去掉导航栏
+        title: "Login",
+        tabBarLabel: "Login page",
+        header: null   //去掉导航栏
       })
     },
-    Chat: {
-      screen: Chat,
-      navigationOptions: (navigation) => ({
-        title: "Chat",
-        tabBarLabel: "Chat page",
-        header: null
-      })
-    },
-    Find: {
-      screen: Find,
-      navigationOptions: (navigation) => ({
-        title: "Find",
-        tabBarLabel: "Find page",
-        header: null
-      })
-    },
-    EditPlan: {
-      screen: EditPlan,
+    // 攻略的编辑界面有它自己的 navigation。
+    PlanNavigator: {
+      screen: PlanNavigator,
       navigationOptions: (navigation) => ({
         title: "New",
         tabBarLabel: "Add new paln",
