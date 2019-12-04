@@ -14,8 +14,6 @@ import { Ionicons } from '@expo/vector-icons'
 import Main from './Main'   // 自适应到 main.android 或 main.ios 文件
 import Login from './Login'
 import SignUp from './SignUp'
-import Chat from './Chat'
-import Find from './Find'
 import EditPlanNavigator from './EditPlanNavigator'
 import GLOBAL from './Global'
 

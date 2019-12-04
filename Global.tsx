@@ -62,6 +62,7 @@ module.exports = {
 
   async askPermission(setting) {
     const PERMISSIONS = {
+      LOCATION: Permissions.LOCATION,
       NOTIFOCATIONS: Permissions.NOTIFICATIONS,
       CAMERA_ROLL: Permissions.CAMERA_ROLL,
       CAMERA: Permissions.CAMERA

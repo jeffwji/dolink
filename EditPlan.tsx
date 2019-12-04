@@ -3,8 +3,9 @@ import React from 'react'
 import {
   Container,
   Header,
-  Title, 
-  Content, 
+  Form, 
+  Content,
+  Input,
   Button, 
   Left,
   Right,
@@ -15,6 +16,8 @@ import {
 } from 'native-base'
 
 import {
+  Platform,
+  StatusBar,
   StyleSheet,
   Alert
 } from 'react-native'
@@ -32,7 +35,8 @@ export default class EditPlan extends React.Component {
     super(props)
 
     this.state = {
-      modified: false
+      modified: false,
+      title: ''
     }
   }
 
@@ -40,10 +44,10 @@ export default class EditPlan extends React.Component {
   }
 
   render() {
-    const {goBack} = this.props.navigation
+    const {navigate, goBack} = this.props.navigation
 
     return (
-      <Container>
+      <Container style={styles.container}>
         <Header>
           <Left>
             <Button transparent onPress={() => {
@@ -87,14 +91,48 @@ export default class EditPlan extends React.Component {
           </Right>
         </Header>
 
-        <Content>
-          <Text>Add new plan</Text>
+        <Content style={styles.content}>
+          <Form>
+            <Input placeholder='Title' 
+              onChangeText={ (text) => {
+                this.setState({title: text})
+              } }/>
+            <Button 
+              style={styles.addButton} 
+              active
+              onPress={() => {
+                navigate('PlanMap')
+              }}
+            >
+            <Icon active name="add" style={{color:'darkgrey'}}/>
+            </Button>
+          </Form>
         </Content>
-
       </Container>
     )
   }
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0
+  },
+
+  content: {
+    flex: 1,
+    marginLeft: 10,
+  },
+
+  addButton: {
+    height: 60,
+    width: 100,
+    borderRadius:5,
+    bottom: 10,
+    borderWidth:1,
+    borderColor:'lightgrey',
+    backgroundColor:'#f5f5f5',
+    justifyContent: 'center'
+  }
 })

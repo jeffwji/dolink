@@ -3,7 +3,7 @@ import React from 'react'
 import {createStackNavigator} from 'react-navigation-stack'
 
 import EditPlan from './EditPlan'
-import Main from './Main'
+import PlanMap from './GoogleMap'
 
 /**
  * 定义攻略编辑界面的导航栈
@@ -18,6 +18,12 @@ const EditPlanNavigator = createStackNavigator(
         title: "New",
         tabBarLabel: "Add new paln",
         header: null
+      })
+    },
+    PlanMap: {
+      screen: PlanMap,
+      navigationOptions: (navigation) => ({
+        title: "Map"
       })
     }
   },
