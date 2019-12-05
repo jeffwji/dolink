@@ -75,17 +75,19 @@ export default class Home extends React.Component {
         </Header>
 
         <Content refreshControl={this._renderRefreshControl()} >
-          {this.state.travelPlans.map( (plan) => this._renderRow(plan) )}
+          {this.state.travelPlans.map( (plan, index) => this._renderRow(plan, index) )}
         </Content>
       </Container>
     )
   }
 
-  _renderRow = (plan) => {
+  _renderRow = (plan, index) => {
     const {navigate} = this.props.navigation
 
     return(
-      <ListItem Button
+      <ListItem 
+        key={index}
+        Button
         style={styles.planRow}
         onPress={() => {
           if (navigate) {
@@ -131,7 +133,8 @@ export default class Home extends React.Component {
         })
       }
     }).catch( error => {
-      Alert.alert(error, 'Home', null)
+      // Alert.alert(error, 'Home', null)
+      console.log(error)
     })
 
     this.setState({isRefreshing: false})

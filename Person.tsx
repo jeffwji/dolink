@@ -70,7 +70,7 @@ export default class Person extends React.Component {
         </Header>
 
         <Content refreshControl={this._renderRefreshControl()} >
-          {this.state.travelPlans.map( (plan) => this._renderRow(plan) )}
+          {this.state.travelPlans.map( (plan, index) => this._renderRow(plan, index) )}
         </Content>
 
         <Footer>
@@ -86,11 +86,11 @@ export default class Person extends React.Component {
     )
   }
 
-  _renderRow = (plan) => {
+  _renderRow = (plan, index) => {
     const {navigate} = this.props.navigation
 
     return(
-      <ListItem Button
+      <ListItem key={index} Button
         style={styles.planRow}
         onPress={() => {
           if (navigate) {
