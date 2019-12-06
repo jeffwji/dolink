@@ -76,7 +76,7 @@ export default class EditPlan extends React.Component {
                 goBack(null)
               }
             }}>
-              <Icon name='Back' />
+              <Icon name='ios-arrow-back' />
             </Button>
           </Left>
           <Right>

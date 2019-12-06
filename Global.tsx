@@ -60,15 +60,14 @@ module.exports = {
     })
   },
 
-  async askPermission(setting) {
+  askPermission(setting) {
     const PERMISSIONS = {
       LOCATION: Permissions.LOCATION,
-      NOTIFOCATIONS: Permissions.NOTIFICATIONS,
+      NOTIFICATIONS: Permissions.NOTIFICATIONS,
       CAMERA_ROLL: Permissions.CAMERA_ROLL,
       CAMERA: Permissions.CAMERA
     }
 
-    const { status } = await Permissions.askAsync(PERMISSIONS[setting]);
-    return status === 'granted'
+    return Permissions.askAsync(PERMISSIONS[setting])
   },
 }

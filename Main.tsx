@@ -50,10 +50,10 @@ export default class Main extends React.Component {
     return query(BASE_URL + API.userInfo, 'GET', GLOBAL.token)
   }
 
-  componentWillMount() {
+  async componentWillMount() {
     const {navigate} = this.props.navigation
 
-    askPermission('NOTIFICATIONS')
+    await askPermission('NOTIFICATIONS')
 
     this._retrievelUserInfo().then( resp => {
       const { data, status } = resp
