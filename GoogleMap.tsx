@@ -1,73 +1,108 @@
 import React from 'react'
-import MapView from 'react-native-maps'
+import MapView, {PROVIDER_GOOGLE } from 'react-native-maps'
 
 import {
   Container,
-  Icon
+  Icon,
+  Item
 } from 'native-base'
 
 import {
-    View, 
-    Dimensions,
-    StyleSheet
+  View, 
+  Dimensions,
+  StyleSheet,
+  TextInput
 } from 'react-native'
 
-import GLOBAL, {askPermission, query} from './Global'
+import axios from 'axios'
+import GLOBAL, {askPermission, query, REACT_APP_GOOGLE_MAPS_API, REACT_APP_GOOGLE_PLACES_API} from './Global'
+
+// https://github.com/react-native-community/react-native-maps
+// https://medium.com/@princessjanf/react-native-maps-with-direction-from-current-location-ab1a371732c2
+// https://github.com/ginnyfahs/CatCallOutApp
 
 export default class GoogleMap extends React.Component {
   constructor(props) {
     super(props)
+    
     this.state = {
-      latitude: null,
-      longitude: null,
-      error: null,
-      concat: null,
-      coords:[],
-      x: 'false',
-      cordLatitude:-6.23,
-      cordLongitude:106.75,
+      locationCoordinates: null,
+      locationInput: ''
     }
   }
 
   componentDidMount () {
-    if(this.state.latitude==null || this.state.longitude==null)
+    if(this.state.locationCoordinates==null)
       this._getCurrentPosition()
   }
 
   async _getCurrentPosition() {
-    // https://github.com/react-native-community/react-native-maps
-    // https://medium.com/@princessjanf/react-native-maps-with-direction-from-current-location-ab1a371732c2
     if(await askPermission('LOCATION')) {
       navigator.geolocation.getCurrentPosition( 
         position => {
           this.setState({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-            error: null
+            locationCoordinates: {
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+              latitudeDelta: 0.0922,
+              longitudeDelta: 0.0421
+            }
           })
         },
-        (error) => this.setState({ error: error.message }),
+        (error) => console.log(error.message),
         { enableHighAccuracy: false, timeout: 200000, maximumAge: 1000 }
       )
     }
   }
 
-  _showMap() {
-      if(this.state.latitude!=null && this.state.longitude!=null) {
-          return(
-            <MapView
-              style={styles.mapStyle}
-              initialRegion={
-                {
-                  latitude: this.state.latitude,
-                  longitude: this.state.longitude,
-                  latitudeDelta: 0.0922,
-                  longitudeDelta: 0.0421
-                }
-              }
-            />
-          )
+  _submit = (input) => {
+    // axios.get("https://maps.googleapis.com/maps/api/geocode/json?address=" + this.state.locationInput.split(' ').join('') + "&key=" + REACT_APP_GOOGLE_PLACES_API)
+    // .then(response => this._updateLocationCoordinates(response))
+    // .catch(error => console.log("Failjax: ", error))
+    console.log("Input text: " + input.nativeEvent.text)
+  }
+
+  _updateLocationCoordinates(response){
+    const coordinate = response.data.results[0].geometry.location 
+    this.setState({
+      locationCoordinates: {
+        latitude: coordinate.lat,
+        longitude: coordinate.lng
       }
+    })
+  }
+
+  _showMap() {
+    if(this.state.locationCoordinates!=null) {
+      return(
+        <View style={styles.overallViewContainer}>
+          <MapView style={styles.container}
+            provider={ PROVIDER_GOOGLE }
+            initialRegion={this.state.locationCoordinates}
+            zoomEnabled={true} 
+            scrollEnabled={true} 
+          >
+            <MapView.Marker 
+              coordinate={{
+                latitude: this.state.locationCoordinates.latitude,
+                longitude: this.state.locationCoordinates.longitude
+              }}
+            />
+          </MapView>
+
+          <View style={styles.allNonMapThings}>
+            <Item style={styles.inputContainer}>
+              <TextInput style={ styles.input }
+                placeholder="Where to go?"
+                value={this.state.locationInput}
+                onChangeText={text => this.setState({ locationInput: text })}
+                onSubmitEditing={this._submit}
+              />
+            </Item>
+          </View>
+        </View>
+      )
+    }
   }
 
   render() {
@@ -81,14 +116,42 @@ export default class GoogleMap extends React.Component {
 
 
 const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: '#fff',
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    mapStyle: {
+    overallViewContainer: {
+      position: 'absolute',
       width: Dimensions.get('window').width,
       height: Dimensions.get('window').height,
+    },
+    container: {
+      position: 'absolute',
+      width: Dimensions.get('window').width,
+      height: Dimensions.get('window').height,
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'space-between'
+    },
+    allNonMapThings: {
+      alignItems: 'center',
+      height: '100%',
+      width: '100%'
+    },
+    inputContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: 'white',
+      width: '90%',
+      height: '6%',
+      top: 30,
+      borderRadius: 5,
+      shadowOpacity: 0.75,
+      shadowRadius: 1,
+      shadowColor: 'gray',
+      shadowOffset: { height: 0, width: 0}
+    },
+    input: {
+      width: '88%',
+      marginTop: 'auto',
+      marginBottom: 'auto',
+      marginLeft: 'auto',
+      marginRight: 'auto',
     },
   });
