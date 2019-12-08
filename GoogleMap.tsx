@@ -11,8 +11,11 @@ import {
   View, 
   Dimensions,
   StyleSheet,
-  TextInput
+  TextInput,
+  Alert
 } from 'react-native'
+
+import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 
 import axios from 'axios'
 import GLOBAL, {askPermission, query, REACT_APP_GOOGLE_MAPS_API, REACT_APP_GOOGLE_PLACES_API} from './Global'
@@ -38,6 +41,7 @@ export default class GoogleMap extends React.Component {
 
   async _getCurrentPosition() {
     if(await askPermission('LOCATION')) {
+      // Get location from handset navigator
       navigator.geolocation.getCurrentPosition( 
         position => {
           this.setState({
@@ -56,18 +60,21 @@ export default class GoogleMap extends React.Component {
   }
 
   _submit = (input) => {
-    // axios.get("https://maps.googleapis.com/maps/api/geocode/json?address=" + this.state.locationInput.split(' ').join('') + "&key=" + REACT_APP_GOOGLE_PLACES_API)
-    // .then(response => this._updateLocationCoordinates(response))
-    // .catch(error => console.log("Failjax: ", error))
-    console.log("Input text: " + input.nativeEvent.text)
+    axios.get("https://maps.googleapis.com/maps/api/geocode/json?address=" + this.state.locationInput.split(' ').join('') + "&key=" + REACT_APP_GOOGLE_PLACES_API)
+      .then(response => this._updateLocationCoordinates(response))
+      .catch(error => Alert.alert(null, "Invalid location", null))
+    // console.log("Input text: " + input.nativeEvent.text)
   }
 
+  // Get location from Google map platform
   _updateLocationCoordinates(response){
     const coordinate = response.data.results[0].geometry.location 
     this.setState({
       locationCoordinates: {
         latitude: coordinate.lat,
-        longitude: coordinate.lng
+        longitude: coordinate.lng,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421
       }
     })
   }
@@ -78,15 +85,14 @@ export default class GoogleMap extends React.Component {
         <View style={styles.overallViewContainer}>
           <MapView style={styles.container}
             provider={ PROVIDER_GOOGLE }
-            initialRegion={this.state.locationCoordinates}
+            region={this.state.locationCoordinates}
             zoomEnabled={true} 
             scrollEnabled={true} 
           >
             <MapView.Marker 
-              coordinate={{
-                latitude: this.state.locationCoordinates.latitude,
-                longitude: this.state.locationCoordinates.longitude
-              }}
+              coordinate={
+                this.state.locationCoordinates
+              }
             />
           </MapView>
 
