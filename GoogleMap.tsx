@@ -40,7 +40,7 @@ class MapInput extends React.Component {
         returnKeyType={'search'}
         listViewDisplayed='false'
         fetchDetails={true}
-        renderDescription={(row) => row.description || row.vicinity}
+        renderDescription={row => row.description || row.formatted_address || row.name}
         onPress={(data, details = null) => { // 'details' is provided when fetchDetails = true
           console.log(data, details)
           this.props.notifyChange(details.geometry.location)
@@ -72,13 +72,19 @@ class MapInput extends React.Component {
         currentLocation={true}
         currentLocationLabel="Current location"
         predefinedPlaces={[homePlace]}
-        nearbyPlacesAPI='GoogleReverseGeocoding'
+        nearbyPlacesAPI="GooglePlacesSearch"
         GoogleReverseGeocodingQuery={{
           // available options for GoogleReverseGeocoding API : https://developers.google.com/maps/documentation/geocoding/intro
-          key: '',
-          language: 'en',
+          //key: '',
+          //language: 'en',
         }}
+        GooglePlacesSearchQuery={{
+          // available options for GooglePlacesSearch API : https://developers.google.com/places/web-service/search
+          rankby: 'distance'
+        }}
+        filterReverseGeocodingByTypes={['locality', 'administrative_area_level_3']}
         getDefaultValue={() => ''}
+        enablePoweredByContainer={false}
       />
     )
   }
