@@ -24,6 +24,67 @@ import GLOBAL, {askPermission, query, REACT_APP_GOOGLE_MAPS_API, REACT_APP_GOOGL
 // https://medium.com/@princessjanf/react-native-maps-with-direction-from-current-location-ab1a371732c2
 // https://github.com/ginnyfahs/CatCallOutApp
 
+
+class MapInput extends React.Component {
+  render() {
+    // https://medium.com/@mohammad.nicoll/react-native-maps-with-autocomplete-e9c71e493974
+    // https://github.com/FaridSafi/react-native-google-places-autocomplete
+
+    const homePlace = { description: 'Home', geometry: { location: { lat: 48.8152937, lng: 2.4597668 } }};
+
+    return(
+      <GooglePlacesAutocomplete
+        placeholder='Enter Location'
+        minLength={2}
+        autoFocus={true}
+        returnKeyType={'search'}
+        listViewDisplayed='false'
+        fetchDetails={true}
+        renderDescription={(row) => row.description || row.vicinity}
+        onPress={(data, details = null) => { // 'details' is provided when fetchDetails = true
+          console.log(data, details)
+          this.props.notifyChange(details.geometry.location)
+        }}
+        query={{
+          key: REACT_APP_GOOGLE_PLACES_API,
+          language: 'en',
+          types: 'geocode'
+        }}
+        styles={{
+          textInputContainer: {
+            backgroundColor: 'rgba(0,0,0,0)',
+            borderTopWidth: 0,
+            borderBottomWidth:0,
+            width: '100%'
+          },
+          textInput: {
+            height: 38,
+            color: '#5d5d5d',
+            fontSize: 16
+          },
+          description: {
+            fontWeight: 'bold'
+          },
+          predefinedPlacesDescription: {
+            color: '#1faadb'
+          }
+        }}
+        currentLocation={true}
+        currentLocationLabel="Current location"
+        predefinedPlaces={[homePlace]}
+        nearbyPlacesAPI='GoogleReverseGeocoding'
+        GoogleReverseGeocodingQuery={{
+          // available options for GoogleReverseGeocoding API : https://developers.google.com/maps/documentation/geocoding/intro
+          key: '',
+          language: 'en',
+        }}
+        getDefaultValue={() => ''}
+      />
+    )
+  }
+}
+
+
 export default class GoogleMap extends React.Component {
   constructor(props) {
     super(props)
@@ -41,34 +102,37 @@ export default class GoogleMap extends React.Component {
 
   async _getCurrentPosition() {
     if(await askPermission('LOCATION')) {
-      // Get location from handset navigator
-      navigator.geolocation.getCurrentPosition( 
-        position => {
-          this.setState({
-            locationCoordinates: {
-              latitude: position.coords.latitude,
-              longitude: position.coords.longitude,
-              latitudeDelta: 0.0922,
-              longitudeDelta: 0.0421
-            }
-          })
-        },
-        (error) => console.log(error.message),
-        { enableHighAccuracy: false, timeout: 200000, maximumAge: 1000 }
-      )
+      this._getLocation().then(data => {
+        this._updateStateLocation(data.coords)
+      })
     }
   }
 
-  _submit = (input) => {
-    axios.get("https://maps.googleapis.com/maps/api/geocode/json?address=" + this.state.locationInput.split(' ').join('') + "&key=" + REACT_APP_GOOGLE_PLACES_API)
-      .then(response => this._updateLocationCoordinates(response))
-      .catch(error => Alert.alert(null, "Invalid location", null))
-    // console.log("Input text: " + input.nativeEvent.text)
+  _getLocation() {
+    return new Promise(
+      (resolve, handleError) => {
+        navigator.geolocation.getCurrentPosition(
+          position => resolve(position), 
+          error => handleError(error),
+          { enableHighAccuracy: false, timeout: 200000, maximumAge: 1000 }
+        )
+      }
+    )
+  }
+
+  _updateStateLocation(location) {
+    this.setState({
+      locationCoordinates: {
+        latitude: location.latitude,
+        longitude: location.longitude,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421
+      }
+    })
   }
 
   // Get location from Google map platform
-  _updateLocationCoordinates(response){
-    const coordinate = response.data.results[0].geometry.location 
+  _updateLocationCoordinates(coordinate){
     this.setState({
       locationCoordinates: {
         latitude: coordinate.lat,
@@ -86,10 +150,11 @@ export default class GoogleMap extends React.Component {
           <MapView style={styles.container}
             provider={ PROVIDER_GOOGLE }
             region={this.state.locationCoordinates}
+            showsUserLocation={true}
             zoomEnabled={true} 
             scrollEnabled={true} 
           >
-            <MapView.Marker 
+            <MapView.Marker
               coordinate={
                 this.state.locationCoordinates
               }
@@ -97,13 +162,8 @@ export default class GoogleMap extends React.Component {
           </MapView>
 
           <View style={styles.allNonMapThings}>
-            <Item style={styles.inputContainer}>
-              <TextInput style={ styles.input }
-                placeholder="Where to go?"
-                value={this.state.locationInput}
-                onChangeText={text => this.setState({ locationInput: text })}
-                onSubmitEditing={this._submit}
-              />
+            <Item>
+              <MapInput notifyChange={(loc) => this._updateLocationCoordinates(loc)} />
             </Item>
           </View>
         </View>
@@ -119,7 +179,6 @@ export default class GoogleMap extends React.Component {
     )
   }
 }
-
 
 const styles = StyleSheet.create({
     overallViewContainer: {
@@ -137,27 +196,6 @@ const styles = StyleSheet.create({
     },
     allNonMapThings: {
       alignItems: 'center',
-      height: '100%',
       width: '100%'
-    },
-    inputContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: 'white',
-      width: '90%',
-      height: '6%',
-      top: 30,
-      borderRadius: 5,
-      shadowOpacity: 0.75,
-      shadowRadius: 1,
-      shadowColor: 'gray',
-      shadowOffset: { height: 0, width: 0}
-    },
-    input: {
-      width: '88%',
-      marginTop: 'auto',
-      marginBottom: 'auto',
-      marginLeft: 'auto',
-      marginRight: 'auto',
-    },
+    }
   });
