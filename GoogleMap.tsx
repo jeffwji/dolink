@@ -4,7 +4,8 @@ import MapView, {PROVIDER_GOOGLE } from 'react-native-maps'
 import {
   Container,
   Icon,
-  Item
+  Item,
+  Drawer
 } from 'native-base'
 
 import {
@@ -25,12 +26,158 @@ import GLOBAL, {askPermission, query, REACT_APP_GOOGLE_MAPS_API, REACT_APP_GOOGL
 // https://github.com/ginnyfahs/CatCallOutApp
 
 
+export default class GoogleMap extends React.Component {
+  constructor(props) {
+    super(props)
+    
+    this.state = {
+      currentLocationCoordinates: null,
+      locationCoordinates: null,
+      locationInput: '',
+      markers: []
+    }
+  }
+
+  componentDidMount () {
+    if(this.state.currentLocationCoordinates==null ) {
+      this._getCurrentPosition(true)
+    }
+  }
+
+  _getCurrentPosition(updateStateLocation=false) {
+    return askPermission('LOCATION').then(permit => {
+      if(permit) {
+        this._getLocation(
+          data => {
+            this._updateCurrentLocation(data.coords.latitude, data.coords.longitude)
+            if(updateStateLocation)
+              this._updateStateLocation(data.coords.latitude, data.coords.longitude)
+          },
+          error => {
+            console.log(error)
+          }
+        )
+      }
+      else throw 'No permission to obtain location'
+    })
+  }
+
+  _getLocation(resolve, handleError) {
+    navigator.geolocation.getCurrentPosition(
+      position => resolve(position), 
+      error => handleError(error),
+      { enableHighAccuracy: false, timeout: 200000, maximumAge: 1000 }
+    )
+  }
+
+  // Update location by navigation
+  _updateStateLocation(latitude, longitude) {
+    this.setState({
+      locationCoordinates: {
+        latitude: latitude,
+        longitude: longitude,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421
+      }
+    })
+  }
+
+  _updateCurrentLocation(latitude, longitude) {
+    this.setState({
+      currentLocationCoordinates: {
+        latitude: latitude,
+        longitude: longitude,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421
+      }
+    })
+  }
+
+  _showMap() {
+    if(this.state.locationCoordinates!=null) {
+      return(
+        <View style={styles.overallViewContainer}>
+          <MapView style={styles.container}
+            provider={ PROVIDER_GOOGLE }
+            initialRegion={this.state.currentLocationCoordinates}
+            region={this.state.locationCoordinates}
+            showsUserLocation={true}
+            zoomEnabled={true} 
+            scrollEnabled={true} 
+          >
+            <MyMarkers markers={this.state.markers} />
+          </MapView>
+
+          <View style={styles.allNonMapThings}>
+            <Item>
+              <MapInput 
+                notifyChange={(loc) => this._updateInput(loc)}
+                defaultLocations={[
+                  { description: 'Home', geometry: { location: { lat: 48.8152937, lng: 2.4597668 } }}
+                ]}
+              />
+            </Item>
+          </View>
+        </View>
+      )
+    }
+  }
+
+  _showMarkers() {
+    return(
+      this.state.markers.map((marker) => {
+        <MapView.Marker coordinate={
+          this.state.locationCoordinates
+        } />
+      })
+    )
+  }
+
+  _updateInput = (loc) => {
+    this._updateStateLocation(loc.lat, loc.lng)
+    const marker = {latlng: {
+      latitude: loc.lat,
+      longitude: loc.lng
+    } }
+
+    this.setState({markers: [marker]})
+  }
+
+  render() {
+    return (
+      <Container style={styles.container}>
+        {this._showMap()}
+      </Container>
+    )
+  }
+}
+
+
+
+class MyMarkers extends React.Component {
+  render = () => {
+    return (
+        this.props.markers.map((marker, index) => 
+          <MapView.Marker
+            coordinate={marker.latlng}
+            key={index}
+          />
+        )
+    )
+  }
+}
+
+
 class MapInput extends React.Component {
+  constructor(props) {
+    super(props)
+  }
+  
   render() {
     // https://medium.com/@mohammad.nicoll/react-native-maps-with-autocomplete-e9c71e493974
     // https://github.com/FaridSafi/react-native-google-places-autocomplete
 
-    const homePlace = { description: 'Home', geometry: { location: { lat: 48.8152937, lng: 2.4597668 } }};
+    // const homePlace = { description: 'Home', geometry: { location: { lat: 48.8152937, lng: 2.4597668 } }};
 
     return(
       <GooglePlacesAutocomplete
@@ -42,7 +189,6 @@ class MapInput extends React.Component {
         fetchDetails={true}
         renderDescription={row => row.description || row.formatted_address || row.name}
         onPress={(data, details = null) => { // 'details' is provided when fetchDetails = true
-          console.log(data, details)
           this.props.notifyChange(details.geometry.location)
         }}
         query={{
@@ -71,8 +217,8 @@ class MapInput extends React.Component {
         }}
         currentLocation={true}
         currentLocationLabel="Current location"
-        predefinedPlaces={[homePlace]}
-        nearbyPlacesAPI="GooglePlacesSearch"
+        predefinedPlaces={this.props.defaultLocations}
+        nearbyPlacesAPI="GooglePlacesSearch"   // Which API to use: GoogleReverseGeocoding or GooglePlacesSearch
         GoogleReverseGeocodingQuery={{
           // available options for GoogleReverseGeocoding API : https://developers.google.com/maps/documentation/geocoding/intro
           //key: '',
@@ -82,126 +228,38 @@ class MapInput extends React.Component {
           // available options for GooglePlacesSearch API : https://developers.google.com/places/web-service/search
           rankby: 'distance'
         }}
+        GooglePlacesDetailsQuery={{
+          // available options for GooglePlacesDetails API : https://developers.google.com/places/web-service/details
+          // fields: 'formatted_address',
+        }}
         filterReverseGeocodingByTypes={['locality', 'administrative_area_level_3']}
         getDefaultValue={() => ''}
         enablePoweredByContainer={false}
+        debounce={200}
       />
     )
   }
 }
 
 
-export default class GoogleMap extends React.Component {
-  constructor(props) {
-    super(props)
-    
-    this.state = {
-      locationCoordinates: null,
-      locationInput: ''
-    }
-  }
-
-  componentDidMount () {
-    if(this.state.locationCoordinates==null)
-      this._getCurrentPosition()
-  }
-
-  async _getCurrentPosition() {
-    if(await askPermission('LOCATION')) {
-      this._getLocation().then(data => {
-        this._updateStateLocation(data.coords)
-      })
-    }
-  }
-
-  _getLocation() {
-    return new Promise(
-      (resolve, handleError) => {
-        navigator.geolocation.getCurrentPosition(
-          position => resolve(position), 
-          error => handleError(error),
-          { enableHighAccuracy: false, timeout: 200000, maximumAge: 1000 }
-        )
-      }
-    )
-  }
-
-  _updateStateLocation(location) {
-    this.setState({
-      locationCoordinates: {
-        latitude: location.latitude,
-        longitude: location.longitude,
-        latitudeDelta: 0.0922,
-        longitudeDelta: 0.0421
-      }
-    })
-  }
-
-  // Get location from Google map platform
-  _updateLocationCoordinates(coordinate){
-    this.setState({
-      locationCoordinates: {
-        latitude: coordinate.lat,
-        longitude: coordinate.lng,
-        latitudeDelta: 0.0922,
-        longitudeDelta: 0.0421
-      }
-    })
-  }
-
-  _showMap() {
-    if(this.state.locationCoordinates!=null) {
-      return(
-        <View style={styles.overallViewContainer}>
-          <MapView style={styles.container}
-            provider={ PROVIDER_GOOGLE }
-            region={this.state.locationCoordinates}
-            showsUserLocation={true}
-            zoomEnabled={true} 
-            scrollEnabled={true} 
-          >
-            <MapView.Marker
-              coordinate={
-                this.state.locationCoordinates
-              }
-            />
-          </MapView>
-
-          <View style={styles.allNonMapThings}>
-            <Item>
-              <MapInput notifyChange={(loc) => this._updateLocationCoordinates(loc)} />
-            </Item>
-          </View>
-        </View>
-      )
-    }
-  }
-
-  render() {
-    return (
-      <Container style={styles.container}>
-        {this._showMap()}
-      </Container>
-    )
-  }
-}
 
 const styles = StyleSheet.create({
-    overallViewContainer: {
-      position: 'absolute',
-      width: Dimensions.get('window').width,
-      height: Dimensions.get('window').height,
-    },
-    container: {
-      position: 'absolute',
-      width: Dimensions.get('window').width,
-      height: Dimensions.get('window').height,
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'space-between'
-    },
-    allNonMapThings: {
-      alignItems: 'center',
-      width: '100%'
-    }
-  });
+  overallViewContainer: {
+    position: 'absolute',
+    width: Dimensions.get('window').width,
+    height: Dimensions.get('window').height,
+  },
+  container: {
+    position: 'absolute',
+    width: Dimensions.get('window').width,
+    height: Dimensions.get('window').height,
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between'
+  },
+  allNonMapThings: {
+    alignItems: 'center',
+    width: '100%'
+  }
+});
+
