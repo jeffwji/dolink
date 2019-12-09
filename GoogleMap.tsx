@@ -111,7 +111,7 @@ export default class GoogleMap extends React.Component {
           <View style={styles.allNonMapThings}>
             <Item>
               <MapInput 
-                notifyChange={(loc) => this._updateInput(loc)}
+                notifyLocationChange={(loc) => this._updateInputLocation(loc, true)}
                 defaultLocations={[
                   { description: 'Home', geometry: { location: { lat: 48.8152937, lng: 2.4597668 } }}
                 ]}
@@ -133,14 +133,19 @@ export default class GoogleMap extends React.Component {
     )
   }
 
-  _updateInput = (loc) => {
+  _updateInputLocation = (loc, replace) => {
     this._updateStateLocation(loc.lat, loc.lng)
     const marker = {latlng: {
       latitude: loc.lat,
       longitude: loc.lng
     } }
 
-    this.setState({markers: [marker]})
+    if(replace) {
+      this.setState({markers: [marker]})
+    } else if(!this.state.markers.includes(marker)) {
+      const markers = this.state.markers.concat(marker)
+      this.setState({markers: markers})
+    }
   }
 
   render() {
@@ -189,7 +194,7 @@ class MapInput extends React.Component {
         fetchDetails={true}
         renderDescription={row => row.description || row.formatted_address || row.name}
         onPress={(data, details = null) => { // 'details' is provided when fetchDetails = true
-          this.props.notifyChange(details.geometry.location)
+          this.props.notifyLocationChange(details.geometry.location)
         }}
         query={{
           key: REACT_APP_GOOGLE_PLACES_API,
