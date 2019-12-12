@@ -40,10 +40,11 @@ export default class GoogleMap extends React.Component {
       locationCoordinates: null,
       locationInput: '',
       currentMarker: null,
-      stops: [],
+      updateMarker: 0
     }
   }
 
+  stops = []
   stopMarkers = []
 
   componentDidMount () {
@@ -135,10 +136,10 @@ export default class GoogleMap extends React.Component {
   }
 
   _showCurrentMarker() {
-    if(this.state.stop != null)
+    if(this.state.currentMarker != null)
       return(
         <StopMarker
-          stop={this.state.stop}
+          stop={this.state.currentMarker}
           color='#009688'
           addRemoveOpt = {i => this._addInterestedLocation(i)}
         />
@@ -147,46 +148,56 @@ export default class GoogleMap extends React.Component {
 
   _showMarkers() {
     return(
-      this.state.stops.map((stop, index) => {
-        const i = this.stopMarkers.findIndex(marker => {
-          const s = marker.props.stop.latlng
-          return (s.latitude == stop.latlng.latitude) && (s.longitude == stop.latlng.longitude)
-        })
+      this.stopMarkers.map(marker => marker)
+    )
+  }
 
-        if (i < 0){
-          const stopMarker =
+  _updateMarker() {
+    this.stopMarkers = []
+    
+    this.stops.map((stop, index) => {
+      const i = this.stopMarkers.findIndex(marker => {
+        const s = marker.props.stop.latlng
+        return (s.latitude == stop.latlng.latitude) && (s.longitude == stop.latlng.longitude)
+      })
+
+      if (i < 0){
+        const stopMarker =
+          <StopMarker
+            key={index}
+            orders = {[index]}
+            stop={stop}
+            color='#f44336'
+            addRemoveOpt = {i => this._removeInterestedLocation(i)}
+          />
+        this.stopMarkers.push(stopMarker)
+      }
+      else {
+        const marker = this.stopMarkers.splice(i, 1)[0]
+        if(marker.props.orders.findIndex(order => {
+          return order == index
+        }) > -1) {
+          this.stopMarkers.push(marker)
+        }
+        else {
+          const orders = marker.props.orders.concat(index)
+          const stopMarker = 
             <StopMarker
               key={index}
-              orders = {[index]}
+              orders = {orders}
               stop={stop}
               color='#f44336'
               addRemoveOpt = {i => this._removeInterestedLocation(i)}
             />
           this.stopMarkers.push(stopMarker)
-          return stopMarker
         }
-        else {
-          const marker = this.stopMarkers.splice(i, 1)[0]
-          if(marker.props.orders.findIndex(order => {
-            return order == index
-          }) > -1)
-            return marker
-          else {
-            const orders = marker.props.orders.concat(index)
-            const stopMarker = 
-              <StopMarker
-                key={index}
-                orders = {orders}
-                stop={stop}
-                color='#f44336'
-                addRemoveOpt = {i => this._removeInterestedLocation(i)}
-              />
-            this.stopMarkers.push(stopMarker)
-            return stopMarker
-          }
-        }
-      } )
-    )
+      }
+    } )
+
+    this.setState({
+      currentMarker: null,
+      updateMarker: this.state.updateMarker + 1
+    })
   }
 
   _setCurrentMarker = (loc) => {
@@ -198,11 +209,12 @@ export default class GoogleMap extends React.Component {
       },
       interested: false
     }
-    this.setState({stop: stop})
+    this.setState({currentMarker: stop})
   }
 
   _addInterestedLocation = (location) => {
     this._updateStateLocation(location.latitude, location.longitude)
+
     const stop = {
       latlng: {
         latitude: location.latitude,
@@ -211,17 +223,13 @@ export default class GoogleMap extends React.Component {
       interested: true
     }
 
-    const stops = this.state.stops.concat(stop)
-    this.setState({stops: stops})
-    this.setState({stop: null})
+    this.stops.push(stop)
+    this._updateMarker()
   }
 
-  _removeInterestedLocation = (index) => {
-    const stopList = this.state.stops
-    stopList.splice(index, 1)
-    this.setState({
-      stops: stopList
-    })
+  _removeInterestedLocation = (order) => {
+    this.stops.splice(order, 1)
+    this._updateMarker()
   }
 
   render() {
@@ -282,9 +290,9 @@ class StopCallout extends React.Component {
         <Callout
           style={{width:220, height:300}}
           onPress={() => {
-            this.props.orders.map( (order, index) => {
-              this.props.addRemoveOpt(order)
-            })
+            //this.props.orders.map( (order, index) => {
+              this.props.addRemoveOpt(this.props.orders[0])
+            //})
           }}
         >
           {this.props.orders.map( (order, index) => this._renderStops(order) )}
