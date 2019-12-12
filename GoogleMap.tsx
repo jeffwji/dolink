@@ -1,11 +1,13 @@
 import React from 'react'
-import MapView, {PROVIDER_GOOGLE } from 'react-native-maps'
+import MapView, {PROVIDER_GOOGLE, Marker, Callout } from 'react-native-maps'
 
 import {
   Container,
   Icon,
   Item,
-  Drawer
+  Button,
+  Drawer,
+  Label
 } from 'native-base'
 
 import {
@@ -13,7 +15,10 @@ import {
   Dimensions,
   StyleSheet,
   TextInput,
-  Alert
+  Text,
+  Alert,
+  TouchableOpacity,
+  TouchableHighlight
 } from 'react-native'
 
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
@@ -34,9 +39,12 @@ export default class GoogleMap extends React.Component {
       currentLocationCoordinates: null,
       locationCoordinates: null,
       locationInput: '',
-      markers: []
+      currentMarker: null,
+      stops: [],
     }
   }
+
+  stopMarkers = []
 
   componentDidMount () {
     if(this.state.currentLocationCoordinates==null ) {
@@ -97,6 +105,19 @@ export default class GoogleMap extends React.Component {
     if(this.state.locationCoordinates!=null) {
       return(
         <View style={styles.overallViewContainer}>
+          <View style={styles.allNonMapThings}>
+            <Item>
+              <MapInput 
+                notifyLocationChange={(loc) => {
+                  this._setCurrentMarker(loc)
+                }}
+                defaultLocations={[
+                  { description: 'Home', geometry: { location: { lat: 48.8152937, lng: 2.4597668 } }}
+                ]}
+              />
+            </Item>
+          </View>
+
           <MapView style={styles.container}
             provider={ PROVIDER_GOOGLE }
             initialRegion={this.state.currentLocationCoordinates}
@@ -105,47 +126,102 @@ export default class GoogleMap extends React.Component {
             zoomEnabled={true} 
             scrollEnabled={true} 
           >
-            <MyMarkers markers={this.state.markers} />
+            {this._showMarkers()}
+            {this._showCurrentMarker()}
           </MapView>
-
-          <View style={styles.allNonMapThings}>
-            <Item>
-              <MapInput 
-                notifyLocationChange={(loc) => this._updateInputLocation(loc, true)}
-                defaultLocations={[
-                  { description: 'Home', geometry: { location: { lat: 48.8152937, lng: 2.4597668 } }}
-                ]}
-              />
-            </Item>
-          </View>
         </View>
       )
     }
   }
 
+  _showCurrentMarker() {
+    if(this.state.stop != null)
+      return(
+        <StopMarker
+          stop={this.state.stop}
+          color='#009688'
+          addRemoveOpt = {i => this._addInterestedLocation(i)}
+        />
+      )
+  }
+
   _showMarkers() {
     return(
-      this.state.markers.map((marker) => {
-        <MapView.Marker coordinate={
-          this.state.locationCoordinates
-        } />
-      })
+      this.state.stops.map((stop, index) => {
+        const i = this.stopMarkers.findIndex(marker => {
+          const s = marker.props.stop.latlng
+          return (s.latitude == stop.latlng.latitude) && (s.longitude == stop.latlng.longitude)
+        })
+
+        if (i < 0){
+          const stopMarker =
+            <StopMarker
+              key={index}
+              orders = {[index]}
+              stop={stop}
+              color='#f44336'
+              addRemoveOpt = {i => this._removeInterestedLocation(i)}
+            />
+          this.stopMarkers.push(stopMarker)
+          return stopMarker
+        }
+        else {
+          const marker = this.stopMarkers.splice(i, 1)[0]
+          if(marker.props.orders.findIndex(order => {
+            return order == index
+          }) > -1)
+            return marker
+          else {
+            const orders = marker.props.orders.concat(index)
+            const stopMarker = 
+              <StopMarker
+                key={index}
+                orders = {orders}
+                stop={stop}
+                color='#f44336'
+                addRemoveOpt = {i => this._removeInterestedLocation(i)}
+              />
+            this.stopMarkers.push(stopMarker)
+            return stopMarker
+          }
+        }
+      } )
     )
   }
 
-  _updateInputLocation = (loc, replace) => {
+  _setCurrentMarker = (loc) => {
     this._updateStateLocation(loc.lat, loc.lng)
-    const marker = {latlng: {
-      latitude: loc.lat,
-      longitude: loc.lng
-    } }
-
-    if(replace) {
-      this.setState({markers: [marker]})
-    } else if(!this.state.markers.includes(marker)) {
-      const markers = this.state.markers.concat(marker)
-      this.setState({markers: markers})
+    const stop = {
+      latlng: {
+        latitude: loc.lat,
+        longitude: loc.lng
+      },
+      interested: false
     }
+    this.setState({stop: stop})
+  }
+
+  _addInterestedLocation = (location) => {
+    this._updateStateLocation(location.latitude, location.longitude)
+    const stop = {
+      latlng: {
+        latitude: location.latitude,
+        longitude: location.longitude
+      },
+      interested: true
+    }
+
+    const stops = this.state.stops.concat(stop)
+    this.setState({stops: stops})
+    this.setState({stop: null})
+  }
+
+  _removeInterestedLocation = (index) => {
+    const stopList = this.state.stops
+    stopList.splice(index, 1)
+    this.setState({
+      stops: stopList
+    })
   }
 
   render() {
@@ -157,17 +233,74 @@ export default class GoogleMap extends React.Component {
   }
 }
 
+class StopMarker extends React.Component {
+  constructor(props) {
+    super(props)
+  }
+  
+  render() {
+    return(
+      <Marker
+        coordinate={this.props.stop.latlng}
+        pinColor={this.props.color}
+      >
+        <StopCallout
+          orders = {this.props.orders}
+          stop = {this.props.stop}
+          addRemoveOpt={(i) => {
+            this.props.addRemoveOpt(i)
+          }} 
+        />
+      </Marker>
+    )
+  }
+}
 
+class StopCallout extends React.Component {
+  constructor(props) {
+    super(props)
+  }
+  
+  render() {
+    if (!this.props.stop.interested) {
+      return(
+        <Callout
+          style={{width:220, height:100}}
+          onPress={() => {
+            this.props.addRemoveOpt(this.props.stop.latlng)
+          }}
+        >
+            <Text>Add it to route</Text>
+            <Button>
+              <Label>Add</Label>
+            </Button>
+        </Callout>
+      )
+    }
+    else {
+      return(
+        <Callout
+          style={{width:220, height:300}}
+          onPress={() => {
+            this.props.orders.map( (order, index) => {
+              this.props.addRemoveOpt(order)
+            })
+          }}
+        >
+          {this.props.orders.map( (order, index) => this._renderStops(order) )}
+        </Callout>
+      )
+    }
+  }
 
-class MyMarkers extends React.Component {
-  render = () => {
-    return (
-        this.props.markers.map((marker, index) => 
-          <MapView.Marker
-            coordinate={marker.latlng}
-            key={index}
-          />
-        )
+  _renderStops(index) {
+    return(
+        <View key={index}>
+          <Text>Remove #{index} it to route</Text>
+          <Button>
+            <Label>Remove #{index}</Label>
+          </Button>
+        </View>
     )
   }
 }
@@ -187,7 +320,7 @@ class MapInput extends React.Component {
     return(
       <GooglePlacesAutocomplete
         placeholder='Enter Location'
-        minLength={2}
+        // minLength={2}
         autoFocus={true}
         returnKeyType={'search'}
         listViewDisplayed='false'
@@ -247,15 +380,13 @@ class MapInput extends React.Component {
 }
 
 
-
 const styles = StyleSheet.create({
   overallViewContainer: {
-    position: 'absolute',
     width: Dimensions.get('window').width,
     height: Dimensions.get('window').height,
   },
   container: {
-    position: 'absolute',
+    // position: 'absolute',
     width: Dimensions.get('window').width,
     height: Dimensions.get('window').height,
     display: 'flex',
@@ -265,6 +396,9 @@ const styles = StyleSheet.create({
   allNonMapThings: {
     alignItems: 'center',
     width: '100%'
+  },
+  callout: {
+
   }
 });
 
