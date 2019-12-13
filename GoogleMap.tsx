@@ -1,17 +1,19 @@
 import React from 'react'
-import MapView, {PROVIDER_GOOGLE, Marker, Callout } from 'react-native-maps'
+import MapView, {PROVIDER_GOOGLE, Marker, Callout, Polyline } from 'react-native-maps'
 
 import {
   Container,
   Icon,
   Item,
+  ListItem,
   Button,
   Drawer,
-  Label
+  Label,
+  List
 } from 'native-base'
 
 import {
-  View, 
+  View,
   Dimensions,
   StyleSheet,
   TextInput,
@@ -22,14 +24,10 @@ import {
 } from 'react-native'
 
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
+import polyline from '@mapbox/polyline'
 
 import axios from 'axios'
 import GLOBAL, {askPermission, query, REACT_APP_GOOGLE_MAPS_API, REACT_APP_GOOGLE_PLACES_API} from './Global'
-
-// https://github.com/react-native-community/react-native-maps
-// https://medium.com/@princessjanf/react-native-maps-with-direction-from-current-location-ab1a371732c2
-// https://github.com/ginnyfahs/CatCallOutApp
-
 
 export default class GoogleMap extends React.Component {
   constructor(props) {
@@ -40,10 +38,11 @@ export default class GoogleMap extends React.Component {
       locationCoordinates: null,
       locationInput: '',
       currentMarker: null,
-      updateMarker: 0
+      updateMap: 0
     }
   }
 
+  directions = []
   stops = []
   stopMarkers = []
 
@@ -102,54 +101,109 @@ export default class GoogleMap extends React.Component {
     })
   }
 
-  _showMap() {
+  _renderMap() {
     if(this.state.locationCoordinates!=null) {
       return(
         <View style={styles.overallViewContainer}>
           <View style={styles.allNonMapThings}>
             <Item>
               <MapInput 
-                notifyLocationChange={(loc) => {
-                  this._setCurrentMarker(loc)
+                notifyLocationChange={(details) => {
+                  this._setCurrentMarker(details)
                 }}
                 defaultLocations={[
-                  { description: 'Home', geometry: { location: { lat: 48.8152937, lng: 2.4597668 } }}
+                  { description: 'Home', geometry: { location: { lat: 48.8152937, lng: 2.4597668 } }, name: 'Market Saint Maurice'}
                 ]}
               />
             </Item>
           </View>
 
-          <MapView style={styles.container}
+          <MapView style={styles.mapView}
             provider={ PROVIDER_GOOGLE }
             initialRegion={this.state.currentLocationCoordinates}
             region={this.state.locationCoordinates}
             showsUserLocation={true}
             zoomEnabled={true} 
-            scrollEnabled={true} 
+            scrollEnabled={true}
+            followUserLocation={true}
           >
-            {this._showMarkers()}
-            {this._showCurrentMarker()}
+            {this._renderRoute()}
+            {this._renderMarkers()}
+            {this._renderCurrentMarker()}
           </MapView>
         </View>
       )
     }
   }
 
-  _showCurrentMarker() {
+  _renderCurrentMarker() {
     if(this.state.currentMarker != null)
       return(
         <StopMarker
           stop={this.state.currentMarker}
           color='#009688'
-          addRemoveOpt = {i => this._addInterestedLocation(i)}
+          addRemoveOpt = {stop => this._addInterestedLocation(stop)}
         />
       )
   }
 
-  _showMarkers() {
+  _renderMarkers() {
     return(
       this.stopMarkers.map(marker => marker)
     )
+  }
+
+  _getDirections() {
+    this.directions= []
+    if(this.stops.length > 1){
+      const temp_stops = this.stops.map(s => s)
+      let origin = temp_stops.shift()
+      do{
+        const dest = temp_stops.shift()
+        this._getDirection(this._coords2string(origin.latlng), this._coords2string(dest.latlng))   // (origin.name, dest.name)
+        origin = dest
+      }while(temp_stops.length > 0)
+    }
+  }
+
+  _coords2string(coordinate){
+    return coordinate.latitude + "," + coordinate.longitude
+  }
+
+  async _getDirection(origin, destination) {
+    const mode = 'driving'; // 'walking';
+    const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&key=${REACT_APP_GOOGLE_PLACES_API}&mode=${mode}`;
+
+    fetch(url).then(response => 
+          response.json()
+        ).then(responseJson => {
+            if (responseJson.routes.length) {
+              const points = /*this._*/ polyline.decode(responseJson.routes[0].overview_polyline.points)
+              const coords = points.map((point, index) => {
+                return  {
+                    latitude : point[0],
+                    longitude : point[1]
+                }
+              })
+
+              this.directions.push(coords)
+              this.setState({updateMap: this.state.updateMap + 1})
+            }
+        }).catch(e => {
+          console.warn(e)
+        });
+  }
+
+  _renderRoute() {
+    if(this.directions.length) {
+      return this.directions.map((route, index) => 
+        <Polyline
+          key={index}
+          coordinates={route}
+          strokeWidth={4}
+          strokeColor="blue"
+        />)
+    }
   }
 
   _updateMarker() {
@@ -168,7 +222,7 @@ export default class GoogleMap extends React.Component {
             orders = {[index]}
             stop={stop}
             color='#f44336'
-            addRemoveOpt = {i => this._removeInterestedLocation(i)}
+            addRemoveOpt = {order => this._removeInterestedLocation(order)}
           />
         this.stopMarkers.push(stopMarker)
       }
@@ -187,7 +241,7 @@ export default class GoogleMap extends React.Component {
               orders = {orders}
               stop={stop}
               color='#f44336'
-              addRemoveOpt = {i => this._removeInterestedLocation(i)}
+              addRemoveOpt = {order => this._removeInterestedLocation(order)}
             />
           this.stopMarkers.push(stopMarker)
         }
@@ -196,46 +250,51 @@ export default class GoogleMap extends React.Component {
 
     this.setState({
       currentMarker: null,
-      updateMarker: this.state.updateMarker + 1
+      updateMap: this.state.updateMap + 1
     })
   }
 
-  _setCurrentMarker = (loc) => {
+  _setCurrentMarker = (details) => {
+    const loc = details.geometry.location
     this._updateStateLocation(loc.lat, loc.lng)
     const stop = {
       latlng: {
         latitude: loc.lat,
         longitude: loc.lng
       },
+      name: details.name,
       interested: false
     }
     this.setState({currentMarker: stop})
   }
 
-  _addInterestedLocation = (location) => {
+  _addInterestedLocation = (s) => {
+    const location = s.latlng
     this._updateStateLocation(location.latitude, location.longitude)
-
     const stop = {
       latlng: {
         latitude: location.latitude,
         longitude: location.longitude
       },
+      name: s.name,
       interested: true
     }
 
     this.stops.push(stop)
     this._updateMarker()
+    this._getDirections()
   }
 
   _removeInterestedLocation = (order) => {
     this.stops.splice(order, 1)
     this._updateMarker()
+    this._getDirections()
   }
 
   render() {
     return (
       <Container style={styles.container}>
-        {this._showMap()}
+        {this._renderMap()}
       </Container>
     )
   }
@@ -255,8 +314,8 @@ class StopMarker extends React.Component {
         <StopCallout
           orders = {this.props.orders}
           stop = {this.props.stop}
-          addRemoveOpt={(i) => {
-            this.props.addRemoveOpt(i)
+          addRemoveOpt={(stop) => {
+            this.props.addRemoveOpt(stop)
           }} 
         />
       </Marker>
@@ -275,7 +334,7 @@ class StopCallout extends React.Component {
         <Callout
           style={{width:220, height:100}}
           onPress={() => {
-            this.props.addRemoveOpt(this.props.stop.latlng)
+            this.props.addRemoveOpt(this.props.stop) //.latlng)
           }}
         >
             <Text>Add it to route</Text>
@@ -288,25 +347,25 @@ class StopCallout extends React.Component {
     else {
       return(
         <Callout
-          style={{width:220, height:300}}
+          style={{ width:220, height: this.props.orders.length * 100}}
           onPress={() => {
-            //this.props.orders.map( (order, index) => {
-              this.props.addRemoveOpt(this.props.orders[0])
-            //})
+            this.props.addRemoveOpt(this.props.orders[0])
           }}
         >
-          {this.props.orders.map( (order, index) => this._renderStops(order) )}
+          <ListItem style={styles.stopList}>
+            {this.props.orders.map( (order, index) => this._renderStops(order, index) )}
+          </ListItem>
         </Callout>
       )
     }
   }
 
-  _renderStops(index) {
+  _renderStops(order, index) {
     return(
         <View key={index}>
-          <Text>Remove #{index} it to route</Text>
+          <Text>Remove #{order} it to route</Text>
           <Button>
-            <Label>Remove #{index}</Label>
+            <Label>Remove #{order}</Label>
           </Button>
         </View>
     )
@@ -320,9 +379,6 @@ class MapInput extends React.Component {
   }
   
   render() {
-    // https://medium.com/@mohammad.nicoll/react-native-maps-with-autocomplete-e9c71e493974
-    // https://github.com/FaridSafi/react-native-google-places-autocomplete
-
     // const homePlace = { description: 'Home', geometry: { location: { lat: 48.8152937, lng: 2.4597668 } }};
 
     return(
@@ -335,7 +391,7 @@ class MapInput extends React.Component {
         fetchDetails={true}
         renderDescription={row => row.description || row.formatted_address || row.name}
         onPress={(data, details = null) => { // 'details' is provided when fetchDetails = true
-          this.props.notifyLocationChange(details.geometry.location)
+          this.props.notifyLocationChange(details) //details.geometry.location)
         }}
         query={{
           key: REACT_APP_GOOGLE_PLACES_API,
@@ -389,10 +445,6 @@ class MapInput extends React.Component {
 
 
 const styles = StyleSheet.create({
-  overallViewContainer: {
-    width: Dimensions.get('window').width,
-    height: Dimensions.get('window').height,
-  },
   container: {
     // position: 'absolute',
     width: Dimensions.get('window').width,
@@ -401,12 +453,26 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     justifyContent: 'space-between'
   },
+  overallViewContainer: {
+    width: Dimensions.get('window').width,
+    height: Dimensions.get('window').height,
+  },
   allNonMapThings: {
     alignItems: 'center',
     width: '100%'
   },
-  callout: {
-
+  mapView: {
+    flex: 1
+  },
+  stopRow: {
+    height: 80,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white'
+  },
+  stopList: {
+    width: '100%',
+    flexDirection: 'column'
   }
 });
 
