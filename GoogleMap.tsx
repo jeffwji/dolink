@@ -313,7 +313,6 @@ class StopMarker extends React.Component {
   render() {
     this.marker = <Marker
         coordinate={this.props.stop.latlng}
-        // pinColor={this.props.color}
       >
         <InterestedStopMarker orders={this.props.orders} />
 
@@ -331,12 +330,10 @@ class StopMarker extends React.Component {
   }
 }
 
-/*
-const stopMarkerPropTypes = {
-  orders: PropTypes.array.isRequired
+StopMarker.propTypes = {
+  orders: PropTypes.array.isRequired,
+  style: PropTypes.object,
 }
-StopMarker.prototype = stopMarkerPropTypes
-*/
 
 class StopCallout extends React.Component {
   constructor(props) {
@@ -403,12 +400,10 @@ class StopCallout extends React.Component {
   }
 }
 
-/*
-const stopCalloutPropTypes = {
-  orders: PropTypes.array.isRequired
+StopCallout.propTypes = {
+  orders: PropTypes.array.isRequired,
+  style: PropTypes.object,
 }
-StopCallout.prototype = stopCalloutPropTypes
-*/
 
 class MapInput extends React.Component {
   constructor(props) {
