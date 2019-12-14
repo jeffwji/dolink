@@ -1,11 +1,13 @@
 import React from 'react'
-import MapView, {PROVIDER_GOOGLE, Marker, Callout, Polyline } from 'react-native-maps'
+import MapView, {PROVIDER_GOOGLE, Marker, Callout, CalloutSubview, Polyline } from 'react-native-maps'
+import CustomCallout from './CustomCallout'
+import InterestedStopMarker from './InterestedStopMarker'
+import PropTypes from 'prop-types';
 
 import {
   Container,
   Icon,
   Item,
-  ListItem,
   Button,
   Drawer,
   Label,
@@ -14,6 +16,7 @@ import {
 
 import {
   View,
+  ScrollView,
   Dimensions,
   StyleSheet,
   TextInput,
@@ -143,6 +146,7 @@ export default class GoogleMap extends React.Component {
           stop={this.state.currentMarker}
           color='#009688'
           addRemoveOpt = {stop => this._addInterestedLocation(stop)}
+          orders = {[]}
         />
       )
   }
@@ -304,13 +308,15 @@ class StopMarker extends React.Component {
   constructor(props) {
     super(props)
   }
+  marker = null
   
   render() {
-    return(
-      <Marker
+    this.marker = <Marker
         coordinate={this.props.stop.latlng}
-        pinColor={this.props.color}
+        // pinColor={this.props.color}
       >
+        <InterestedStopMarker orders={this.props.orders} />
+
         <StopCallout
           orders = {this.props.orders}
           stop = {this.props.stop}
@@ -319,9 +325,18 @@ class StopMarker extends React.Component {
           }} 
         />
       </Marker>
+    return(
+      this.marker
     )
   }
 }
+
+/*
+const stopMarkerPropTypes = {
+  orders: PropTypes.array.isRequired
+}
+StopMarker.prototype = stopMarkerPropTypes
+*/
 
 class StopCallout extends React.Component {
   constructor(props) {
@@ -331,30 +346,42 @@ class StopCallout extends React.Component {
   render() {
     if (!this.props.stop.interested) {
       return(
-        <Callout
+        <Callout alphaHitTest tooltip
           style={{width:220, height:100}}
-          onPress={() => {
-            this.props.addRemoveOpt(this.props.stop) //.latlng)
+          onPress={e => {
+            if ( e.nativeEvent.action === 'marker-inside-overlay-press' || e.nativeEvent.action === 'callout-inside-press' ) {
+              return;
+            }
           }}
         >
+          <CustomCallout>
             <Text>Add it to route</Text>
-            <Button>
-              <Label>Add</Label>
-            </Button>
+            <CalloutSubview onPress={() => {
+                this.props.addRemoveOpt(this.props.stop)
+              }}>
+              <Button>
+                <Label>Add</Label>
+              </Button>
+            </CalloutSubview>
+          </CustomCallout>
         </Callout>
       )
     }
     else {
       return(
-        <Callout
-          style={{ width:220, height: this.props.orders.length * 100}}
-          onPress={() => {
-            this.props.addRemoveOpt(this.props.orders[0])
+        <Callout alphaHitTest tooltip
+          onPress={e => {
+            if ( e.nativeEvent.action === 'marker-inside-overlay-press' || e.nativeEvent.action === 'callout-inside-press' ) {
+              return;
+            }
           }}
         >
-          <ListItem style={styles.stopList}>
-            {this.props.orders.map( (order, index) => this._renderStops(order, index) )}
-          </ListItem>
+          <CustomCallout
+            style={styles.customCallout}>
+            <ScrollView>
+              {this.props.orders.map( (order, index) => this._renderStops(order, index) )}
+            </ScrollView>
+          </CustomCallout>
         </Callout>
       )
     }
@@ -364,14 +391,24 @@ class StopCallout extends React.Component {
     return(
         <View key={index}>
           <Text>Remove #{order} it to route</Text>
-          <Button>
-            <Label>Remove #{order}</Label>
-          </Button>
+          <CalloutSubview onPress={() => {
+                this.props.addRemoveOpt(order) //.latlng)
+              }}>
+            <Button>
+              <Label>Remove #{order}</Label>
+            </Button>
+          </CalloutSubview>
         </View>
     )
   }
 }
 
+/*
+const stopCalloutPropTypes = {
+  orders: PropTypes.array.isRequired
+}
+StopCallout.prototype = stopCalloutPropTypes
+*/
 
 class MapInput extends React.Component {
   constructor(props) {
@@ -464,15 +501,23 @@ const styles = StyleSheet.create({
   mapView: {
     flex: 1
   },
+  customCallout: {
+    width: 250,
+    paddingHorizontal: 0,
+    paddingVertical: 0,
+    borderRadius: 12,
+    alignItems: 'flex-end',
+    marginHorizontal: 0,
+    marginVertical: 0,
+  },
   stopRow: {
-    height: 80,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'white'
+    width: '100%',
+    flexDirection: 'column',
   },
   stopList: {
     width: '100%',
-    flexDirection: 'column'
+    flexDirection: 'row',
+    backgroundColor: 'white'
   }
 });
 
