@@ -37,32 +37,34 @@ export default class GoogleMap extends React.Component {
     super(props)
     
     this.state = {
-      currentLocationCoordinates: null,
-      locationCoordinates: null,
-      locationInput: '',
-      currentMarker: null,
       updateMap: 0
     }
   }
 
+  currentLocationCoordinates = null
   directions = []
   stops = []
   stopMarkers = []
+  stopCandidate = null
 
   componentDidMount () {
-    if(this.state.currentLocationCoordinates==null ) {
-      this._getCurrentPosition(true)
+    if(this.currentLocationCoordinates==null ) {
+      this._getCurrentPosition()
     }
   }
 
-  _getCurrentPosition(updateStateLocation=false) {
+  _getCurrentPosition() {
     return askPermission('LOCATION').then(permit => {
       if(permit) {
         this._getLocation(
           data => {
-            this._updateCurrentLocation(data.coords.latitude, data.coords.longitude)
-            if(updateStateLocation)
-              this._updateStateLocation(data.coords.latitude, data.coords.longitude)
+            const region = {
+              latitude: data.coords.latitude,
+              longitude: data.coords.longitude,
+              latitudeDelta: 0.0922,
+              longitudeDelta: 0.0421
+            }
+            this._updateCurrentLocation(region, true)
           },
           error => {
             console.log(error)
@@ -81,38 +83,34 @@ export default class GoogleMap extends React.Component {
     )
   }
 
-  // Update location by navigation
-  _updateStateLocation(latitude, longitude) {
-    this.setState({
-      locationCoordinates: {
-        latitude: latitude,
-        longitude: longitude,
-        latitudeDelta: 0.0922,
-        longitudeDelta: 0.0421
-      }
-    })
-  }
-
-  _updateCurrentLocation(latitude, longitude) {
-    this.setState({
-      currentLocationCoordinates: {
-        latitude: latitude,
-        longitude: longitude,
-        latitudeDelta: 0.0922,
-        longitudeDelta: 0.0421
-      }
-    })
-  }
+  _updateCurrentLocation(region, updateMap) {
+    this.currentLocationCoordinates = region
+    if(updateMap)
+      this.update()
+    }
 
   _renderMap() {
-    if(this.state.locationCoordinates!=null) {
+    if(this.currentLocationCoordinates!=null) {
       return(
         <View style={styles.overallViewContainer}>
           <View style={styles.allNonMapThings}>
             <Item>
               <MapInput 
                 notifyLocationChange={(details) => {
-                  this._setCurrentMarker(details)
+                  const stop = {
+                    latlng: {
+                      latitude: details.geometry.location.lat,
+                      longitude: details.geometry.location.lng
+                    },
+                    interested: false
+                  }
+                  this._setStopCandidate(stop)
+                  this._updateCurrentLocation({
+                    latitude: stop.latlng.latitude, 
+                    longitude: stop.latlng.longitude,
+                    latitudeDelta: this.currentLocationCoordinates.latitudeDelta,
+                    longitudeDelta: this.currentLocationCoordinates.longitudeDelta
+                  }, true)
                 }}
                 defaultLocations={[
                   { description: 'Home', geometry: { location: { lat: 48.8152937, lng: 2.4597668 } }, name: 'Market Saint Maurice'}
@@ -123,12 +121,13 @@ export default class GoogleMap extends React.Component {
 
           <MapView style={styles.mapView}
             provider={ PROVIDER_GOOGLE }
-            initialRegion={this.state.currentLocationCoordinates}
-            region={this.state.locationCoordinates}
+            region={this.currentLocationCoordinates}
+            onRegionChange={region => this._updateCurrentLocation(region, false)}
             showsUserLocation={true}
             zoomEnabled={true} 
             scrollEnabled={true}
             followUserLocation={true}
+            // onPress={e => this._updateCurrentLocation(e.nativeEvent.coordinate)}
           >
             {this._renderRoute()}
             {this._renderMarkers()}
@@ -140,15 +139,16 @@ export default class GoogleMap extends React.Component {
   }
 
   _renderCurrentMarker() {
-    if(this.state.currentMarker != null)
-      return(
-        <StopMarker
-          stop={this.state.currentMarker}
-          color='#009688'
-          addRemoveOpt = {stop => this._addInterestedLocation(stop)}
-          orders = {[]}
-        />
-      )
+    if(this.stopCandidate != null)
+        return(
+          <StopMarker
+            stop={this.stopCandidate}
+            color='#009688'
+            addRemoveOpt = {stop => this._addInterestedLocation(stop)}
+            orders = {[]}
+            onStopLocationChange = {(stop, orders) => this._onStopChange(stop, orders)}
+          />
+        )
   }
 
   _renderMarkers() {
@@ -182,7 +182,7 @@ export default class GoogleMap extends React.Component {
           response.json()
         ).then(responseJson => {
             if (responseJson.routes.length) {
-              const points = /*this._*/ polyline.decode(responseJson.routes[0].overview_polyline.points)
+              const points = polyline.decode(responseJson.routes[0].overview_polyline.points)
               const coords = points.map((point, index) => {
                 return  {
                     latitude : point[0],
@@ -191,7 +191,7 @@ export default class GoogleMap extends React.Component {
               })
 
               this.directions.push(coords)
-              this.setState({updateMap: this.state.updateMap + 1})
+              this.update()
             }
         }).catch(e => {
           console.warn(e)
@@ -205,7 +205,7 @@ export default class GoogleMap extends React.Component {
           key={index}
           coordinates={route}
           strokeWidth={4}
-          strokeColor="blue"
+          strokeColor="hotpink"
         />)
     }
   }
@@ -227,6 +227,7 @@ export default class GoogleMap extends React.Component {
             stop={stop}
             color='#f44336'
             addRemoveOpt = {order => this._removeInterestedLocation(order)}
+            onStopLocationChange = {(stop, orders) => this._onStopChange(stop, orders)}
           />
         this.stopMarkers.push(stopMarker)
       }
@@ -246,41 +247,49 @@ export default class GoogleMap extends React.Component {
               stop={stop}
               color='#f44336'
               addRemoveOpt = {order => this._removeInterestedLocation(order)}
+              onStopLocationChange = {(stop, orders) => this._onStopChange(stop, orders)}
             />
           this.stopMarkers.push(stopMarker)
         }
       }
     } )
 
+    this.stopCandidate=null
+
+    this.update()
+  }
+
+  update() {
     this.setState({
-      currentMarker: null,
       updateMap: this.state.updateMap + 1
     })
   }
 
-  _setCurrentMarker = (details) => {
-    const loc = details.geometry.location
-    this._updateStateLocation(loc.lat, loc.lng)
-    const stop = {
-      latlng: {
-        latitude: loc.lat,
-        longitude: loc.lng
-      },
-      name: details.name,
-      interested: false
+  _onStopChange(stop, orders) {
+    if(stop.interested) {
+      orders.map(order => {
+        this.stops[order] = stop
+      })
+      this._updateMarker()
+      this._getDirections()
     }
-    this.setState({currentMarker: stop})
+    else{
+      this._setStopCandidate(stop)
+    }
+    this.update()
+  }
+
+  _setStopCandidate = (stop) => {
+    this.stopCandidate = stop
   }
 
   _addInterestedLocation = (s) => {
     const location = s.latlng
-    this._updateStateLocation(location.latitude, location.longitude)
     const stop = {
       latlng: {
         latitude: location.latitude,
         longitude: location.longitude
       },
-      name: s.name,
       interested: true
     }
 
@@ -311,21 +320,27 @@ class StopMarker extends React.Component {
   marker = null
   
   render() {
-    this.marker = <Marker
-        coordinate={this.props.stop.latlng}
+    const stop = this.props.stop
+    return(
+      <Marker
+        coordinate={stop.latlng}
+        ref = {marker => this.marker = marker}
+        title = {stop.name}
+        onDrag={e => stop.latlng = e.nativeEvent.coordinate}
+        onDragEnd={e => this.props.onStopLocationChange(stop, this.props.orders)}
+        draggable
       >
-        <InterestedStopMarker orders={this.props.orders} />
+        <InterestedStopMarker orders={this.props.orders} stop={stop}/>
 
         <StopCallout
           orders = {this.props.orders}
-          stop = {this.props.stop}
+          stop = {stop}
           addRemoveOpt={(stop) => {
             this.props.addRemoveOpt(stop)
           }} 
         />
       </Marker>
-    return(
-      this.marker
+    
     )
   }
 }
@@ -339,11 +354,13 @@ class StopCallout extends React.Component {
   constructor(props) {
     super(props)
   }
+  callout = null
   
   render() {
     if (!this.props.stop.interested) {
       return(
         <Callout alphaHitTest tooltip
+          ref = {callout => this.callout = callout}
           style={{width:220, height:100}}
           onPress={e => {
             if ( e.nativeEvent.action === 'marker-inside-overlay-press' || e.nativeEvent.action === 'callout-inside-press' ) {
@@ -353,7 +370,8 @@ class StopCallout extends React.Component {
         >
           <CustomCallout>
             <Text>Add it to route</Text>
-            <CalloutSubview onPress={() => {
+            <CalloutSubview
+              onPress={() => {
                 this.props.addRemoveOpt(this.props.stop)
               }}>
               <Button>
@@ -367,6 +385,7 @@ class StopCallout extends React.Component {
     else {
       return(
         <Callout alphaHitTest tooltip
+          ref = {callout => this.callout = callout}
           onPress={e => {
             if ( e.nativeEvent.action === 'marker-inside-overlay-press' || e.nativeEvent.action === 'callout-inside-press' ) {
               return;

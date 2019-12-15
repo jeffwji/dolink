@@ -24,7 +24,7 @@ class InterestedStopMarker extends React.Component {
         }
         {(orders.length==0) && 
             <View style={styles.candidateBubble}>
-                <Text style={[styles.orders, { fontSize }]}>{orders}</Text> 
+              <Text style={[styles.orders, { fontSize }]}>?</Text> 
             </View>
         }
         <View style={styles.arrowBorder} />
