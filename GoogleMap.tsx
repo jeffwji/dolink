@@ -94,8 +94,7 @@ export default class GoogleMap extends React.Component {
       latlng: {
         latitude: stopDetail.geometry.location.lat,
         longitude: stopDetail.geometry.location.lng
-      },
-      interested: false
+      }
     }
 
     this._setStopCandidate(stop)
@@ -139,8 +138,7 @@ export default class GoogleMap extends React.Component {
                   latlng: {
                     latitude: e.nativeEvent.coordinate.latitude,
                     longitude: e.nativeEvent.coordinate.longitude
-                  },
-                  interested: false
+                  }
                 })
                 this.update()
               }
@@ -283,7 +281,7 @@ export default class GoogleMap extends React.Component {
   }
 
   _onStopChange(stop, orders) {
-    if(stop.interested) {
+    if(orders.length > 0) {
       orders.map(order => {
         this.stops[order] = stop
       })
@@ -306,8 +304,7 @@ export default class GoogleMap extends React.Component {
       latlng: {
         latitude: location.latitude,
         longitude: location.longitude
-      },
-      interested: true
+      }
     }
 
     this.stops.push(stop)
@@ -377,7 +374,7 @@ class StopCallout extends React.Component {
   callout = null
   
   render() {
-    if (!this.props.stop.interested) {
+    if (this.props.orders.length === 0) {
       return(
         <Callout alphaHitTest tooltip
           ref = {callout => this.callout = callout}
