@@ -22,6 +22,7 @@ module.exports = {
   currentLoginUser: '',
   token: 'eyJhbGciOiJIUzI1NiJ9.eyIkaW50X3Blcm1zIjpbXSwic3ViIjoib3JnLnBhYzRqLmNvcmUucHJvZmlsZS5Db21tb25Qcm9maWxlI251bGwiLCIkaW50X3JvbGVzIjpbIlJPTEVfQ1VTVE9NRVIiXSwiVXNlckluZm8iOiJ7XCJpZFwiOlwiMDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAxXCIsXCJjcmVkZW50aWFsSWRcIjpcIjAwMDAwMDAwLTAwMDAtMDAwMC0wMDAwLTAwMDAwMDAwMDAwMVwiLFwidXNlcm5hbWVcIjpcImpvaG5AZXhhbXBsZS5jb21cIixcImZpcnN0TmFtZVwiOlwiSm9oblwiLFwibGFzdE5hbWVcIjpudWxsLFwicmVnaXN0ZXJEYXRlXCI6XCIyMDE5LTExLTIxVDE2OjM5OjA2LjUzMVwiLFwiYWN0aXZlXCI6dHJ1ZX0iLCJpYXQiOjE1NzQzODM5MzEsInVzZXJuYW1lIjoiam9obkBleGFtcGxlLmNvbSJ9.ZhYYIMkZM-DQDh_WNYtQSddyHKW4w6lUbO1Y_3TvVAU',
   //token: '',
+
   REACT_APP_GOOGLE_MAPS_API: '',
   REACT_APP_GOOGLE_PLACES_API: 'AIzaSyBvVhXwTmCkzwKOxx_sjAi5qroJf_ZE7sc',
 
@@ -37,6 +38,14 @@ module.exports = {
         Authorization: (t!=='')?((re.test(t)?'Bearer ':'Basic ') + t):t
       }
     })
+  },
+
+  googleMapService(serviceName, parameters) {
+    const url = `https://maps.googleapis.com/maps/api/${serviceName}/json?${parameters}&key=AIzaSyBvVhXwTmCkzwKOxx_sjAi5qroJf_ZE7sc`
+
+    return fetch(url).then(response => 
+          response.json()
+        )
   },
 
   uploadImage(path) {

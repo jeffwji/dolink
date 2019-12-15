@@ -30,7 +30,7 @@ import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplet
 import polyline from '@mapbox/polyline'
 
 import axios from 'axios'
-import GLOBAL, {askPermission, query, REACT_APP_GOOGLE_MAPS_API, REACT_APP_GOOGLE_PLACES_API} from './Global'
+import GLOBAL, {askPermission, query, googleMapService, REACT_APP_GOOGLE_MAPS_API, REACT_APP_GOOGLE_PLACES_API} from './Global'
 
 export default class GoogleMap extends React.Component {
   constructor(props) {
@@ -90,18 +90,11 @@ export default class GoogleMap extends React.Component {
   }
 
   _resetStopCandidate(stopDetail) {
-    const stop = {
-      latlng: {
-        latitude: stopDetail.geometry.location.lat,
-        longitude: stopDetail.geometry.location.lng
-      }
-    }
-
-    this._setStopCandidate(stop)
+    this._setStopCandidate(stopDetail)
 
     this._updateCurrentLocation({
-      latitude: stop.latlng.latitude, 
-      longitude: stop.latlng.longitude,
+      latitude: stopDetail.geometry.location.lat,
+      longitude: stopDetail.geometry.location.lng,
       latitudeDelta: this.currentLocationCoordinates.latitudeDelta,
       longitudeDelta: this.currentLocationCoordinates.longitudeDelta
     }, true)
@@ -134,13 +127,19 @@ export default class GoogleMap extends React.Component {
             followUserLocation={true}
             onPress={e => {
               if(!e.nativeEvent.action || e.nativeEvent.action === 'press') {
-                this._setStopCandidate({
-                  latlng: {
-                    latitude: e.nativeEvent.coordinate.latitude,
-                    longitude: e.nativeEvent.coordinate.longitude
-                  }
-                })
-                this.update()
+                googleMapService("geocode", `latlng=${this._coords2string(e.nativeEvent.coordinate)}`)
+                  .then(detail => {
+                    let result = detail.results.find(result => result.types.find(type => type === 'point_of_interest'))
+                    result = result?result:detail.results.find(result => result.types.find(type => type === 'route'))
+                    return result?result:detail.results[0]
+                  })
+                  .then(stopDetail => {
+                    this._setStopCandidate(stopDetail)
+                    this.update()
+                  })
+                  .catch(e => {
+                    console.warn(e)
+                  });
               }
             }}
           >
@@ -157,11 +156,11 @@ export default class GoogleMap extends React.Component {
     if(this.stopCandidate != null)
         return(
           <StopMarker
-            stop={this.stopCandidate}
+            stopDetail={this.stopCandidate}
             color='#009688'
-            addRemoveOpt = {stop => this._addInterestedLocation(stop)}
+            addRemoveOpt = {stopDetail => this._addInterestedLocation(stopDetail)}
             orders = {[]}
-            onStopLocationChange = {(stop, orders) => this._onStopChange(stop, orders)}
+            onStopLocationChange = {(stopDetail, orders) => this._onStopChange(stopDetail, orders)}
           />
         )
   }
@@ -179,7 +178,10 @@ export default class GoogleMap extends React.Component {
       let origin = temp_stops.shift()
       do{
         const dest = temp_stops.shift()
-        this._getDirection(this._coords2string(origin.latlng), this._coords2string(dest.latlng))   // (origin.name, dest.name)
+        this._getDirection(
+          `${origin.geometry.location.lat},${origin.geometry.location.lng}`,
+          `${dest.geometry.location.lat},${dest.geometry.location.lng}`
+        )
         origin = dest
       }while(temp_stops.length > 0)
     }
@@ -191,26 +193,24 @@ export default class GoogleMap extends React.Component {
 
   async _getDirection(origin, destination) {
     const mode = 'driving'; // 'walking';
-    const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&key=${REACT_APP_GOOGLE_PLACES_API}&mode=${mode}`;
-
-    fetch(url).then(response => 
-          response.json()
-        ).then(responseJson => {
-            if (responseJson.routes.length) {
-              const points = polyline.decode(responseJson.routes[0].overview_polyline.points)
-              const coords = points.map((point, index) => {
-                return  {
-                    latitude : point[0],
-                    longitude : point[1]
-                }
-              })
-
-              this.directions.push(coords)
-              this.update()
+    googleMapService("directions", `origin=${origin}&destination=${destination}&mode=${mode}`)
+      .then(resp => {
+        if (resp.routes.length) {
+          const points = polyline.decode(resp.routes[0].overview_polyline.points)
+          const coords = points.map((point, index) => {
+            return  {
+                latitude : point[0],
+                longitude : point[1]
             }
-        }).catch(e => {
-          console.warn(e)
-        });
+          })
+
+          this.directions.push(coords)
+          this.update()
+        }
+      })
+      .catch(e => {
+        console.warn(e)
+      })
   }
 
   _renderRoute() {
@@ -228,10 +228,10 @@ export default class GoogleMap extends React.Component {
   _updateMarker() {
     this.stopMarkers = []
     
-    this.stops.map((stop, index) => {
+    this.stops.map((stopDetail, index) => {
       const i = this.stopMarkers.findIndex(marker => {
-        const s = marker.props.stop.latlng
-        return (s.latitude == stop.latlng.latitude) && (s.longitude == stop.latlng.longitude)
+        const s = marker.props.stopDetail.geometry.location
+        return (s.lat == stopDetail.geometry.location.lat) && (s.lng == stopDetail.geometry.location.lng)
       })
 
       if (i < 0){
@@ -239,10 +239,10 @@ export default class GoogleMap extends React.Component {
           <StopMarker
             key={index}
             orders = {[index]}
-            stop={stop}
+            stopDetail={stopDetail}
             color='#f44336'
             addRemoveOpt = {order => this._removeInterestedLocation(order)}
-            onStopLocationChange = {(stop, orders) => this._onStopChange(stop, orders)}
+            onStopLocationChange = {(stopDetail, orders) => this._onStopChange(stopDetail, orders)}
           />
         this.stopMarkers.push(stopMarker)
       }
@@ -257,12 +257,12 @@ export default class GoogleMap extends React.Component {
           const orders = marker.props.orders.concat(index)
           const stopMarker = 
             <StopMarker
-              key={index}
+              key= {marker.props.key} //{index}
               orders = {orders}
-              stop={stop}
+              stopDetail={stopDetail}
               color='#f44336'
               addRemoveOpt = {order => this._removeInterestedLocation(order)}
-              onStopLocationChange = {(stop, orders) => this._onStopChange(stop, orders)}
+              onStopLocationChange = {(stopDetail, orders) => this._onStopChange(stopDetail, orders)}
             />
           this.stopMarkers.push(stopMarker)
         }
@@ -280,34 +280,26 @@ export default class GoogleMap extends React.Component {
     })
   }
 
-  _onStopChange(stop, orders) {
+  _onStopChange(stopDetail, orders) {
     if(orders.length > 0) {
       orders.map(order => {
-        this.stops[order] = stop
+        this.stops[order] = stopDetail
       })
       this._updateMarker()
       this._getDirections()
     }
     else{
-      this._setStopCandidate(stop)
+      this._setStopCandidate(stopDetail)
     }
     this.update()
   }
 
-  _setStopCandidate = (stop) => {
-    this.stopCandidate = stop
+  _setStopCandidate = (stopDetail) => {
+    this.stopCandidate = stopDetail
   }
 
-  _addInterestedLocation = (s) => {
-    const location = s.latlng
-    const stop = {
-      latlng: {
-        latitude: location.latitude,
-        longitude: location.longitude
-      }
-    }
-
-    this.stops.push(stop)
+  _addInterestedLocation = (stopDetail) => {
+    this.stops.push(stopDetail)
     this._updateMarker()
     this._getDirections()
   }
@@ -332,26 +324,37 @@ class StopMarker extends React.Component {
     super(props)
   }
   marker = null
-  
+
   render() {
-    const stop = this.props.stop
+    const stop = this.props.stopDetail
+    const coord = {latitude: stop.geometry.location.lat, longitude: stop.geometry.location.lng }
     return(
       <Marker
-        coordinate={stop.latlng}
+        coordinate={coord}
         ref = {marker => this.marker = marker}
-        title = {stop.name}
-        //onDrag={e => stop.latlng = e.nativeEvent.coordinate}
+        title = {stop.description || stop.formatted_address || stop.name}
         onDragEnd={e => {
-          stop.latlng = e.nativeEvent.coordinate
-          this.props.onStopLocationChange(stop, this.props.orders)
+          const param = e.nativeEvent.coordinate.latitude + "," + e.nativeEvent.coordinate.longitude
+          googleMapService("geocode", `latlng=${param}`)
+            .then(detail => {
+              let result = detail.results.find(result => result.types.find(type => type === 'point_of_interest'))
+              result = result?result:detail.results.find(result => result.types.find(type => type === 'route'))
+              return result?result:detail.results[0]
+            })
+            .then( newStopDetail => {
+              this.props.onStopLocationChange(newStopDetail, this.props.orders)
+            })
+            .catch(e => {
+              console.warn(e)
+            });
         }}
         draggable
       >
-        <InterestedStopMarker orders={this.props.orders} stop={stop}/>
+        <InterestedStopMarker orders={this.props.orders} stopDetail={stop} />
 
         <StopCallout
           orders = {this.props.orders}
-          stop = {stop}
+          stopDetail = {stop}
           addRemoveOpt={(stop) => {
             this.props.addRemoveOpt(stop)
           }} 
@@ -389,7 +392,7 @@ class StopCallout extends React.Component {
             <Text>Add it to route</Text>
             <CalloutSubview
               onPress={() => {
-                this.props.addRemoveOpt(this.props.stop)
+                this.props.addRemoveOpt(this.props.stopDetail)
               }}>
               <Button>
                 <Label>Add</Label>
@@ -425,7 +428,7 @@ class StopCallout extends React.Component {
         <View key={index}>
           <Text>Remove #{order} it to route</Text>
           <CalloutSubview onPress={() => {
-                this.props.addRemoveOpt(order) //.latlng)
+                this.props.addRemoveOpt(order)
               }}>
             <Button>
               <Label>Remove #{order}</Label>
