@@ -89,8 +89,17 @@ export default class GoogleMap extends React.Component {
       this.update()
   }
 
-  _resetStopCandidate(stop) {
+  _resetStopCandidate(stopDetail) {
+    const stop = {
+      latlng: {
+        latitude: stopDetail.geometry.location.lat,
+        longitude: stopDetail.geometry.location.lng
+      },
+      interested: false
+    }
+
     this._setStopCandidate(stop)
+
     this._updateCurrentLocation({
       latitude: stop.latlng.latitude, 
       longitude: stop.latlng.longitude,
@@ -107,14 +116,7 @@ export default class GoogleMap extends React.Component {
             <Item>
               <MapInput 
                 notifyLocationChange={(details) => {
-                  const stop = {
-                    latlng: {
-                      latitude: details.geometry.location.lat,
-                      longitude: details.geometry.location.lng
-                    },
-                    interested: false
-                  }
-                  this._resetStopCandidate(stop)
+                  this._resetStopCandidate(details)
                 }}
                 defaultLocations={[
                   { description: 'Home', geometry: { location: { lat: 48.8152937, lng: 2.4597668 } }, name: 'Market Saint Maurice'}
@@ -132,7 +134,7 @@ export default class GoogleMap extends React.Component {
             scrollEnabled={true}
             followUserLocation={true}
             onPress={e => {
-              if(!e.nativeEvent.action) {
+              if(!e.nativeEvent.action || e.nativeEvent.action === 'press') {
                 this._setStopCandidate({
                   latlng: {
                     latitude: e.nativeEvent.coordinate.latitude,
@@ -143,7 +145,6 @@ export default class GoogleMap extends React.Component {
                 this.update()
               }
             }}
-            //onPress={e => this._updateCurrentLocation(e.nativeEvent.coordinate, true)}
           >
             {this._renderRoute()}
             {this._renderMarkers()}
@@ -342,8 +343,11 @@ class StopMarker extends React.Component {
         coordinate={stop.latlng}
         ref = {marker => this.marker = marker}
         title = {stop.name}
-        onDrag={e => stop.latlng = e.nativeEvent.coordinate}
-        onDragEnd={e => this.props.onStopLocationChange(stop, this.props.orders)}
+        //onDrag={e => stop.latlng = e.nativeEvent.coordinate}
+        onDragEnd={e => {
+          stop.latlng = e.nativeEvent.coordinate
+          this.props.onStopLocationChange(stop, this.props.orders)
+        }}
         draggable
       >
         <InterestedStopMarker orders={this.props.orders} stop={stop}/>
@@ -446,8 +450,6 @@ class MapInput extends React.Component {
   }
   
   render() {
-    // const homePlace = { description: 'Home', geometry: { location: { lat: 48.8152937, lng: 2.4597668 } }};
-
     return(
       <GooglePlacesAutocomplete
         placeholder='Enter Location'
@@ -485,7 +487,7 @@ class MapInput extends React.Component {
           }
         }}
         currentLocation={true}
-        currentLocationLabel="Current location"
+        currentLocationLabel="Surround"
         predefinedPlaces={this.props.defaultLocations}
         nearbyPlacesAPI="GooglePlacesSearch"   // Which API to use: GoogleReverseGeocoding or GooglePlacesSearch
         GoogleReverseGeocodingQuery={{
