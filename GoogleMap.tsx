@@ -87,7 +87,17 @@ export default class GoogleMap extends React.Component {
     this.currentLocationCoordinates = region
     if(updateMap)
       this.update()
-    }
+  }
+
+  _resetStopCandidate(stop) {
+    this._setStopCandidate(stop)
+    this._updateCurrentLocation({
+      latitude: stop.latlng.latitude, 
+      longitude: stop.latlng.longitude,
+      latitudeDelta: this.currentLocationCoordinates.latitudeDelta,
+      longitudeDelta: this.currentLocationCoordinates.longitudeDelta
+    }, true)
+  }
 
   _renderMap() {
     if(this.currentLocationCoordinates!=null) {
@@ -104,13 +114,7 @@ export default class GoogleMap extends React.Component {
                     },
                     interested: false
                   }
-                  this._setStopCandidate(stop)
-                  this._updateCurrentLocation({
-                    latitude: stop.latlng.latitude, 
-                    longitude: stop.latlng.longitude,
-                    latitudeDelta: this.currentLocationCoordinates.latitudeDelta,
-                    longitudeDelta: this.currentLocationCoordinates.longitudeDelta
-                  }, true)
+                  this._resetStopCandidate(stop)
                 }}
                 defaultLocations={[
                   { description: 'Home', geometry: { location: { lat: 48.8152937, lng: 2.4597668 } }, name: 'Market Saint Maurice'}
@@ -127,7 +131,19 @@ export default class GoogleMap extends React.Component {
             zoomEnabled={true} 
             scrollEnabled={true}
             followUserLocation={true}
-            // onPress={e => this._updateCurrentLocation(e.nativeEvent.coordinate)}
+            onPress={e => {
+              if(!e.nativeEvent.action) {
+                this._setStopCandidate({
+                  latlng: {
+                    latitude: e.nativeEvent.coordinate.latitude,
+                    longitude: e.nativeEvent.coordinate.longitude
+                  },
+                  interested: false
+                })
+                this.update()
+              }
+            }}
+            //onPress={e => this._updateCurrentLocation(e.nativeEvent.coordinate, true)}
           >
             {this._renderRoute()}
             {this._renderMarkers()}
