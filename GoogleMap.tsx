@@ -1,35 +1,21 @@
 import React from 'react'
 import MapView, {PROVIDER_GOOGLE, Marker, Callout, CalloutSubview, Polyline } from 'react-native-maps'
-import CustomCallout from './CustomCallout'
-import InterestedStopMarker from './InterestedStopMarker'
-import PropTypes from 'prop-types';
+import StopMarker from './StopMarker'
 
 import {
   Container,
-  Icon,
-  Item,
-  Button,
-  Drawer,
-  Label,
-  List
+  Item
 } from 'native-base'
 
 import {
   View,
-  ScrollView,
   Dimensions,
-  StyleSheet,
-  TextInput,
-  Text,
-  Alert,
-  TouchableOpacity,
-  TouchableHighlight
+  StyleSheet
 } from 'react-native'
 
-import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
+import MapSearchInput from './MapSearchInput';
 import polyline from '@mapbox/polyline'
 
-import axios from 'axios'
 import GLOBAL, {askPermission, query, googleMapService, REACT_APP_GOOGLE_MAPS_API, REACT_APP_GOOGLE_PLACES_API} from './Global'
 
 export default class GoogleMap extends React.Component {
@@ -106,7 +92,7 @@ export default class GoogleMap extends React.Component {
         <View style={styles.overallViewContainer}>
           <View style={styles.allNonMapThings}>
             <Item>
-              <MapInput 
+              <MapSearchInput 
                 notifyLocationChange={(details) => {
                   this._resetStopCandidate(details)
                 }}
@@ -125,7 +111,7 @@ export default class GoogleMap extends React.Component {
             zoomEnabled={true} 
             scrollEnabled={true}
             followUserLocation={true}
-            onPress={e => {
+            onLongPress={e => {
               if(!e.nativeEvent.action || e.nativeEvent.action === 'press') {
                 googleMapService("geocode", `latlng=${this._coords2string(e.nativeEvent.coordinate)}`)
                   .then(detail => {
@@ -257,7 +243,7 @@ export default class GoogleMap extends React.Component {
           const orders = marker.props.orders.concat(index)
           const stopMarker = 
             <StopMarker
-              key= {marker.props.key} //{index}
+              key= {marker.key}  // {index}
               orders = {orders}
               stopDetail={stopDetail}
               color='#f44336'
@@ -319,199 +305,6 @@ export default class GoogleMap extends React.Component {
   }
 }
 
-class StopMarker extends React.Component {
-  constructor(props) {
-    super(props)
-  }
-  marker = null
-
-  render() {
-    const stop = this.props.stopDetail
-    const coord = {latitude: stop.geometry.location.lat, longitude: stop.geometry.location.lng }
-    return(
-      <Marker
-        coordinate={coord}
-        ref = {marker => this.marker = marker}
-        title = {stop.description || stop.formatted_address || stop.name}
-        onDragEnd={e => {
-          const param = e.nativeEvent.coordinate.latitude + "," + e.nativeEvent.coordinate.longitude
-          googleMapService("geocode", `latlng=${param}`)
-            .then(detail => {
-              let result = detail.results.find(result => result.types.find(type => type === 'point_of_interest'))
-              result = result?result:detail.results.find(result => result.types.find(type => type === 'route'))
-              return result?result:detail.results[0]
-            })
-            .then( newStopDetail => {
-              this.props.onStopLocationChange(newStopDetail, this.props.orders)
-            })
-            .catch(e => {
-              console.warn(e)
-            });
-        }}
-        draggable
-      >
-        <InterestedStopMarker orders={this.props.orders} stopDetail={stop} />
-
-        <StopCallout
-          orders = {this.props.orders}
-          stopDetail = {stop}
-          addRemoveOpt={(stop) => {
-            this.props.addRemoveOpt(stop)
-          }} 
-        />
-      </Marker>
-    
-    )
-  }
-}
-
-StopMarker.propTypes = {
-  orders: PropTypes.array.isRequired,
-  style: PropTypes.object,
-}
-
-class StopCallout extends React.Component {
-  constructor(props) {
-    super(props)
-  }
-  callout = null
-  
-  render() {
-    if (this.props.orders.length === 0) {
-      return(
-        <Callout alphaHitTest tooltip
-          ref = {callout => this.callout = callout}
-          style={{width:220, height:100}}
-          onPress={e => {
-            if ( e.nativeEvent.action === 'marker-inside-overlay-press' || e.nativeEvent.action === 'callout-inside-press' ) {
-              return;
-            }
-          }}
-        >
-          <CustomCallout>
-            <Text>Add it to route</Text>
-            <CalloutSubview
-              onPress={() => {
-                this.props.addRemoveOpt(this.props.stopDetail)
-              }}>
-              <Button>
-                <Label>Add</Label>
-              </Button>
-            </CalloutSubview>
-          </CustomCallout>
-        </Callout>
-      )
-    }
-    else {
-      return(
-        <Callout alphaHitTest tooltip
-          ref = {callout => this.callout = callout}
-          onPress={e => {
-            if ( e.nativeEvent.action === 'marker-inside-overlay-press' || e.nativeEvent.action === 'callout-inside-press' ) {
-              return;
-            }
-          }}
-        >
-          <CustomCallout
-            style={styles.customCallout}>
-            <ScrollView>
-              {this.props.orders.map( (order, index) => this._renderStops(order, index) )}
-            </ScrollView>
-          </CustomCallout>
-        </Callout>
-      )
-    }
-  }
-
-  _renderStops(order, index) {
-    return(
-        <View key={index}>
-          <Text>Remove #{order} it to route</Text>
-          <CalloutSubview onPress={() => {
-                this.props.addRemoveOpt(order)
-              }}>
-            <Button>
-              <Label>Remove #{order}</Label>
-            </Button>
-          </CalloutSubview>
-        </View>
-    )
-  }
-}
-
-StopCallout.propTypes = {
-  orders: PropTypes.array.isRequired,
-  style: PropTypes.object,
-}
-
-class MapInput extends React.Component {
-  constructor(props) {
-    super(props)
-  }
-  
-  render() {
-    return(
-      <GooglePlacesAutocomplete
-        placeholder='Enter Location'
-        // minLength={2}
-        autoFocus={true}
-        returnKeyType={'search'}
-        listViewDisplayed='false'
-        fetchDetails={true}
-        renderDescription={row => row.description || row.formatted_address || row.name}
-        onPress={(data, details = null) => { // 'details' is provided when fetchDetails = true
-          this.props.notifyLocationChange(details) //details.geometry.location)
-        }}
-        query={{
-          key: REACT_APP_GOOGLE_PLACES_API,
-          language: 'en',
-          types: 'geocode'
-        }}
-        styles={{
-          textInputContainer: {
-            backgroundColor: 'rgba(0,0,0,0)',
-            borderTopWidth: 0,
-            borderBottomWidth:0,
-            width: '100%'
-          },
-          textInput: {
-            height: 38,
-            color: '#5d5d5d',
-            fontSize: 16
-          },
-          description: {
-            fontWeight: 'bold'
-          },
-          predefinedPlacesDescription: {
-            color: '#1faadb'
-          }
-        }}
-        currentLocation={true}
-        currentLocationLabel="Surround"
-        predefinedPlaces={this.props.defaultLocations}
-        nearbyPlacesAPI="GooglePlacesSearch"   // Which API to use: GoogleReverseGeocoding or GooglePlacesSearch
-        GoogleReverseGeocodingQuery={{
-          // available options for GoogleReverseGeocoding API : https://developers.google.com/maps/documentation/geocoding/intro
-          //key: '',
-          //language: 'en',
-        }}
-        GooglePlacesSearchQuery={{
-          // available options for GooglePlacesSearch API : https://developers.google.com/places/web-service/search
-          rankby: 'distance'
-        }}
-        GooglePlacesDetailsQuery={{
-          // available options for GooglePlacesDetails API : https://developers.google.com/places/web-service/details
-          // fields: 'formatted_address',
-        }}
-        filterReverseGeocodingByTypes={['locality', 'administrative_area_level_3']}
-        getDefaultValue={() => ''}
-        enablePoweredByContainer={false}
-        debounce={200}
-      />
-    )
-  }
-}
-
 
 const styles = StyleSheet.create({
   container: {
@@ -532,24 +325,6 @@ const styles = StyleSheet.create({
   },
   mapView: {
     flex: 1
-  },
-  customCallout: {
-    width: 250,
-    paddingHorizontal: 0,
-    paddingVertical: 0,
-    borderRadius: 12,
-    alignItems: 'flex-end',
-    marginHorizontal: 0,
-    marginVertical: 0,
-  },
-  stopRow: {
-    width: '100%',
-    flexDirection: 'column',
-  },
-  stopList: {
-    width: '100%',
-    flexDirection: 'row',
-    backgroundColor: 'white'
   }
 });
 

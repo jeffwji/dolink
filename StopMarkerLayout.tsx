@@ -12,7 +12,7 @@ const defaultProps = {
   fontSize: 13,
 };
 
-class InterestedStopMarker extends React.Component {
+class StopMarkerLayout extends React.Component {
   render() {
     const { fontSize, orders } = this.props;
     return(
@@ -34,8 +34,8 @@ class InterestedStopMarker extends React.Component {
   }
 }
 
-InterestedStopMarker.propTypes = propTypes;
-InterestedStopMarker.defaultProps = defaultProps;
+StopMarkerLayout.propTypes = propTypes;
+StopMarkerLayout.defaultProps = defaultProps;
 
 const styles = StyleSheet.create({
   container: {
@@ -88,4 +88,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default InterestedStopMarker;
+export default StopMarkerLayout;
