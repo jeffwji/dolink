@@ -48,6 +48,10 @@ module.exports = {
         )
   },
 
+  googleImageService(photoReference, maxWidth, maxHeight){
+    return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=${maxWidth}&maxheigth=${maxHeight}&photoreference=${photoReference}&key=AIzaSyBvVhXwTmCkzwKOxx_sjAi5qroJf_ZE7sc`
+  },
+
   uploadImage(path) {
     const photo = {
       uri: path,

@@ -12,19 +12,20 @@ const defaultProps = {
   fontSize: 13,
 };
 
-class StopMarkerLayout extends React.Component {
+class StopMarkerPin extends React.Component {
   render() {
-    const { fontSize, orders } = this.props;
+    const { fontSize, orders, stopDetail } = this.props;
     return(
       <View style={styles.container}>
         {(orders.length>0) && 
             <View style={styles.interestedBubble}>
-                <Text style={[styles.orders, { fontSize }]}>{orders.join()}</Text> 
+              <Text style={[styles.orders, { fontSize }]}>{stopDetail.description || stopDetail.formatted_address || stopDetail.name}</Text> 
+              <Text style={[styles.orders, { fontSize }]}>Stop #: {orders.join()}</Text>
             </View>
         }
         {(orders.length==0) && 
             <View style={styles.candidateBubble}>
-              <Text style={[styles.orders, { fontSize }]}>?</Text> 
+            <Text style={[styles.orders, { fontSize }]}>{stopDetail.description || stopDetail.formatted_address || stopDetail.name}</Text> 
             </View>
         }
         <View style={styles.arrowBorder} />
@@ -34,8 +35,8 @@ class StopMarkerLayout extends React.Component {
   }
 }
 
-StopMarkerLayout.propTypes = propTypes;
-StopMarkerLayout.defaultProps = defaultProps;
+StopMarkerPin.propTypes = propTypes;
+StopMarkerPin.defaultProps = defaultProps;
 
 const styles = StyleSheet.create({
   container: {
@@ -44,7 +45,8 @@ const styles = StyleSheet.create({
   },
   interestedBubble: {
     flex: 0,
-    flexDirection: 'row',
+    flexDirection: 'column',
+    alignItems: 'center',
     alignSelf: 'flex-start',
     backgroundColor: '#FF5A5F',
     padding: 10,
@@ -54,7 +56,8 @@ const styles = StyleSheet.create({
   },
   candidateBubble: {
     flex: 0,
-    flexDirection: 'row',
+    flexDirection: 'column',
+    alignItems: 'center',
     alignSelf: 'flex-start',
     backgroundColor: '#ffaca6',
     padding: 10,
@@ -88,4 +91,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default StopMarkerLayout;
+export default StopMarkerPin;

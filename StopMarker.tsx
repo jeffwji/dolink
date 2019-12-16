@@ -2,7 +2,7 @@
 import React from 'react'
 import {Marker} from 'react-native-maps'
 import StopDetailCallout from './StopDetailCallout'
-import StopMarkerLayout from './StopMarkerLayout'
+import StopMarkerPin from './StopMarkerPin'
 import PropTypes from 'prop-types';
 
 import  {googleMapService} from './Global'
@@ -39,7 +39,7 @@ class StopMarker extends React.Component {
           }}
           draggable
         >
-          <StopMarkerLayout orders={this.props.orders} stopDetail={stop} />
+          <StopMarkerPin orders={this.props.orders} stopDetail={stop} />
   
           <StopDetailCallout
             orders = {this.props.orders}

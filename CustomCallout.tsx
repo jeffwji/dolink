@@ -26,7 +26,7 @@ CustomCallout.propTypes = propTypes;
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'column',
+    //flexDirection: 'column',
     alignSelf: 'flex-start',
   },
   bubble: {

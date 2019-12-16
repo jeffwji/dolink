@@ -97,7 +97,7 @@ export default class GoogleMap extends React.Component {
                   this._resetStopCandidate(details)
                 }}
                 defaultLocations={[
-                  { description: 'Home', geometry: { location: { lat: 48.8152937, lng: 2.4597668 } }, name: 'Market Saint Maurice'}
+                  { description: 'Home', geometry: { location: { lat: 43.8906719, lng: -79.2964162 } }, place_id: 'ChIJ1bQTc_zV1IkR_pQs6RrmKzo', isPredefinedPlace: true, name: 'Stonebridge Public School, Stonebridge Drive, Markham, ON, Canada'}
                 ]}
               />
             </Item>
@@ -111,6 +111,23 @@ export default class GoogleMap extends React.Component {
             zoomEnabled={true} 
             scrollEnabled={true}
             followUserLocation={true}
+            onPress={e => {
+              if(!e.nativeEvent.action || e.nativeEvent.action === 'press') {
+                googleMapService("geocode", `latlng=${this._coords2string(e.nativeEvent.coordinate)}`)
+                  .then(point => {
+                    return point.results.find(result => result.types.find(type => type === 'point_of_interest'))
+                  })
+                  .then(p => {
+                    if(p) {
+                      this._setStopCandidate(p)
+                      this.update()
+                    }
+                  })
+                  .catch(e => {
+                    console.warn(e)
+                  });
+              }
+            }}
             onLongPress={e => {
               if(!e.nativeEvent.action || e.nativeEvent.action === 'press') {
                 googleMapService("geocode", `latlng=${this._coords2string(e.nativeEvent.coordinate)}`)
@@ -119,8 +136,8 @@ export default class GoogleMap extends React.Component {
                     result = result?result:detail.results.find(result => result.types.find(type => type === 'route'))
                     return result?result:detail.results[0]
                   })
-                  .then(stopDetail => {
-                    this._setStopCandidate(stopDetail)
+                  .then(p => {
+                    this._setStopCandidate(p)
                     this.update()
                   })
                   .catch(e => {

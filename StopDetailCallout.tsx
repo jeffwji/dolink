@@ -10,16 +10,20 @@ import {
 
 import {
   View,
+  Image,
   ScrollView,
   StyleSheet,
   Text
 } from 'react-native'
+
+import {googleMapService, googleImageService} from './Global'
 
 
 class StopDetailCallout extends React.Component {
     constructor(props) {
       super(props)
     }
+
     callout = null
     
     render() {
@@ -27,7 +31,10 @@ class StopDetailCallout extends React.Component {
         return(
           <Callout alphaHitTest tooltip
             ref = {callout => this.callout = callout}
-            style={{width:220, height:100}}
+            style={{
+                //height:100,
+                width:250
+            }}
             onPress={e => {
               if ( e.nativeEvent.action === 'marker-inside-overlay-press' || e.nativeEvent.action === 'callout-inside-press' ) {
                 return;
@@ -36,9 +43,7 @@ class StopDetailCallout extends React.Component {
           >
             <CustomCallout>
                 <View>
-                    {
-                        console.log(this.props.stopDetail)
-                    }
+                    <PhotoView stopDetail={this.props.stopDetail} />
                     <Text>Add it to route</Text>
                     <CalloutSubview
                         onPress={() => {
@@ -48,7 +53,7 @@ class StopDetailCallout extends React.Component {
                         <Label>Add</Label>
                         </Button>
                     </CalloutSubview>
-              </View>
+                </View>
             </CustomCallout>
           </Callout>
         )
@@ -65,18 +70,18 @@ class StopDetailCallout extends React.Component {
           >
             <CustomCallout
               style={styles.customCallout}>
-              <ScrollView>
-                {this.props.orders.map( (order, index) => this._renderStops(order, index) )}
-              </ScrollView>
+                  <View>
+                    <PhotoView stopDetail={this.props.stopDetail} />
+                    <ScrollView>
+                        {this.props.orders.map( (order, index) => this._renderStops(order, index) )}
+                    </ScrollView>
+                  </View>
             </CustomCallout>
           </Callout>
         )
       }
     }
-    _renderPicture(detail) {
-        
-    }
-  
+
     _renderStops(order, index) {
       return(
           <View key={index}>
@@ -101,9 +106,61 @@ class StopDetailCallout extends React.Component {
 export default StopDetailCallout;
   
 
+class PhotoView extends React.Component {
+    constructor(props) {
+        super(props)
+  
+        this.state = {
+            placeImageIndex: 0,
+            photos: null
+        }
+    }
+
+    current_place_id = null
+
+    render() {
+        if(this.props.stopDetail.place_id != this.current_place_id) {
+            googleMapService('place/details', `place_id=${this.props.stopDetail.place_id}`)
+                .then(detail => {
+                    this.current_place_id = this.props.stopDetail.place_id
+                    this.setState({ photos:detail.result.photos })
+                })
+                .catch(error => console.log(error))
+        }
+        return(
+            <View style={{
+                marginLeft: 0,
+                marginRight: 0,
+                marginTop: 0,
+                marginBottom: 0
+            }}>
+            {this._renderPicture()}
+            </View>
+        )
+    }
+
+    _renderPicture() {
+        if(this.state.photos && this.state.photos.length > 0) {
+            const photo = this.state.photos[this.state.placeImageIndex]
+            const uri=googleImageService(photo.photo_reference, 205, 205)
+            return(
+                <Image
+                    source={{ uri: uri} }
+                    style={{ width: 205, height: 205 }}
+                />
+            )
+        }
+    }
+}
+
+
 const styles = StyleSheet.create({
     customCallout: {
       width: 250,
+      marginLeft: 0,
+      marginRight: 0,
+      marginTop: 0,
+      marginBottom: 0,
       paddingHorizontal: 0,
       paddingVertical: 0,
       borderRadius: 12,
@@ -112,5 +169,3 @@ const styles = StyleSheet.create({
       marginVertical: 0,
     }
   });
-  
-  

@@ -1,6 +1,5 @@
-
 import React from 'react'
-import {REACT_APP_GOOGLE_PLACES_API} from './Global'
+import {googleMapService, REACT_APP_GOOGLE_PLACES_API} from './Global'
 
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 
@@ -17,10 +16,17 @@ class MapSearchInput extends React.Component {
           autoFocus={true}
           returnKeyType={'search'}
           listViewDisplayed='false'
-          fetchDetails={true}
+          fetchDetails={false}
           renderDescription={row => row.description || row.formatted_address || row.name}
           onPress={(data, details = null) => { // 'details' is provided when fetchDetails = true
-            this.props.notifyLocationChange(details) //details.geometry.location)
+            /*if(details.isPredefinedPlace) {
+              if(details.place_id) {
+                googleMapService('place/details', `place_id=${details.place_id}`)
+                  .then(d => this.props.notifyLocationChange(d.result))
+              }
+            }
+            else*/
+              this.props.notifyLocationChange(data) //details.geometry.location)
           }}
           query={{
             key: REACT_APP_GOOGLE_PLACES_API,
