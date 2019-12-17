@@ -42,18 +42,18 @@ class StopDetailCallout extends React.Component {
             }}
           >
             <CustomCallout>
-                <View>
-                    <PhotoView stopDetail={this.props.stopDetail} />
-                    <Text>Add it to route</Text>
-                    <CalloutSubview
-                        onPress={() => {
-                        this.props.addRemoveOpt(this.props.stopDetail)
-                        }}>
-                        <Button>
-                        <Label>Add</Label>
-                        </Button>
-                    </CalloutSubview>
-                </View>
+              <View>
+                <PhotoView stopDetail={this.props.stopDetail} />
+                <Text>Add it to route</Text>
+                <CalloutSubview
+                  onPress={() => {
+                    this.props.addRemoveOpt(this.props.stopDetail)
+                  }}>
+                  <Button>
+                    <Label>Add</Label>
+                  </Button>
+                </CalloutSubview>
+              </View>
             </CustomCallout>
           </Callout>
         )
@@ -70,12 +70,12 @@ class StopDetailCallout extends React.Component {
           >
             <CustomCallout
               style={styles.customCallout}>
-                  <View>
-                    <PhotoView stopDetail={this.props.stopDetail} />
-                    <ScrollView>
-                        {this.props.orders.map( (order, index) => this._renderStops(order, index) )}
-                    </ScrollView>
-                  </View>
+                <View>
+                  <PhotoView stopDetail={this.props.stopDetail} />
+                  <ScrollView>
+                    {this.props.orders.map( (order, index) => this._renderStops(order, index) )}
+                  </ScrollView>
+                </View>
             </CustomCallout>
           </Callout>
         )
@@ -112,21 +112,25 @@ class PhotoView extends React.Component {
   
         this.state = {
             placeImageIndex: 0,
-            photos: null
         }
     }
 
+    photos = null
     current_place_id = null
 
     render() {
         if(this.props.stopDetail.place_id != this.current_place_id) {
+            this.photos = null
             googleMapService('place/details', `place_id=${this.props.stopDetail.place_id}`)
                 .then(detail => {
+                    const parent = this._reactInternalInstance._currentElement._owner._instance;
                     this.current_place_id = this.props.stopDetail.place_id
-                    this.setState({ photos:detail.result.photos })
+                    this.photos = detail.result.photos
+                    this.setState({placeImageIndex: 0})
                 })
                 .catch(error => console.log(error))
         }
+        
         return(
             <View style={{
                 marginLeft: 0,
@@ -140,8 +144,8 @@ class PhotoView extends React.Component {
     }
 
     _renderPicture() {
-        if(this.state.photos && this.state.photos.length > 0) {
-            const photo = this.state.photos[this.state.placeImageIndex]
+        if(this.photos && this.photos.length > 0) {
+            const photo = this.photos[this.state.placeImageIndex]
             const uri=googleImageService(photo.photo_reference, 205, 205)
             return(
                 <Image
