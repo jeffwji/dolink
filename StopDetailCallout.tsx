@@ -20,88 +20,89 @@ import {googleMapService, googleImageService} from './Global'
 
 
 class StopDetailCallout extends React.Component {
-    constructor(props) {
-      super(props)
-    }
+  constructor(props) {
+    super(props)
+  }
 
-    callout = null
+  callout = null
     
-    render() {
-      if (this.props.orders.length === 0) {
-        return(
-          <Callout alphaHitTest tooltip
-            ref = {callout => this.callout = callout}
-            style={{
-                //height:100,
-                width:250
-            }}
-            onPress={e => {
-              if ( e.nativeEvent.action === 'marker-inside-overlay-press' || e.nativeEvent.action === 'callout-inside-press' ) {
-                return;
-              }
-            }}
-          >
-            <CustomCallout>
-              <View>
-                <PhotoView stopDetail={this.props.stopDetail} />
-                <Text>Add it to route</Text>
-                <CalloutSubview
-                  onPress={() => {
-                    this.props.addRemoveOpt(this.props.stopDetail)
-                  }}>
-                  <Button>
-                    <Label>Add</Label>
-                  </Button>
-                </CalloutSubview>
-              </View>
-            </CustomCallout>
-          </Callout>
-        )
-      }
-      else {
-        return(
-          <Callout alphaHitTest tooltip
-            ref = {callout => this.callout = callout}
-            onPress={e => {
-              if ( e.nativeEvent.action === 'marker-inside-overlay-press' || e.nativeEvent.action === 'callout-inside-press' ) {
-                return;
-              }
-            }}
-          >
-            <CustomCallout
-              style={styles.customCallout}>
-                <View>
-                  <PhotoView stopDetail={this.props.stopDetail} />
-                  <ScrollView>
-                    {this.props.orders.map( (order, index) => this._renderStops(order, index) )}
-                  </ScrollView>
-                </View>
-            </CustomCallout>
-          </Callout>
-        )
-      }
-    }
-
-    _renderStops(order, index) {
+  render() {
+    if (this.props.orders.length === 0) {
       return(
-          <View key={index}>
-            <Text>Remove #{order} it to route</Text>
-            <CalloutSubview onPress={() => {
-                  this.props.addRemoveOpt(order)
+        <Callout alphaHitTest tooltip
+          ref = {callout => this.callout = callout}
+          style={{
+            //height:100,
+            width:250
+          }}
+          onPress={e => {
+            if ( e.nativeEvent.action === 'marker-inside-overlay-press' || e.nativeEvent.action === 'callout-inside-press' ) {
+              return;
+            }
+          }}
+        >
+          <CustomCallout>
+            <View>
+              <PhotoView stopDetail={this.props.stopDetail} />
+              <Text style={[styles.orders, { fontSize: 13 }]}>{this.props.stopDetail.description || this.props.stopDetail.formatted_address || this.props.stopDetail.name}</Text> 
+              <Text>Add it to route</Text>
+              <CalloutSubview
+                onPress={() => {
+                  this.props.addRemoveOpt(this.props.stopDetail)
                 }}>
-              <Button>
-                <Label>Remove #{order}</Label>
-              </Button>
-            </CalloutSubview>
-          </View>
+                <Button>
+                  <Label>Add</Label>
+                </Button>
+              </CalloutSubview>
+            </View>
+          </CustomCallout>
+        </Callout>
+      )
+    }
+    else {
+      return(
+        <Callout alphaHitTest tooltip
+          ref = {callout => this.callout = callout}
+          onPress={e => {
+            if ( e.nativeEvent.action === 'marker-inside-overlay-press' || e.nativeEvent.action === 'callout-inside-press' ) {
+              return;
+            }
+          }}
+        >
+          <CustomCallout style={styles.customCallout}>
+            <View>
+                <PhotoView stopDetail={this.props.stopDetail} />
+                <ScrollView>
+                  {this.props.orders.map( (order, index) => this._renderStops(order, index) )}
+                </ScrollView>
+            </View>
+          </CustomCallout>
+        </Callout>
       )
     }
   }
+
+  _renderStops(order, index) {
+    return(
+      <View key={index}>
+        <Text style={[styles.orders, { fontSize: 13 }]}>{this.props.stopDetail.description || this.props.stopDetail.formatted_address || this.props.stopDetail.name}</Text> 
+        <Text>Remove #{order} it to route</Text>
+        <CalloutSubview onPress={() => {
+          this.props.addRemoveOpt(order)
+        }}>
+          <Button>
+            <Label>Remove #{order}</Label>
+          </Button>
+        </CalloutSubview>
+      </View>
+    )
+  }
+}
   
-  StopDetailCallout.propTypes = {
+StopDetailCallout.propTypes = {
     orders: PropTypes.array.isRequired,
     style: PropTypes.object,
-  }
+}
 
 export default StopDetailCallout;
   
@@ -119,28 +120,27 @@ class PhotoView extends React.Component {
     current_place_id = null
 
     render() {
-        if(this.props.stopDetail.place_id != this.current_place_id) {
-            this.photos = null
-            googleMapService('place/details', `place_id=${this.props.stopDetail.place_id}`)
-                .then(detail => {
-                    const parent = this._reactInternalInstance._currentElement._owner._instance;
-                    this.current_place_id = this.props.stopDetail.place_id
-                    this.photos = detail.result.photos
-                    this.setState({placeImageIndex: 0})
-                })
-                .catch(error => console.log(error))
-        }
+      if(this.props.stopDetail.place_id != this.current_place_id) {
+        this.photos = null
+        googleMapService('place/details', `place_id=${this.props.stopDetail.place_id}`)
+          .then(detail => {
+            this.current_place_id = this.props.stopDetail.place_id
+            this.photos = detail.result.photos
+            this.setState({placeImageIndex: 0})
+          })
+          .catch(error => console.log(error))
+      }
         
-        return(
-            <View style={{
-                marginLeft: 0,
-                marginRight: 0,
-                marginTop: 0,
-                marginBottom: 0
-            }}>
-            {this._renderPicture()}
-            </View>
-        )
+      return(
+        <View style={{
+              marginLeft: 0,
+              marginRight: 0,
+              marginTop: 0,
+              marginBottom: 0
+        }}>
+          {this._renderPicture()}
+        </View>
+      )
     }
 
     _renderPicture() {

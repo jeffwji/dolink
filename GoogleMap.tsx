@@ -111,24 +111,19 @@ export default class GoogleMap extends React.Component {
             zoomEnabled={true} 
             scrollEnabled={true}
             followUserLocation={true}
-            onPress={e => {
-              if(!e.nativeEvent.action || e.nativeEvent.action === 'press') {
-                googleMapService("geocode", `latlng=${this._coords2string(e.nativeEvent.coordinate)}`)
-                  .then(point => {
-                    return point.results.find(result => result.types.find(type => type === 'point_of_interest'))
-                  })
-                  .then(p => {
-                    if(p) {
-                      this._setStopCandidate(p)
-                      this.update()
-                    }
-                  })
-                  .catch(e => {
-                    console.warn(e)
-                  });
+            onPoiClick = { e => {
+              const poi = e.nativeEvent
+              poi.geometry = {
+                location: {
+                  lat: poi.coordinate.latitude,
+                  lng: poi.coordinate.longitude
+                },
               }
+              poi.place_id = poi.placeId
+              this._setStopCandidate(poi)
+              this.update()
             }}
-            onLongPress={e => {
+            /*onLongPress={e => {
               if(!e.nativeEvent.action || e.nativeEvent.action === 'press') {
                 googleMapService("geocode", `latlng=${this._coords2string(e.nativeEvent.coordinate)}`)
                   .then(detail => {
@@ -144,7 +139,7 @@ export default class GoogleMap extends React.Component {
                     console.warn(e)
                   });
               }
-            }}
+            }}*/
           >
             {this._renderRoute()}
             {this._renderMarkers()}

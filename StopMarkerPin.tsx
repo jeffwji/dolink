@@ -3,14 +3,6 @@ import PropTypes from 'prop-types';
 
 import { StyleSheet, View, Text } from 'react-native';
 
-const propTypes = {
-  orders: PropTypes.array.isRequired,
-  fontSize: PropTypes.number,
-};
-
-const defaultProps = {
-  fontSize: 13,
-};
 
 class StopMarkerPin extends React.Component {
   render() {
@@ -19,13 +11,12 @@ class StopMarkerPin extends React.Component {
       <View style={styles.container}>
         {(orders.length>0) && 
             <View style={styles.interestedBubble}>
-              <Text style={[styles.orders, { fontSize }]}>{stopDetail.description || stopDetail.formatted_address || stopDetail.name}</Text> 
-              <Text style={[styles.orders, { fontSize }]}>Stop #: {orders.join()}</Text>
+              <Text style={[styles.orders, { fontSize }]}>{orders.join()}</Text>
             </View>
         }
         {(orders.length==0) && 
             <View style={styles.candidateBubble}>
-            <Text style={[styles.orders, { fontSize }]}>{stopDetail.description || stopDetail.formatted_address || stopDetail.name}</Text> 
+            <Text style={[styles.orders, { fontSize }]}>?</Text> 
             </View>
         }
         <View style={styles.arrowBorder} />
@@ -35,8 +26,14 @@ class StopMarkerPin extends React.Component {
   }
 }
 
-StopMarkerPin.propTypes = propTypes;
-StopMarkerPin.defaultProps = defaultProps;
+StopMarkerPin.propTypes =  {
+  orders: PropTypes.array.isRequired,
+  fontSize: PropTypes.number,
+};
+
+StopMarkerPin.defaultProps = {
+  fontSize: 13,
+};
 
 const styles = StyleSheet.create({
   container: {

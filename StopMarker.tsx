@@ -6,7 +6,7 @@ import StopMarkerPin from './StopMarkerPin'
 import PropTypes from 'prop-types';
 
 import  {googleMapService} from './Global'
-
+import {View} from 'react-native'
 
 class StopMarker extends React.Component {
     constructor(props) {
@@ -17,6 +17,7 @@ class StopMarker extends React.Component {
     render() {
       const stop = this.props.stopDetail
       const coord = {latitude: stop.geometry.location.lat, longitude: stop.geometry.location.lng }
+
       return(
         <Marker
           coordinate={coord}
@@ -46,12 +47,24 @@ class StopMarker extends React.Component {
             stopDetail = {stop}
             addRemoveOpt={(stop) => {
               this.props.addRemoveOpt(stop)
-            }} 
+            }}
           />
         </Marker>
       )
     }
+
+    _reflashCallout() {
+      if(this.marker) {
+        this.marker.hideCallout()
+        this.marker.showCallout()
+      }
+    }
+
+    componentDidUpdate() {
+      this._reflashCallout()
+    }
   }
+
   
   StopMarker.propTypes = {
     orders: PropTypes.array.isRequired,
