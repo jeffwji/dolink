@@ -75,15 +75,17 @@ export default class GoogleMap extends React.Component {
       this.update()
   }
 
-  _resetStopCandidate(stopDetail) {
-    this._setStopCandidate(stopDetail)
-
-    this._updateCurrentLocation({
-      latitude: stopDetail.geometry.location.lat,
-      longitude: stopDetail.geometry.location.lng,
-      latitudeDelta: this.currentLocationCoordinates.latitudeDelta,
-      longitudeDelta: this.currentLocationCoordinates.longitudeDelta
-    }, true)
+  _resetStopCandidate(stop) {
+    this._setStopCandidate(stop)
+      .then(() =>
+        this._updateCurrentLocation({
+          latitude: stop.geometry.location.lat,
+          longitude: stop.geometry.location.lng,
+          latitudeDelta: this.currentLocationCoordinates.latitudeDelta,
+          longitudeDelta: this.currentLocationCoordinates.longitudeDelta
+        }, true)
+      )
+      .catch(error => console.log(error))
   }
 
   _renderMap() {
@@ -121,9 +123,10 @@ export default class GoogleMap extends React.Component {
               }
               poi.place_id = poi.placeId
               this._setStopCandidate(poi)
-              this.update()
+                .then(() => this.update())
+                .catch(error => console.log(error))
             }}
-            /*onLongPress={e => {
+            /*onLongPress={ e => {
               if(!e.nativeEvent.action || e.nativeEvent.action === 'press') {
                 googleMapService("geocode", `latlng=${this._coords2string(e.nativeEvent.coordinate)}`)
                   .then(detail => {
@@ -133,7 +136,8 @@ export default class GoogleMap extends React.Component {
                   })
                   .then(p => {
                     this._setStopCandidate(p)
-                    this.update()
+                      .then(() => this.update())
+                      .catch(error => console.log(error))
                   })
                   .catch(e => {
                     console.warn(e)
@@ -285,15 +289,21 @@ export default class GoogleMap extends React.Component {
       })
       this._updateMarker()
       this._getDirections()
+      this.update()
     }
     else{
       this._setStopCandidate(stopDetail)
+        .then(() => this.update())
+        .catch(error => console.log(error))
     }
-    this.update()
   }
 
   _setStopCandidate = (stopDetail) => {
-    this.stopCandidate = stopDetail
+    // this.stopCandidate = stopDetail
+    return googleMapService('place/details', `place_id=${stopDetail.place_id}`)
+          .then(detail => 
+            this.stopCandidate = detail.result
+          )
   }
 
   _addInterestedLocation = (stopDetail) => {

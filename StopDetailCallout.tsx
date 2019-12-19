@@ -43,7 +43,9 @@ class StopDetailCallout extends React.Component {
         >
           <CustomCallout>
             <View>
-              <PhotoView stopDetail={this.props.stopDetail} />
+              <PhotoView 
+                stopDetail={this.props.stopDetail}
+              />
               <Text style={[styles.orders, { fontSize: 13 }]}>{this.props.stopDetail.description || this.props.stopDetail.formatted_address || this.props.stopDetail.name}</Text> 
               <Text>Add it to route</Text>
               <CalloutSubview
@@ -71,7 +73,9 @@ class StopDetailCallout extends React.Component {
         >
           <CustomCallout style={styles.customCallout}>
             <View>
-                <PhotoView stopDetail={this.props.stopDetail} />
+                <PhotoView 
+                  stopDetail={this.props.stopDetail}
+                />
                 <ScrollView>
                   {this.props.orders.map( (order, index) => this._renderStops(order, index) )}
                 </ScrollView>
@@ -120,7 +124,7 @@ class PhotoView extends React.Component {
     current_place_id = null
 
     render() {
-      if(this.props.stopDetail.place_id != this.current_place_id) {
+      /*if(this.props.stopDetail.place_id != this.current_place_id) {
         this.photos = null
         googleMapService('place/details', `place_id=${this.props.stopDetail.place_id}`)
           .then(detail => {
@@ -129,7 +133,7 @@ class PhotoView extends React.Component {
             this.setState({placeImageIndex: 0})
           })
           .catch(error => console.log(error))
-      }
+      }*/
         
       return(
         <View style={{
@@ -144,16 +148,17 @@ class PhotoView extends React.Component {
     }
 
     _renderPicture() {
-        if(this.photos && this.photos.length > 0) {
-            const photo = this.photos[this.state.placeImageIndex]
-            const uri=googleImageService(photo.photo_reference, 205, 205)
-            return(
-                <Image
-                    source={{ uri: uri} }
-                    style={{ width: 205, height: 205 }}
-                />
-            )
-        }
+      const photos = this.props.stopDetail.photos
+      if(photos && photos.length > 0) {
+        const photo = photos[this.state.placeImageIndex]
+        const uri=googleImageService(photo.photo_reference, 205, 205)
+        return(
+          <Image
+            source={{ uri: uri} }
+            style={{ width: 205, height: 205 }}
+          />
+        )
+      }
     }
 }
 

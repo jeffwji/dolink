@@ -16,7 +16,7 @@ class MapSearchInput extends React.Component {
           autoFocus={true}
           returnKeyType={'search'}
           listViewDisplayed='false'
-          fetchDetails={false}
+          fetchDetails={true}
           renderDescription={row => row.description || row.formatted_address || row.name}
           onPress={(data, details = null) => { // 'details' is provided when fetchDetails = true
             /*if(details.isPredefinedPlace) {
@@ -26,7 +26,7 @@ class MapSearchInput extends React.Component {
               }
             }
             else*/
-              this.props.notifyLocationChange(data) //details.geometry.location)
+              this.props.notifyLocationChange(details) //details.geometry.location)
           }}
           query={{
             key: REACT_APP_GOOGLE_PLACES_API,

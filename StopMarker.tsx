@@ -56,7 +56,7 @@ class StopMarker extends React.Component {
     _reflashCallout() {
       if(this.marker) {
         this.marker.hideCallout()
-        this.marker.showCallout()
+        //this.marker.showCallout()
       }
     }
 
