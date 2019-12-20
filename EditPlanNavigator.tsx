@@ -1,15 +1,14 @@
 import React from 'react'
 
 import {createStackNavigator} from 'react-navigation-stack'
+import {SceneInterpolatorProps} from 'react-navigation-stack/lib/typescript/types';
+import {createAppContainer, NavigationScreenComponent} from 'react-navigation'
+import {Animated, Easing} from 'react-native';
 
 import EditPlan from './EditPlan'
 import PlanMap from './GoogleMap'
+import StopEditModal from './StopEditModal';
 
-/**
- * 定义攻略编辑界面的导航栈
- * 
- * 参考：https://medium.com/async-la/react-navigation-stacks-tabs-and-drawers-oh-my-92edd606e4db
- */
 const EditPlanNavigator = createStackNavigator(
   {
     EditPlan: {
@@ -23,13 +22,13 @@ const EditPlanNavigator = createStackNavigator(
     PlanMap: {
       screen: PlanMap,
       navigationOptions: (navigation) => ({
-        title: "Map"
+        title: "PlanMap"
       })
-    }
+    },
   },
   {
-    initialRouteName: 'EditPlan'
+    initialRouteName: 'EditPlan',
   }
 )
 
-export default EditPlanNavigator
+export default createAppContainer(EditPlanNavigator)

@@ -27,77 +27,50 @@ class StopDetailCallout extends React.Component {
   callout = null
     
   render() {
-    if (this.props.orders.length === 0) {
-      return(
-        <Callout alphaHitTest tooltip
-          ref = {callout => this.callout = callout}
-          style={{
-            //height:100,
-            width:250
-          }}
-          onPress={e => {
-            if ( e.nativeEvent.action === 'marker-inside-overlay-press' || e.nativeEvent.action === 'callout-inside-press' ) {
-              return;
-            }
-          }}
-        >
-          <CustomCallout>
-            <View>
-              <PhotoView 
-                stopDetail={this.props.stopDetail}
-              />
-              <Text style={[styles.orders, { fontSize: 13 }]}>{this.props.stopDetail.description || this.props.stopDetail.formatted_address || this.props.stopDetail.name}</Text> 
-              <Text>Add it to route</Text>
-              <CalloutSubview
-                onPress={() => {
-                  this.props.addRemoveOpt(this.props.stopDetail)
-                }}>
-                <Button>
-                  <Label>Add</Label>
-                </Button>
-              </CalloutSubview>
-            </View>
-          </CustomCallout>
-        </Callout>
-      )
-    }
-    else {
-      return(
-        <Callout alphaHitTest tooltip
-          ref = {callout => this.callout = callout}
-          onPress={e => {
-            if ( e.nativeEvent.action === 'marker-inside-overlay-press' || e.nativeEvent.action === 'callout-inside-press' ) {
-              return;
-            }
-          }}
-        >
-          <CustomCallout style={styles.customCallout}>
-            <View>
-                <PhotoView 
-                  stopDetail={this.props.stopDetail}
-                />
-                <ScrollView>
-                  {this.props.orders.map( (order, index) => this._renderStops(order, index) )}
-                </ScrollView>
-            </View>
-          </CustomCallout>
-        </Callout>
-      )
+    return(
+      <Callout alphaHitTest tooltip
+        ref = {callout => this.callout = callout}
+        style={{
+          width:250
+        }}
+        onPress={e => { this.props.editStop()
+          /*if ( e.nativeEvent.action === 'marker-inside-overlay-press' || e.nativeEvent.action === 'callout-inside-press' ) {
+            return;
+          }*/
+        }}
+      >
+        <CustomCallout style={styles.customCallout}>
+        {this._renderCallout()}
+        </CustomCallout>
+      </Callout>
+    )
+  }
+
+  _renderCallout() {
+    if(this.props.orders.length === 0) {
+        return(
+          <View>
+            <PhotoView stopDetail={this.props.stopDetail} />
+            <Text style={[styles.orders, { fontSize: 13 }]}>{this.props.stopDetail.description || this.props.stopDetail.formatted_address || this.props.stopDetail.name}</Text> 
+            { /*<CalloutSubview onPress={() => this.props.editStop()}></CalloutSubview> */}
+            <Text>Click to Add</Text>
+          </View>
+        )
+    } else {
+        return(
+          <View>
+            {this._renderStops(this.props.orders)}
+          </View>
+        )
     }
   }
 
-  _renderStops(order, index) {
+  _renderStops(orders) {
     return(
-      <View key={index}>
+      <View>
         <Text style={[styles.orders, { fontSize: 13 }]}>{this.props.stopDetail.description || this.props.stopDetail.formatted_address || this.props.stopDetail.name}</Text> 
-        <Text>Remove #{order} it to route</Text>
-        <CalloutSubview onPress={() => {
-          this.props.addRemoveOpt(order)
-        }}>
-          <Button>
-            <Label>Remove #{order}</Label>
-          </Button>
-        </CalloutSubview>
+        { /* <CalloutSubview onPress={() => {this.props.editStop()}}></CalloutSubview> */ }
+        <Text>Edit stops</Text>
       </View>
     )
   }

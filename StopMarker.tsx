@@ -23,6 +23,9 @@ class StopMarker extends React.Component {
           coordinate={coord}
           ref = {marker => this.marker = marker}
           title = {stop.description || stop.formatted_address || stop.name}
+          onPress={e => {
+            if(this.props.orders.length > 0) this.props.editStop(this)
+          }}
           onDragEnd={e => {
             const param = e.nativeEvent.coordinate.latitude + "," + e.nativeEvent.coordinate.longitude
             googleMapService("geocode", `latlng=${param}`)
@@ -40,13 +43,15 @@ class StopMarker extends React.Component {
           }}
           draggable
         >
-          <StopMarkerPin orders={this.props.orders} stopDetail={stop} />
+          <StopMarkerPin 
+            orders={this.props.orders} 
+            stopDetail={stop}/>
   
           <StopDetailCallout
             orders = {this.props.orders}
             stopDetail = {stop}
-            addRemoveOpt={(stop) => {
-              this.props.addRemoveOpt(stop)
+            editStop={() => {
+              this.props.editStop(this)
             }}
           />
         </Marker>

@@ -19,13 +19,6 @@ class MapSearchInput extends React.Component {
           fetchDetails={true}
           renderDescription={row => row.description || row.formatted_address || row.name}
           onPress={(data, details = null) => { // 'details' is provided when fetchDetails = true
-            /*if(details.isPredefinedPlace) {
-              if(details.place_id) {
-                googleMapService('place/details', `place_id=${details.place_id}`)
-                  .then(d => this.props.notifyLocationChange(d.result))
-              }
-            }
-            else*/
               this.props.notifyLocationChange(details) //details.geometry.location)
           }}
           query={{

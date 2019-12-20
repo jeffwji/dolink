@@ -1,16 +1,25 @@
 import React from 'react'
 import MapView, {PROVIDER_GOOGLE, Marker, Callout, CalloutSubview, Polyline } from 'react-native-maps'
 import StopMarker from './StopMarker'
+import {NavigationInjectedProps} from 'react-navigation';
+import Modal from 'react-native-modal';
+
+type Props = NavigationInjectedProps;
 
 import {
   Container,
-  Item
+  Item,
+  Button
 } from 'native-base'
 
 import {
   View,
   Dimensions,
-  StyleSheet
+  Text,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  TouchableWithoutFeedback
 } from 'react-native'
 
 import MapSearchInput from './MapSearchInput';
@@ -18,15 +27,40 @@ import polyline from '@mapbox/polyline'
 
 import GLOBAL, {askPermission, query, googleMapService, REACT_APP_GOOGLE_MAPS_API, REACT_APP_GOOGLE_PLACES_API} from './Global'
 
-export default class GoogleMap extends React.Component {
+// For stop edit
+type State = {
+  stopEditScrollOffset: null | number;
+  stopEditModalVisiblity: boolean;
+};
+//
+
+export default class GoogleMap extends React.Component<State> {
+  // For stop edit
+  public stopEditScrollViewRef: React.RefObject<ScrollView>;
+  //
+
   constructor(props) {
-    super(props)
+    super(props, {
+      // For stop edit
+      stopEditScrollOffset: null,
+      //
+    })
     
     this.state = {
-      updateMap: 0
+      updateMap: 0,
+      // for stop edit
+      stopEditModalVisiblity: false
+      //
     }
+
+    // For stop edit
+    this.stopEditScrollViewRef = React.createRef();
+    //
   }
 
+  // For stop edit
+  editingOrders = []
+  //
   currentLocationCoordinates = null
   directions = []
   stops = []
@@ -160,7 +194,7 @@ export default class GoogleMap extends React.Component {
           <StopMarker
             stopDetail={this.stopCandidate}
             color='#009688'
-            addRemoveOpt = {stopDetail => this._addInterestedLocation(stopDetail)}
+            editStop = {(marker) => this._addInterestedLocation(marker.props.stopDetail)}
             orders = {[]}
             onStopLocationChange = {(stopDetail, orders) => this._onStopChange(stopDetail, orders)}
           />
@@ -243,7 +277,7 @@ export default class GoogleMap extends React.Component {
             orders = {[index]}
             stopDetail={stopDetail}
             color='#f44336'
-            addRemoveOpt = {order => this._removeInterestedLocation(order)}
+            editStop = {(marker) => this._editStop(marker.props.orders)}
             onStopLocationChange = {(stopDetail, orders) => this._onStopChange(stopDetail, orders)}
           />
         this.stopMarkers.push(stopMarker)
@@ -263,7 +297,7 @@ export default class GoogleMap extends React.Component {
               orders = {orders}
               stopDetail={stopDetail}
               color='#f44336'
-              addRemoveOpt = {order => this._removeInterestedLocation(order)}
+              editStop = {(marker) => this._editStop(marker.props.orders)}
               onStopLocationChange = {(stopDetail, orders) => this._onStopChange(stopDetail, orders)}
             />
           this.stopMarkers.push(stopMarker)
@@ -312,7 +346,11 @@ export default class GoogleMap extends React.Component {
     this._getDirections()
   }
 
-  _removeInterestedLocation = (order) => {
+  _editStop = (stopOrders) => {
+    this.openStopEditModal(stopOrders)
+  }
+
+  _removeStop(order) {
     this.stops.splice(order, 1)
     this._updateMarker()
     this._getDirections()
@@ -320,10 +358,94 @@ export default class GoogleMap extends React.Component {
 
   render() {
     return (
-      <Container style={styles.container}>
+      <Container style={styles.container} 
+        onClick = { e => 
+          console.log(e)
+        }
+      >
         {this._renderMap()}
+        {this._renderModal()}
       </Container>
     )
+  }
+
+  ////////////////////////////////
+  // Stop edit modal
+  //
+  _renderModal(): React.ReactElement<any> {
+    return (
+      <Modal
+        animationType="fade"
+        transparent={true}
+        isVisible={this.isStopEditModalVisible()}
+        //swipeDirection={['left','right']}
+        //onSwipeComplete={this.closeStopEditModal}
+        backgroundColor = 'transparent'
+        scrollTo={this.handleScrollTo}
+        scrollOffset={this.state.stopEditScrollOffset}
+        scrollOffsetMax={400 - 300} // content height - ScrollView height
+        style={styles.modal}
+        // onRequestClose={() => {this.closeStopEditModal}}
+        >
+        <TouchableOpacity 
+          style={{
+            flex: 1,
+            justifyContent: 'flex-end'
+          }} 
+          activeOpacity={1} 
+          onPressOut={() => {
+            this.closeStopEditModal()
+          }}
+        >
+        <View>
+          <ScrollView style={styles.scrollableModal}
+            ref={this.stopEditScrollViewRef}
+            onScroll={this.handleOnScroll}
+            scrollEventThrottle={16}>
+              <TouchableWithoutFeedback>
+                <View>
+                {
+                  this.editingOrders.map((order, index) => {
+                    return <View key={index} style={styles.scrollableModalContent1}>
+                      <Button onPress={() => {
+                        this._removeStop(order)
+                      }}>
+                        <Text style={styles.scrollableModalText1}>Remove stop {order}</Text>
+                      </Button>
+                    </View>
+                  })
+                }
+                </View>
+              </TouchableWithoutFeedback>
+            </ScrollView>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+    )
+  }
+
+  openStopEditModal = (stopOrders) => {
+    this.editingOrders = stopOrders
+    this.setState({stopEditModalVisiblity: true} as any)
+  }
+
+  closeStopEditModal = () => {
+    this.editingOrders = []
+    this.setState({stopEditModalVisiblity: false} as any)
+  }
+
+  isStopEditModalVisible = () => this.state.stopEditModalVisiblity;
+
+  handleScrollTo = p => {
+    if (this.stopEditScrollViewRef.current) {
+      this.stopEditScrollViewRef.current.scrollTo(p);
+    }
+  }
+
+  handleOnScroll = event => {
+    this.setState({
+      scrollOffset: event.nativeEvent.contentOffset.y,
+    });
   }
 }
 
@@ -347,6 +469,34 @@ const styles = StyleSheet.create({
   },
   mapView: {
     flex: 1
-  }
+  },
+
+  modal: {
+    justifyContent: 'flex-end',
+    margin: 0,
+  },
+  scrollableModal: {
+    height: 300,
+  },
+  scrollableModalContent1: {
+    height: 200,
+    backgroundColor: '#87BBE0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scrollableModalText1: {
+    fontSize: 20,
+    color: 'white',
+  },
+  scrollableModalContent2: {
+    height: 200,
+    backgroundColor: '#A9DCD3',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scrollableModalText2: {
+    fontSize: 20,
+    color: 'white',
+  },
 });
 
