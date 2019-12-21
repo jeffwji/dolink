@@ -27,35 +27,14 @@ import polyline from '@mapbox/polyline'
 
 import GLOBAL, {askPermission, query, googleMapService, REACT_APP_GOOGLE_MAPS_API, REACT_APP_GOOGLE_PLACES_API} from './Global'
 
-// For stop edit
-type State = {
-  stopEditScrollOffset: null | number;
-  stopEditModalVisiblity: boolean;
-};
-//
 
-export default class GoogleMap extends React.Component<State> {
-  // For stop edit
-  public stopEditScrollViewRef: React.RefObject<ScrollView>;
-  //
-
+export default class GoogleMap extends React.Component {
   constructor(props) {
-    super(props, {
-      // For stop edit
-      stopEditScrollOffset: null,
-      //
-    })
+    super(props)
     
     this.state = {
-      updateMap: 0,
-      // for stop edit
-      stopEditModalVisiblity: false
-      //
+      updateMap: 0
     }
-
-    // For stop edit
-    this.stopEditScrollViewRef = React.createRef();
-    //
   }
 
   editingCoordinate = null
@@ -386,7 +365,8 @@ export default class GoogleMap extends React.Component<State> {
         }
       >
         {this._renderMap()}
-        {this._renderModal()}
+        {/*this._renderModal()*/}
+        <MarkerEditModal mapView = {this} />
       </Container>
     )
   }
@@ -402,16 +382,37 @@ export default class GoogleMap extends React.Component<State> {
   }
 
   _isStopEditModalVisible = () => this.state.stopEditModalVisiblity;
+}
 
-  ////////////////////////////////
-  // Stop edit modal
-  //
-  _renderModal(): React.ReactElement<any> {
+
+////////////////////////////////
+// Stop edit modal
+//
+type State = {
+  stopEditScrollOffset: null | number;
+};
+
+class MarkerEditModal extends React.Component<State> {
+    public stopEditScrollViewRef: React.RefObject<ScrollView>;
+
+    constructor(props) {
+      super(props, {
+        stopEditScrollOffset: null,
+      })
+      
+      this.state = {
+        stopEditModalVisiblity: false
+      }
+  
+      this.stopEditScrollViewRef = React.createRef();
+    }
+
+  render() {
     return (
       <Modal
         animationType="fade"
         transparent={true}
-        isVisible={this._isStopEditModalVisible()}
+        isVisible={this.props.mapView._isStopEditModalVisible()}
         backgroundColor = 'transparent'
         scrollTo={this._handleScrollTo}
         scrollOffset={this.state.stopEditScrollOffset}
@@ -425,7 +426,7 @@ export default class GoogleMap extends React.Component<State> {
           }} 
           activeOpacity={1} 
           onPressOut={() => {
-            this._closeStopEditModal()
+            this.props.mapView._closeStopEditModal()
           }}
         >
           {this._renderMarkerEdit()}
@@ -435,8 +436,8 @@ export default class GoogleMap extends React.Component<State> {
   }
 
   _renderMarkerEdit() {
-    if(this.editingCoordinate) {
-      const m = this._getMarkerByCoordinate(this.editingCoordinate)
+    if(this.props.mapView.editingCoordinate) {
+      const m = this.props.mapView._getMarkerByCoordinate(this.props.mapView.editingCoordinate)
       if(m) {
         return(
           <TouchableWithoutFeedback>
@@ -459,15 +460,15 @@ export default class GoogleMap extends React.Component<State> {
         )
       }
     }
-    else if (this.state.isStopEditModalVisible)
-      this._closeStopEditModal()
+    else if (this.props.mapView.isStopEditModalVisible)
+      this.props.mapView._closeStopEditModal()
   }
 
   _renderMarkerStops(orders) {
     const content = orders.map((order, index) => 
           <View key={index} style={styles.scrollableModalContent1}>
             <Button onPress={() => {
-              this._removeStop(order)
+              this.props.mapView._removeStop(order)
             }}>
               <Text style={styles.scrollableModalText1}>Remove stop {order}</Text>
             </Button>
