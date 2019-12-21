@@ -168,7 +168,7 @@ export default class GoogleMap extends React.Component {
           <StopMarker
             stopDetail={this.stopCandidate}
             color='#009688'
-            editStop = {(marker) => this._addInterestedLocation(marker.props.stopDetail)}
+            addStop = {(marker) => this._addStop(marker.props.stopDetail)}
             orders = {[]}
             onStopLocationChange = {(stopDetail, orders) => this._onStopChange(stopDetail, orders)}
           />
@@ -318,7 +318,7 @@ export default class GoogleMap extends React.Component {
           )
   }
 
-  _addInterestedLocation = (stopDetail) => {
+  _addStop = (stopDetail) => {
     this.stops.push(stopDetail)
     this._updateMarker()
     this._getDirections()

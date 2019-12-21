@@ -84,7 +84,7 @@ export default class MarkerEditModal extends React.Component<State> {
               <TouchableWithoutFeedback>
                 <View>
                 {
-                  this._renderMarkerStops(m.props.orders)
+                  this._renderMarkerStops(m)
                 }
                 </View>
               </TouchableWithoutFeedback>
@@ -98,14 +98,19 @@ export default class MarkerEditModal extends React.Component<State> {
       this.props.mapView._closeStopEditModal()
   }
   
-  _renderMarkerStops(orders) {
-    const content = orders.map((order, index) => 
+  _renderMarkerStops(marker) {
+    const content = marker.props.orders.map((order, index) => 
       <View key={index} style={[styles.scrollableModalContent, {backgroundColor: (index % 2 == 0)?'#87BBE0':'#A9DCD3'}]}>
         <Button onPress={() => {
           this.props.mapView._removeStop(order)
         }}>
           <Text style={styles.scrollableModalText}>Remove stop {order}</Text>
         </Button>
+        {/*<Button onPress={() => {
+          this.props.mapView._addStop(marker)
+        }}>
+          <Text style={styles.scrollableModalText}>Add stop</Text>
+      </Button>*/}
       </View>
     )
     return content
@@ -113,8 +118,9 @@ export default class MarkerEditModal extends React.Component<State> {
   
   _renderMarkerInformation(marker) {
     return(
-      <View>
-        {this._renderPicture(marker.props.stopDetail)}
+      <View style={{flexDirection: 'row'}}>
+      {this._renderPicture(marker.props.stopDetail)}
+      {this._renderAddress(marker.props.stopDetail)}
       </View>
     )
   }
@@ -131,6 +137,21 @@ export default class MarkerEditModal extends React.Component<State> {
         />
       )
     }
+  }
+
+  _renderAddress(detail){
+    return(
+      <View style={{flexDirection: 'column'}}>
+      {(detail.icon) && 
+        <Image
+          source={{ uri: detail.icon} }
+          style={{ width: 16, height: 16 }}
+        />}
+      {(detail.name) && <Text>{detail.name}</Text>}
+      {(detail.formatted_address) && <Text>{detail.formatted_address}</Text>}
+      {(detail.formatted_phone_number) && <Text>{detail.formatted_phone_number}</Text>}
+      </View>
+    )
   }
 
   _handleScrollTo = p => {

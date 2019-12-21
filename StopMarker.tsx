@@ -6,7 +6,6 @@ import StopMarkerPin from './StopMarkerPin'
 import PropTypes from 'prop-types';
 
 import  {googleMapService} from './Global'
-import {View} from 'react-native'
 
 class StopMarker extends React.Component {
   constructor(props) {
@@ -50,8 +49,8 @@ class StopMarker extends React.Component {
         <StopDetailCallout
           orders = {this.props.orders}
           stopDetail = {stop}
-          editStop={() => {
-            this.props.editStop(this)
+          addStop={() => {
+            this.props.addStop(this)
           }}
         />
       </Marker>

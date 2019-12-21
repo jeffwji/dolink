@@ -27,7 +27,7 @@ class StopDetailCallout extends React.Component {
         style={{
           width:250
         }}
-        onPress={e => { this.props.editStop()
+        onPress={e => { this.props.addStop()
           /*if ( e.nativeEvent.action === 'marker-inside-overlay-press' || e.nativeEvent.action === 'callout-inside-press' ) {
             return;
           }*/
