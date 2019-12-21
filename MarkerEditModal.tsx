@@ -106,11 +106,6 @@ export default class MarkerEditModal extends React.Component<State> {
         }}>
           <Text style={styles.scrollableModalText}>Remove stop {order}</Text>
         </Button>
-        {/*<Button onPress={() => {
-          this.props.mapView._addStop(marker)
-        }}>
-          <Text style={styles.scrollableModalText}>Add stop</Text>
-      </Button>*/}
       </View>
     )
     return content
@@ -150,6 +145,11 @@ export default class MarkerEditModal extends React.Component<State> {
       {(detail.name) && <Text>{detail.name}</Text>}
       {(detail.formatted_address) && <Text>{detail.formatted_address}</Text>}
       {(detail.formatted_phone_number) && <Text>{detail.formatted_phone_number}</Text>}
+      <Button onPress={() => {
+          this.props.mapView._addStop(detail)
+        }}>
+          <Text style={styles.scrollableModalText}>Add as new stop</Text>
+      </Button>
       </View>
     )
   }

@@ -306,14 +306,6 @@ export default class GoogleMap extends React.Component {
           this._getDirections()
           this.update()
         })
-      /*
-      orders.map(order => {
-        this.stops[order] = stopEsential
-      })
-      this._updateMarker()
-      this._getDirections()
-      this.update()
-      */
     }
     else{
       this._setStopCandidate(stopEsential)
