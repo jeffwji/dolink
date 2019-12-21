@@ -1,22 +1,16 @@
 import React from 'react'
-import { Callout, CalloutSubview } from 'react-native-maps'
+import { Callout } from 'react-native-maps'
 import CustomCallout from './CustomCallout'
 import PropTypes from 'prop-types';
 
 import {
-  Button,
-  Label
-} from 'native-base'
-
-import {
   View,
   Image,
-  ScrollView,
   StyleSheet,
   Text
 } from 'react-native'
 
-import {googleMapService, googleImageService} from './Global'
+import {googleImageService} from './Global'
 
 
 class StopDetailCallout extends React.Component {
@@ -71,58 +65,58 @@ export default StopDetailCallout;
   
 
 class PhotoView extends React.Component {
-    constructor(props) {
-        super(props)
+  constructor(props) {
+    super(props)
   
-        this.state = {
-            placeImageIndex: 0,
-        }
+    this.state = {
+      placeImageIndex: 0,
     }
+  }
 
-    photos = null
-    current_place_id = null
+  photos = null
+  current_place_id = null
 
-    render() {
+  render() {
+    return(
+      <View style={{
+            marginLeft: 0,
+            marginRight: 0,
+            marginTop: 0,
+            marginBottom: 0
+      }}>
+        {this._renderPicture()}
+      </View>
+    )
+  }
+
+  _renderPicture() {
+    const photos = this.props.stopDetail.photos
+    if(photos && photos.length > 0) {
+      const photo = photos[this.state.placeImageIndex]
+      const uri=googleImageService(photo.photo_reference, 205, 205)
       return(
-        <View style={{
-              marginLeft: 0,
-              marginRight: 0,
-              marginTop: 0,
-              marginBottom: 0
-        }}>
-          {this._renderPicture()}
-        </View>
+        <Image
+          source={{ uri: uri} }
+          style={{ width: 205, height: 205 }}
+        />
       )
     }
-
-    _renderPicture() {
-      const photos = this.props.stopDetail.photos
-      if(photos && photos.length > 0) {
-        const photo = photos[this.state.placeImageIndex]
-        const uri=googleImageService(photo.photo_reference, 205, 205)
-        return(
-          <Image
-            source={{ uri: uri} }
-            style={{ width: 205, height: 205 }}
-          />
-        )
-      }
-    }
+  }
 }
 
 
 const styles = StyleSheet.create({
-    customCallout: {
-      width: 250,
-      marginLeft: 0,
-      marginRight: 0,
-      marginTop: 0,
-      marginBottom: 0,
-      paddingHorizontal: 0,
-      paddingVertical: 0,
-      borderRadius: 12,
-      alignItems: 'flex-end',
-      marginHorizontal: 0,
-      marginVertical: 0,
-    }
-  });
+  customCallout: {
+    width: 250,
+    marginLeft: 0,
+    marginRight: 0,
+    marginTop: 0,
+    marginBottom: 0,
+    paddingHorizontal: 0,
+    paddingVertical: 0,
+    borderRadius: 12,
+    alignItems: 'flex-end',
+    marginHorizontal: 0,
+    marginVertical: 0,
+  }
+})
