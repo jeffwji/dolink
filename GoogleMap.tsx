@@ -58,9 +58,7 @@ export default class GoogleMap extends React.Component<State> {
     //
   }
 
-  // For stop edit
   editingCoordinate = null
-  //
   currentLocationCoordinates = null
   directions = []
   stops = []
@@ -71,6 +69,10 @@ export default class GoogleMap extends React.Component<State> {
     if(this.currentLocationCoordinates==null ) {
       this._getCurrentPosition()
     }
+  }
+
+  _setCurrentEditCoordinate(coordinate) {
+    this.editingCoordinate = coordinate
   }
 
   _getCurrentPosition() {
@@ -338,7 +340,6 @@ export default class GoogleMap extends React.Component<State> {
   }
 
   _setStopCandidate = (stopDetail) => {
-    // this.stopCandidate = stopDetail
     return googleMapService('place/details', `place_id=${stopDetail.place_id}`)
           .then(detail => 
             this.stopCandidate = detail.result
@@ -364,7 +365,7 @@ export default class GoogleMap extends React.Component<State> {
       // if coordinate doesn't exist any more, close edit modal.
       const marker = this._getMarkerByCoordinate(removedStop[0].geometry.location)
       if(!marker) {
-        this.editingCoordinate = null
+        this._setCurrentEditCoordinate(null)
         this._closeStopEditModal()
       }
     }
@@ -389,6 +390,18 @@ export default class GoogleMap extends React.Component<State> {
       </Container>
     )
   }
+
+  _openStopEditModal = (marker) => {
+    this._setCurrentEditCoordinate(marker.props.stopDetail.geometry.location)
+    this.setState({stopEditModalVisiblity: true} as any)
+  }
+
+  _closeStopEditModal = () => {
+    this._setCurrentEditCoordinate(null)
+    this.setState({stopEditModalVisiblity: false} as any)
+  }
+
+  _isStopEditModalVisible = () => this.state.stopEditModalVisiblity;
 
   ////////////////////////////////
   // Stop edit modal
@@ -471,17 +484,6 @@ export default class GoogleMap extends React.Component<State> {
     )
   }
 
-  _openStopEditModal = (marker) => {
-    this.editingCoordinate = marker.props.stopDetail.geometry.location
-    this.setState({stopEditModalVisiblity: true} as any)
-  }
-
-  _closeStopEditModal = () => {
-    this.editingCoordinate = null
-    this.setState({stopEditModalVisiblity: false} as any)
-  }
-
-  _isStopEditModalVisible = () => this.state.stopEditModalVisiblity;
 
   _handleScrollTo = p => {
     if (this.stopEditScrollViewRef.current) {
