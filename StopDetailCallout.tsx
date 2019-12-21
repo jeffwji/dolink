@@ -56,13 +56,13 @@ class StopDetailCallout extends React.Component {
             <Text>Click to Add</Text>
           </View>
         )
-    } else {
+    } /*else {
         return(
           <View>
             {this._renderStops(this.props.orders)}
           </View>
         )
-    }
+    }*/
   }
 
   _renderStops(orders) {

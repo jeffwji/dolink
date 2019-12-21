@@ -59,7 +59,7 @@ export default class GoogleMap extends React.Component<State> {
   }
 
   // For stop edit
-  editingOrders = []
+  editingCoordinate = null
   //
   currentLocationCoordinates = null
   directions = []
@@ -277,7 +277,7 @@ export default class GoogleMap extends React.Component<State> {
             orders = {[index]}
             stopDetail={stopDetail}
             color='#f44336'
-            editStop = {(marker) => this._editStop(marker.props.orders)}
+            editStop = {(marker) => this._editStop(marker)}
             onStopLocationChange = {(stopDetail, orders) => this._onStopChange(stopDetail, orders)}
           />
         this.stopMarkers.push(stopMarker)
@@ -297,7 +297,7 @@ export default class GoogleMap extends React.Component<State> {
               orders = {orders}
               stopDetail={stopDetail}
               color='#f44336'
-              editStop = {(marker) => this._editStop(marker.props.orders)}
+              editStop = {(marker) => this._editStop(marker)}
               onStopLocationChange = {(stopDetail, orders) => this._onStopChange(stopDetail, orders)}
             />
           this.stopMarkers.push(stopMarker)
@@ -311,6 +311,11 @@ export default class GoogleMap extends React.Component<State> {
   }
 
   update() {
+    if (!this.editingCoordinate && this.state.isStopEditModalVisible)
+      this.setState({
+        isStopEditModalVisible: false
+      })
+
     this.setState({
       updateMap: this.state.updateMap + 1
     })
@@ -346,14 +351,30 @@ export default class GoogleMap extends React.Component<State> {
     this._getDirections()
   }
 
-  _editStop = (stopOrders) => {
-    this.openStopEditModal(stopOrders)
+  _editStop = (marker) => {
+    this.openStopEditModal(marker)
   }
 
   _removeStop(order) {
-    this.stops.splice(order, 1)
-    this._updateMarker()
-    this._getDirections()
+    const removedStop = this.stops.splice(order, 1)
+    if(removedStop) {
+      this._updateMarker()
+      this._getDirections()
+
+      // if coordinate doesn't exist any more, close edit modal.
+      const marker = this._getMarkerByCoordinate(removedStop[0].geometry.location)
+      if(!marker) {
+        this.editingCoordinate = null
+        this.closeStopEditModal()
+      }
+    }
+  }
+
+  _getMarkerByCoordinate(coordinate) {
+    return this.stopMarkers.find(marker => {
+      const location = marker.props.stopDetail.geometry.location
+      return (location.lat === coordinate.lat) && (location.lng === coordinate.lng)
+    })
   }
 
   render() {
@@ -405,15 +426,7 @@ export default class GoogleMap extends React.Component<State> {
               <TouchableWithoutFeedback>
                 <View>
                 {
-                  this.editingOrders.map((order, index) => {
-                    return <View key={index} style={styles.scrollableModalContent1}>
-                      <Button onPress={() => {
-                        this._removeStop(order)
-                      }}>
-                        <Text style={styles.scrollableModalText1}>Remove stop {order}</Text>
-                      </Button>
-                    </View>
-                  })
+                  this.renderMarkerEdit()
                 }
                 </View>
               </TouchableWithoutFeedback>
@@ -424,13 +437,33 @@ export default class GoogleMap extends React.Component<State> {
     )
   }
 
-  openStopEditModal = (stopOrders) => {
-    this.editingOrders = stopOrders
+  renderMarkerEdit() {
+    if(this.editingCoordinate) {
+      const m = this._getMarkerByCoordinate(this.editingCoordinate)
+      if(m) {
+        const content = m.props.orders.map((order, index) => 
+          <View key={index} style={styles.scrollableModalContent1}>
+            <Button onPress={() => {
+              this._removeStop(order)
+            }}>
+              <Text style={styles.scrollableModalText1}>Remove stop {order}</Text>
+            </Button>
+          </View>
+        )
+        return content
+      }
+    }
+    else if (this.state.isStopEditModalVisible)
+      this.closeStopEditModal()
+  }
+
+  openStopEditModal = (marker) => {
+    this.editingCoordinate = marker.props.stopDetail.geometry.location
     this.setState({stopEditModalVisiblity: true} as any)
   }
 
   closeStopEditModal = () => {
-    this.editingOrders = []
+    this.editingCoordinate = null
     this.setState({stopEditModalVisiblity: false} as any)
   }
 
