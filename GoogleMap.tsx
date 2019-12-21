@@ -295,24 +295,39 @@ export default class GoogleMap extends React.Component {
     })
   }
 
-  _onStopChange(stopDetail, orders) {
+  _onStopChange(stopEsential, orders) {
     if(orders.length > 0) {
+      this._getStopDetailInformation(stopEsential)
+        .then(detail => {
+          orders.map(order => {
+            this.stops[order] = detail.result
+          })
+          this._updateMarker()
+          this._getDirections()
+          this.update()
+        })
+      /*
       orders.map(order => {
-        this.stops[order] = stopDetail
+        this.stops[order] = stopEsential
       })
       this._updateMarker()
       this._getDirections()
       this.update()
+      */
     }
     else{
-      this._setStopCandidate(stopDetail)
+      this._setStopCandidate(stopEsential)
         .then(() => this.update())
         .catch(error => console.log(error))
     }
   }
 
-  _setStopCandidate = (stopDetail) => {
-    return googleMapService('place/details', `place_id=${stopDetail.place_id}`)
+  _getStopDetailInformation(stopEsential){
+    return googleMapService('place/details', `place_id=${stopEsential.place_id}`)
+  }
+
+  _setStopCandidate = (stopEsential) => {
+    return this._getStopDetailInformation(stopEsential)
           .then(detail => 
             this.stopCandidate = detail.result
           )
