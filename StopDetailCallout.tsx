@@ -40,36 +40,22 @@ class StopDetailCallout extends React.Component {
         }}
       >
         <CustomCallout style={styles.customCallout}>
-        {this._renderCallout()}
+          {(this.props.orders.length===0) && 
+            <View>
+              <PhotoView stopDetail={this.props.stopDetail} />
+              <Text style={[styles.orders, { fontSize: 13 }]}>{this.props.stopDetail.description || this.props.stopDetail.formatted_address || this.props.stopDetail.name}</Text> 
+              <Text>Click to Add</Text>
+            </View>
+          }
         </CustomCallout>
       </Callout>
     )
-  }
-
-  _renderCallout() {
-    if(this.props.orders.length === 0) {
-        return(
-          <View>
-            <PhotoView stopDetail={this.props.stopDetail} />
-            <Text style={[styles.orders, { fontSize: 13 }]}>{this.props.stopDetail.description || this.props.stopDetail.formatted_address || this.props.stopDetail.name}</Text> 
-            { /*<CalloutSubview onPress={() => this.props.editStop()}></CalloutSubview> */}
-            <Text>Click to Add</Text>
-          </View>
-        )
-    } /*else {
-        return(
-          <View>
-            {this._renderStops(this.props.orders)}
-          </View>
-        )
-    }*/
   }
 
   _renderStops(orders) {
     return(
       <View>
         <Text style={[styles.orders, { fontSize: 13 }]}>{this.props.stopDetail.description || this.props.stopDetail.formatted_address || this.props.stopDetail.name}</Text> 
-        { /* <CalloutSubview onPress={() => {this.props.editStop()}}></CalloutSubview> */ }
         <Text>Edit stops</Text>
       </View>
     )
@@ -97,17 +83,6 @@ class PhotoView extends React.Component {
     current_place_id = null
 
     render() {
-      /*if(this.props.stopDetail.place_id != this.current_place_id) {
-        this.photos = null
-        googleMapService('place/details', `place_id=${this.props.stopDetail.place_id}`)
-          .then(detail => {
-            this.current_place_id = this.props.stopDetail.place_id
-            this.photos = detail.result.photos
-            this.setState({placeImageIndex: 0})
-          })
-          .catch(error => console.log(error))
-      }*/
-        
       return(
         <View style={{
               marginLeft: 0,

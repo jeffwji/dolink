@@ -352,7 +352,7 @@ export default class GoogleMap extends React.Component<State> {
   }
 
   _editStop = (marker) => {
-    this.openStopEditModal(marker)
+    this._openStopEditModal(marker)
   }
 
   _removeStop(order) {
@@ -365,7 +365,7 @@ export default class GoogleMap extends React.Component<State> {
       const marker = this._getMarkerByCoordinate(removedStop[0].geometry.location)
       if(!marker) {
         this.editingCoordinate = null
-        this.closeStopEditModal()
+        this._closeStopEditModal()
       }
     }
   }
@@ -398,15 +398,12 @@ export default class GoogleMap extends React.Component<State> {
       <Modal
         animationType="fade"
         transparent={true}
-        isVisible={this.isStopEditModalVisible()}
-        //swipeDirection={['left','right']}
-        //onSwipeComplete={this.closeStopEditModal}
+        isVisible={this._isStopEditModalVisible()}
         backgroundColor = 'transparent'
-        scrollTo={this.handleScrollTo}
+        scrollTo={this._handleScrollTo}
         scrollOffset={this.state.stopEditScrollOffset}
         scrollOffsetMax={400 - 300} // content height - ScrollView height
         style={styles.modal}
-        // onRequestClose={() => {this.closeStopEditModal}}
         >
         <TouchableOpacity 
           style={{
@@ -415,33 +412,46 @@ export default class GoogleMap extends React.Component<State> {
           }} 
           activeOpacity={1} 
           onPressOut={() => {
-            this.closeStopEditModal()
+            this._closeStopEditModal()
           }}
         >
-        <View>
-          <ScrollView style={styles.scrollableModal}
-            ref={this.stopEditScrollViewRef}
-            onScroll={this.handleOnScroll}
-            scrollEventThrottle={16}>
-              <TouchableWithoutFeedback>
-                <View>
-                {
-                  this.renderMarkerEdit()
-                }
-                </View>
-              </TouchableWithoutFeedback>
-            </ScrollView>
-          </View>
+          {this._renderMarkerEdit()}
         </TouchableOpacity>
       </Modal>
     )
   }
 
-  renderMarkerEdit() {
+  _renderMarkerEdit() {
     if(this.editingCoordinate) {
       const m = this._getMarkerByCoordinate(this.editingCoordinate)
       if(m) {
-        const content = m.props.orders.map((order, index) => 
+        return(
+          <TouchableWithoutFeedback>
+          <View style={{backgroundColor: '#A9DCD3'}}>
+            {this._renderMarkerInformation(m)}
+            <ScrollView style={styles.scrollableModal}
+                ref={this.stopEditScrollViewRef}
+                onScroll={this._handleOnScroll}
+                scrollEventThrottle={16}>
+                <TouchableWithoutFeedback>
+                  <View>
+                  {
+                    this._renderMarkerStops(m.props.orders)
+                  }
+                  </View>
+                </TouchableWithoutFeedback>
+              </ScrollView>
+          </View>
+          </TouchableWithoutFeedback>
+        )
+      }
+    }
+    else if (this.state.isStopEditModalVisible)
+      this._closeStopEditModal()
+  }
+
+  _renderMarkerStops(orders) {
+    const content = orders.map((order, index) => 
           <View key={index} style={styles.scrollableModalContent1}>
             <Button onPress={() => {
               this._removeStop(order)
@@ -450,32 +460,36 @@ export default class GoogleMap extends React.Component<State> {
             </Button>
           </View>
         )
-        return content
-      }
-    }
-    else if (this.state.isStopEditModalVisible)
-      this.closeStopEditModal()
+    return content
   }
 
-  openStopEditModal = (marker) => {
+  _renderMarkerInformation(marker) {
+    return(
+      <View>
+        <Text>Something</Text>
+      </View>
+    )
+  }
+
+  _openStopEditModal = (marker) => {
     this.editingCoordinate = marker.props.stopDetail.geometry.location
     this.setState({stopEditModalVisiblity: true} as any)
   }
 
-  closeStopEditModal = () => {
+  _closeStopEditModal = () => {
     this.editingCoordinate = null
     this.setState({stopEditModalVisiblity: false} as any)
   }
 
-  isStopEditModalVisible = () => this.state.stopEditModalVisiblity;
+  _isStopEditModalVisible = () => this.state.stopEditModalVisiblity;
 
-  handleScrollTo = p => {
+  _handleScrollTo = p => {
     if (this.stopEditScrollViewRef.current) {
       this.stopEditScrollViewRef.current.scrollTo(p);
     }
   }
 
-  handleOnScroll = event => {
+  _handleOnScroll = event => {
     this.setState({
       scrollOffset: event.nativeEvent.contentOffset.y,
     });
