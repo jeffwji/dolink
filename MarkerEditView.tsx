@@ -11,9 +11,9 @@ import {
   Text,
   ScrollView,
   StyleSheet,
-  TouchableOpacity,
   TouchableWithoutFeedback,
-  Image
+  Image,
+  Dimensions
 } from 'react-native'
 
 import {googleImageService} from './Global'
@@ -23,53 +23,62 @@ import {googleImageService} from './Global'
 //
 type State = {
   stopEditScrollOffset: null | number;
+  minMapViewHight: number
 };
   
-export default class MarkerEditModal extends React.Component<State> {
+export default class MarkerEditView extends React.Component<State> {
   public stopEditScrollViewRef: React.RefObject<ScrollView>;
   
   constructor(props) {
     super(props, {
-      stopEditScrollOffset: null,
+      stopEditScrollOffset: null
     })
-        
+
     this.state = {
-      stopEditModalVisiblity: false,
-      placeImageIndex: 0
+      placeImageIndex: 0,
+      minMapViewHight: 540
     }
     
-    this.stopEditScrollViewRef = React.createRef();
+    this.HEIGHT = Dimensions.get('window').height
+    this.stopEditScrollViewRef = React.createRef()
   }
   
   render() {
-    return (
-      <Modal
-        animationType="fade"
-        transparent={true}
-        isVisible={this.props.mapView._isStopEditModalVisible()}
-        //backgroundColor = 'transparent'
-        backgroundColor = 'rgba(0,0,0,0)'
-        scrollTo={this._handleScrollTo}
-        scrollOffset={this.state.stopEditScrollOffset}
-        scrollOffsetMax={400 - 300} // content height - ScrollView height
-        style={styles.modal}
-        //overlayOpacity = '1'
-        //overlayBackgroundColor="#ffff00"
-      >
-          <TouchableOpacity 
-            style={{
-              flex: 1,
-              justifyContent: 'flex-end'
-            }} 
-            activeOpacity={1} 
-            onPressOut={() => {
-              this.props.mapView._closeStopEditModal()
-            }}
-          >
+    if(this.props.mapView._isStopEditModalVisible())
+    {
+      return (
+        <View style={[styles.overlay, { height: this.HEIGHT-this.state.minMapViewHight }]}>
+          {/*<TouchableHighlight>*/}
+            <View 
+              style={styles.slidingBar}
+              onMoveShouldSetResponder={this._handleMoveShouldSetResponder}
+              onResponderMove={this._handleResponderMove}
+            />
+          {/*</TouchableHighlight>*/}
             {this._renderMarkerEdit()}
-          </TouchableOpacity>
-        </Modal>
+        </View>
       )
+    }
+    else {
+      return(<View></View>)
+    }
+  }
+
+  _handleMoveShouldSetResponder = (evt) => {
+    return true;
+  }
+
+  _handleResponderMove =(evt) => {
+    if(this.HEIGHT-evt.nativeEvent.pageY > 50)
+      this.setState({
+        minMapViewHight: evt.nativeEvent.pageY
+      })
+    else {
+      this.props.mapView._closeStopEditModal()
+      this.setState({
+        minMapViewHight: 540
+      })
+    }
   }
   
   _renderMarkerEdit() {
@@ -97,8 +106,12 @@ export default class MarkerEditModal extends React.Component<State> {
         )
       }
     }
-    else if (this.props.mapView.isStopEditModalVisible)
+    else if (this.props.mapView.isStopEditModalVisible) {
       this.props.mapView._closeStopEditModal()
+      this.setState({
+        minMapViewHight: 540
+      })
+    }
   }
   
   _renderMarkerStops(marker) {
@@ -186,6 +199,20 @@ const styles = StyleSheet.create({
   scrollableModalText: {
     fontSize: 20,
     color: 'white',
+  },
+
+  slidingBar: {
+    height: 20, 
+    width: Dimensions.get('window').width, 
+    backgroundColor: 'black'
+  },
+  overlay: {
+    flex: 1,
+    position: 'absolute',
+    left: 0,
+    bottom: 0,
+    backgroundColor: 'white',
+    width: Dimensions.get('window').width
   }
 })
 

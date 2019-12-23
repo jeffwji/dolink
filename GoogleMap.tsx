@@ -1,8 +1,7 @@
 import React from 'react'
 import MapView, {PROVIDER_GOOGLE, Polyline } from 'react-native-maps'
 import StopMarker from './StopMarker'
-import MarkerEditModal from './MarkerEditModal'
-
+import MarkerEditView from './MarkerEditView'
 
 import {
   Container,
@@ -12,7 +11,10 @@ import {
 import {
   View,
   Dimensions,
-  StyleSheet
+  StyleSheet,
+  TouchableOpacity,
+  Text,
+  Alert
 } from 'react-native'
 
 import MapSearchInput from './MapSearchInput';
@@ -26,7 +28,8 @@ export default class GoogleMap extends React.Component {
     super(props)
     
     this.state = {
-      updateMap: 0
+      updateMap: 0,
+      isStopEditModalVisible: false,
     }
   }
 
@@ -326,9 +329,63 @@ export default class GoogleMap extends React.Component {
   }
 
   _addStop = (stopDetail) => {
-    this.stops.push(stopDetail)
-    this._updateMarker()
-    this._getDirections()
+    if(this.stopMarkers.length > 1 || (this.stopMarkers.length === 1 && !this._getMarkerByCoordinate(stopDetail.geometry.location))) {
+        Alert.alert(
+          'Add new stop',
+          'Press \'Add\' to append to the end of route, or \'Insert to...\' to front of an existing stop.',
+          [
+            {
+              text: 'Cancle',
+              onPress: () => console.log('Cancel Pressed'),
+              style: 'cancel',
+            },
+            {
+              text: 'Add',
+              onPress: () => {
+                this.stops.push(stopDetail)
+                this._updateMarker()
+                this._getDirections()
+              }
+            },
+            {
+              text: 'Insert to...', 
+              onPress: () => {
+                this._insertStop(stopDetail)
+              }
+            }
+          ],
+          {cancelable: false},
+        )
+    } else {
+      this.stops.push(stopDetail)
+      this._updateMarker()
+      this._getDirections()
+    }
+  }
+
+  _insertStop(stopDetail) {
+    Alert.alert(
+      null,
+      "Select stop which you like to insert front to",
+      this._listStopWithName()
+    )
+  }
+
+  _listStopWithName() {
+    const list =  this.stops.map((stop, index) => {
+      return {
+        text: "Stop " + index + " - " + stop.name,
+        onPress: (e => {
+          console.log("stop #" + index + " is selected")
+        })
+      }
+    })
+    list.push({
+      text: 'Cancle',
+      onPress: () => console.log('Cancel Pressed'),
+      style: 'cancel',
+    })
+    return list
   }
 
   _editStop = (marker) => {
@@ -359,16 +416,16 @@ export default class GoogleMap extends React.Component {
 
   render() {
     return (
-      <Container style={styles.container} 
-        onClick = { e => 
-          console.log(e)
-        }
-      >
+      <Container style={styles.container}>
         {this._renderMap()}
-        {/*this._renderModal()*/}
-        <MarkerEditModal mapView = {this} />
+        {this._renderMarkerEditView()}
       </Container>
     )
+  }
+  
+  _renderMarkerEditView() {
+    //return(<MarkerEditModal mapView = {this} />)
+    return(<MarkerEditView mapView = {this} />)
   }
 
   _openStopEditModal = (marker) => {
