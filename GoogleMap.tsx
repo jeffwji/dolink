@@ -168,15 +168,20 @@ export default class GoogleMap extends React.Component {
 
   _renderCurrentMarker() {
     if(this.stopCandidate != null)
-        return(
-          <StopMarker
-            stopDetail={this.stopCandidate}
-            color='#009688'
-            addStop = {(marker) => this._addStop(marker.props.stopDetail)}
-            orders = {[]}
-            onStopLocationChange = {(stopDetail, orders) => this._onStopChange(stopDetail, orders)}
-          />
-        )
+      return(
+        this._newMarker(this.stopCandidate)
+      )
+  }
+
+  _newMarker(detail, key=0, color='#009688', orders=[]){
+    return <StopMarker
+      key = {key}
+      stopDetail={detail}
+      color={color}
+      orders = {orders}
+      addStop = {(marker) => this._addStop(marker.props.stopDetail)}
+      onStopLocationChange = {(stopDetail, orders) => this._onStopChange(stopDetail, orders)}
+    />
   }
 
   _renderMarkers() {
