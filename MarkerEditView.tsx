@@ -82,8 +82,8 @@ export default class MarkerEditView extends React.Component<State> {
   }
   
   _renderMarkerEdit() {
-    if(this.props.mapView.editingCoordinate) {
-      const m = this.props.mapView._getMarkerByCoordinate(this.props.mapView.editingCoordinate)
+    if(this.props.mapView.editingPlaceId) {
+      const m = this.props.mapView._getMarkerByPlaceId(this.props.mapView.editingPlaceId)
       if(m) {
         return(
           <TouchableWithoutFeedback>

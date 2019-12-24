@@ -33,7 +33,7 @@ export default class GoogleMap extends React.Component {
     }
   }
 
-  editingCoordinate = null
+  editingPlaceId = null
   currentLocationCoordinates = null
   directions = []
   stops = []
@@ -47,8 +47,8 @@ export default class GoogleMap extends React.Component {
   }
 
   //_setCurrentEditCoordinate(coordinate) {
-  _setCurrentEditCoordinate(place_id) {
-    this.editingCoordinate = place_id
+    _setCurrentEditPlaceId(place_id) {
+    this.editingPlaceId = place_id
   }
 
   _getCurrentPosition() {
@@ -244,8 +244,8 @@ export default class GoogleMap extends React.Component {
     
     this.stops.map((stopDetail, index) => {
       const i = this.stopMarkers.findIndex(marker => {
-        const s = marker.props.stopDetail.geometry.location
-        return (s.lat == stopDetail.geometry.location.lat) && (s.lng == stopDetail.geometry.location.lng)
+        const s = marker.props.stopDetail
+        return (s.place_id == stopDetail.place_id)
       })
 
       if (i < 0){
@@ -289,7 +289,7 @@ export default class GoogleMap extends React.Component {
   }
 
   update() {
-    if (!this.editingCoordinate && this.state.isStopEditModalVisible)
+    if (!this.editingPlaceId && this.state.isStopEditModalVisible)
       this.setState({
         isStopEditModalVisible: false
       })
@@ -328,7 +328,7 @@ export default class GoogleMap extends React.Component {
   }
 
   _addStop = (stopDetail) => {
-    if(this.stopMarkers.length > 1 || (this.stopMarkers.length === 1 && !this._getMarkerByCoordinate(stopDetail.place_id))) {  //.geometry.location))) {
+    if(this.stopMarkers.length > 1 || (this.stopMarkers.length === 1 && !this._getMarkerByPlaceId(stopDetail.place_id))) {
         Alert.alert(
           'Add new stop',
           'Press \'Add\' to append to the end of route, or \'Insert to...\' to front of an existing stop.',
@@ -398,19 +398,15 @@ export default class GoogleMap extends React.Component {
       this._getDirections()
 
       // if coordinate doesn't exist any more, close edit modal.
-      const marker = this._getMarkerByCoordinate(removedStop[0].place_id)//.geometry.location)
+      const marker = this._getMarkerByPlaceId(removedStop[0].place_id)
       if(!marker) {
-        this._setCurrentEditCoordinate(null)
+        this._setCurrentEditPlaceId(null)
         this._closeStopEditModal()
       }
     }
   }
 
-  _getMarkerByCoordinate(/*coordinate*/place_id) {
-    /*return this.stopMarkers.find(marker => {
-      const location = marker.props.stopDetail.geometry.location
-      return (location.lat === coordinate.lat) && (location.lng === coordinate.lng)
-    })*/
+  _getMarkerByPlaceId(place_id) {
     return this.stopMarkers.find(marker => {
       return marker.props.stopDetail.place_id === place_id
     })
@@ -432,12 +428,12 @@ export default class GoogleMap extends React.Component {
 
   _openStopEditModal = (marker) => {
     //this._setCurrentEditCoordinate(marker.props.stopDetail.geometry.location)
-    this._setCurrentEditCoordinate(marker.props.stopDetail.place_id)
+    this._setCurrentEditPlaceId(marker.props.stopDetail.place_id)
     this.setState({stopEditModalVisiblity: true} as any)
   }
 
   _closeStopEditModal = () => {
-    this._setCurrentEditCoordinate(null)
+    this._setCurrentEditPlaceId(null)
     this.setState({stopEditModalVisiblity: false} as any)
   }
 
