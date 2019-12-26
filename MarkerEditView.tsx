@@ -84,64 +84,8 @@ export default class MarkerEditView extends React.Component<State> {
   
   _renderMarkerEdit() {
     if(this.props.mapView.editingPlaceId || this.props.mapView.stopCandidate) {
-      /*if(this.currentMarker && this.currentPlaceId === this.props.mapView.editingPlaceId) {
-        const m = this.currentMarker
-        return(
-          <TouchableWithoutFeedback>
-          <View style={{backgroundColor: '#FFFFFF'}}>
-            {this._renderMarkerInformation(m)}
-            <ScrollView style={styles.scrollableModal}
-              ref={this.stopEditScrollViewRef}
-              onScroll={this._handleOnScroll}
-              scrollEventThrottle={16}>
-              <TouchableWithoutFeedback>
-                <View>
-                {
-                  this._renderMarkerStops(m)
-                }
-                </View>
-              </TouchableWithoutFeedback>
-            </ScrollView>
-          </View>
-          </TouchableWithoutFeedback>
-        )
-      } else {
-        const p = new Promise( (resolver,rejector) => {
-          resolver(this.props.mapView._getMarkerByPlaceId(this.props.mapView.editingPlaceId))
-        })
-
-        p.then( marker => {
-          if(marker)
-            return marker
-          else {
-            return googleMapService('place/details', `place_id=${this.props.mapView.editingPlaceId}`)
-            .then(detail => {
-              return <StopMarker
-                stopDetail={detail.result}
-                color='#009688'
-                orders={[]}
-                addStop = {(marker) => this._addStop(marker.props.stopDetail)}
-                onStopLocationChange = {(stopDetail, orders) => this._onStopChange(stopDetail, orders)}
-              />
-            })
-          }
-        }).then(marker => {
-          this.currentMarker = marker
-          this.currentPlaceId = this.props.mapView.editingPlaceId
-          this.setState({
-            reload: this.state.reload + 1
-          })
-        })
-      }*/
-
       let m = this.props.mapView._getMarkerByPlaceId(this.props.mapView.editingPlaceId)
-      m = m?m:this.props.mapView.stopCandidate?<StopMarker
-        stopDetail={this.props.mapView.stopCandidate}
-        color='#009688'
-        orders={[]}
-        addStop = {(marker) => this.props.mapView._addStop(marker.props.stopDetail)}
-        onStopLocationChange = {(stopDetail, orders) => this.props.mapView._onStopChange(stopDetail, orders)}
-      />:null
+      m = m?m:this.props.mapView.stopCandidate?this.props.mapView._newMarker(this.props.mapView.stopCandidate, 0, '#009688', []):null
 
       if(m) {
         return(
