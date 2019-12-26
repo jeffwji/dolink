@@ -1,6 +1,5 @@
 import React from 'react'
-import Modal from 'react-native-modal';
-
+import StopMarker from './StopMarker'
 
 import {
   Button
@@ -16,7 +15,7 @@ import {
   Dimensions
 } from 'react-native'
 
-import {googleImageService} from './Global'
+import {googleImageService, googleMapService} from './Global'
 
 ////////////////////////////////
 // Stop edit modal
@@ -25,10 +24,10 @@ type State = {
   stopEditScrollOffset: null | number;
   minMapViewHight: number
 };
-  
+
 export default class MarkerEditView extends React.Component<State> {
   public stopEditScrollViewRef: React.RefObject<ScrollView>;
-  
+
   constructor(props) {
     super(props, {
       stopEditScrollOffset: null
@@ -36,26 +35,28 @@ export default class MarkerEditView extends React.Component<State> {
 
     this.state = {
       placeImageIndex: 0,
-      minMapViewHight: 540
+      minMapViewHight: 540,
+      reload: 0
     }
-    
+
     this.HEIGHT = Dimensions.get('window').height
     this.stopEditScrollViewRef = React.createRef()
+    this.currentMarker = null
+    this.currentPlaceId = null
   }
-  
+
   render() {
-    if(this.props.mapView._isStopEditModalVisible())
+    const stopEditModalVisiblity = this.props.mapView.state.stopEditModalVisiblity
+    if(stopEditModalVisiblity)
     {
       return (
         <View style={[styles.overlay, { height: this.HEIGHT-this.state.minMapViewHight }]}>
-          {/*<TouchableHighlight>*/}
-            <View 
-              style={styles.slidingBar}
-              onMoveShouldSetResponder={this._handleMoveShouldSetResponder}
-              onResponderMove={this._handleResponderMove}
-            />
-          {/*</TouchableHighlight>*/}
-            {this._renderMarkerEdit()}
+          <View 
+            style={styles.slidingBar}
+            onMoveShouldSetResponder={this._handleMoveShouldSetResponder}
+            onResponderMove={this._handleResponderMove}
+          />
+          {this._renderMarkerEdit()}
         </View>
       )
     }
@@ -82,8 +83,66 @@ export default class MarkerEditView extends React.Component<State> {
   }
   
   _renderMarkerEdit() {
-    if(this.props.mapView.editingPlaceId) {
-      const m = this.props.mapView._getMarkerByPlaceId(this.props.mapView.editingPlaceId)
+    if(this.props.mapView.editingPlaceId || this.props.mapView.stopCandidate) {
+      /*if(this.currentMarker && this.currentPlaceId === this.props.mapView.editingPlaceId) {
+        const m = this.currentMarker
+        return(
+          <TouchableWithoutFeedback>
+          <View style={{backgroundColor: '#FFFFFF'}}>
+            {this._renderMarkerInformation(m)}
+            <ScrollView style={styles.scrollableModal}
+              ref={this.stopEditScrollViewRef}
+              onScroll={this._handleOnScroll}
+              scrollEventThrottle={16}>
+              <TouchableWithoutFeedback>
+                <View>
+                {
+                  this._renderMarkerStops(m)
+                }
+                </View>
+              </TouchableWithoutFeedback>
+            </ScrollView>
+          </View>
+          </TouchableWithoutFeedback>
+        )
+      } else {
+        const p = new Promise( (resolver,rejector) => {
+          resolver(this.props.mapView._getMarkerByPlaceId(this.props.mapView.editingPlaceId))
+        })
+
+        p.then( marker => {
+          if(marker)
+            return marker
+          else {
+            return googleMapService('place/details', `place_id=${this.props.mapView.editingPlaceId}`)
+            .then(detail => {
+              return <StopMarker
+                stopDetail={detail.result}
+                color='#009688'
+                orders={[]}
+                addStop = {(marker) => this._addStop(marker.props.stopDetail)}
+                onStopLocationChange = {(stopDetail, orders) => this._onStopChange(stopDetail, orders)}
+              />
+            })
+          }
+        }).then(marker => {
+          this.currentMarker = marker
+          this.currentPlaceId = this.props.mapView.editingPlaceId
+          this.setState({
+            reload: this.state.reload + 1
+          })
+        })
+      }*/
+
+      let m = this.props.mapView._getMarkerByPlaceId(this.props.mapView.editingPlaceId)
+      m = m?m:this.props.mapView.stopCandidate?<StopMarker
+        stopDetail={this.props.mapView.stopCandidate}
+        color='#009688'
+        orders={[]}
+        addStop = {(marker) => this.props.mapView._addStop(marker.props.stopDetail)}
+        onStopLocationChange = {(stopDetail, orders) => this.props.mapView._onStopChange(stopDetail, orders)}
+      />:null
+
       if(m) {
         return(
           <TouchableWithoutFeedback>
@@ -105,17 +164,16 @@ export default class MarkerEditView extends React.Component<State> {
           </TouchableWithoutFeedback>
         )
       }
-    }
-    else if (this.props.mapView.isStopEditModalVisible) {
+    } //else {
       this.props.mapView._closeStopEditModal()
       this.setState({
         minMapViewHight: 540
       })
-    }
+    //}
   }
   
   _renderMarkerStops(marker) {
-    const content = marker.props.orders.map((order, index) => 
+    return marker.props.orders.map((order, index) => 
       <View key={index} style={[styles.scrollableModalContent, {backgroundColor: (index % 2 == 0)?'#87BBE0':'#A9DCD3'}]}>
         <Button onPress={() => {
           this.props.mapView._removeStop(order)
@@ -124,7 +182,6 @@ export default class MarkerEditView extends React.Component<State> {
         </Button>
       </View>
     )
-    return content
   }
   
   _renderMarkerInformation(marker) {

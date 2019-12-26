@@ -23,7 +23,7 @@ class StopMarker extends React.Component {
         ref = {marker => this.marker = marker}
         title = {stop.description || stop.formatted_address || stop.name}
         onPress={e => {
-          if(this.props.orders.length > 0) this.props.editStop(this)
+          this.props.editStop(this)
         }}
         onDragEnd={e => {
           const param = e.nativeEvent.coordinate.latitude + "," + e.nativeEvent.coordinate.longitude
@@ -33,8 +33,8 @@ class StopMarker extends React.Component {
               result = result?result:detail.results.find(result => result.types.find(type => type === 'route'))
               return result?result:detail.results[0]
             })
-            .then( newStopDetail => {
-              this.props.onStopLocationChange(newStopDetail, this.props.orders)
+            .then( newStopEssential => {
+              this.props.onStopLocationChange(newStopEssential, this.props.orders)
             })
             .catch(e => {
               console.warn(e)
@@ -46,13 +46,13 @@ class StopMarker extends React.Component {
           orders={this.props.orders} 
           stopDetail={stop}/>
   
-        <StopDetailCallout
+        {/*<StopDetailCallout
           orders = {this.props.orders}
           stopDetail = {stop}
           addStop={() => {
             this.props.addStop(this)
           }}
-        />
+        />*/}
       </Marker>
     )
   }

@@ -12,8 +12,6 @@ import {
   View,
   Dimensions,
   StyleSheet,
-  TouchableOpacity,
-  Text,
   Alert
 } from 'react-native'
 
@@ -22,14 +20,17 @@ import polyline from '@mapbox/polyline'
 
 import {askPermission, googleMapService} from './Global'
 
+type State = {
+  stopEditModalVisiblity: number;
+};
 
-export default class GoogleMap extends React.Component {
+export default class GoogleMap extends React.Component<State> {
   constructor(props) {
     super(props)
     
     this.state = {
       updateMap: 0,
-      isStopEditModalVisible: false,
+      stopEditModalVisiblity: false,
     }
   }
 
@@ -47,7 +48,7 @@ export default class GoogleMap extends React.Component {
   }
 
   //_setCurrentEditCoordinate(coordinate) {
-    _setCurrentEditPlaceId(place_id) {
+  _setCurrentEditPlaceId(place_id) {
     this.editingPlaceId = place_id
   }
 
@@ -127,6 +128,12 @@ export default class GoogleMap extends React.Component {
             followUserLocation={true}
             onPoiClick = { e => {
               const poi = e.nativeEvent
+
+              /*this.editingPlaceId = poi.placeId
+              this.setState({
+                stopEditModalVisiblity: true
+              })*/
+
               poi.geometry = {
                 location: {
                   lat: poi.coordinate.latitude,
@@ -135,9 +142,15 @@ export default class GoogleMap extends React.Component {
               }
               poi.place_id = poi.placeId
               this._setStopCandidate(poi)
-                .then(() => this.update())
+                .then(() => {
+                  this.editingPlaceId = poi.placeId
+                  /*this.update()*/
+                  this.setState({
+                    stopEditModalVisiblity: true
+                })})
                 .catch(error => console.log(error))
             }}
+            
             /*onLongPress={ e => {
               if(!e.nativeEvent.action || e.nativeEvent.action === 'press') {
                 googleMapService("geocode", `latlng=${this._coords2string(e.nativeEvent.coordinate)}`)
@@ -179,7 +192,7 @@ export default class GoogleMap extends React.Component {
       stopDetail={detail}
       color={color}
       orders = {orders}
-      addStop = {(marker) => this._addStop(marker.props.stopDetail)}
+      editStop = {(marker) => this._editStop(marker)}
       onStopLocationChange = {(stopDetail, orders) => this._onStopChange(stopDetail, orders)}
     />
   }
@@ -254,15 +267,7 @@ export default class GoogleMap extends React.Component {
       })
 
       if (i < 0){
-        const stopMarker =
-          <StopMarker
-            key={index}
-            orders = {[index]}
-            stopDetail={stopDetail}
-            color='#f44336'
-            editStop = {(marker) => this._editStop(marker)}
-            onStopLocationChange = {(stopDetail, orders) => this._onStopChange(stopDetail, orders)}
-          />
+        const stopMarker = this._newMarker(stopDetail, index, '#f44336', [index])
         this.stopMarkers.push(stopMarker)
       }
       else {
@@ -274,15 +279,7 @@ export default class GoogleMap extends React.Component {
         }
         else {
           const orders = marker.props.orders.concat(index)
-          const stopMarker = 
-            <StopMarker
-              key= {marker.key}  // {index}
-              orders = {orders}
-              stopDetail={stopDetail}
-              color='#f44336'
-              editStop = {(marker) => this._editStop(marker)}
-              onStopLocationChange = {(stopDetail, orders) => this._onStopChange(stopDetail, orders)}
-            />
+          const stopMarker = this._newMarker(stopDetail, marker.key, '#f44336', orders)
           this.stopMarkers.push(stopMarker)
         }
       }
@@ -294,9 +291,9 @@ export default class GoogleMap extends React.Component {
   }
 
   update() {
-    if (!this.editingPlaceId && this.state.isStopEditModalVisible)
+    if (!this.editingPlaceId && this.state.stopEditModalVisiblity)
       this.setState({
-        isStopEditModalVisible: false
+        stopEditModalVisiblity: false
       })
 
     this.setState({
@@ -304,32 +301,37 @@ export default class GoogleMap extends React.Component {
     })
   }
 
-  _onStopChange(stopEsential, orders) {
+  _onStopChange(stopEssential, orders) {
     if(orders.length > 0) {
-      this._getStopDetailInformation(stopEsential)
+      this._getStopDetailInformation(stopEssential)
         .then(detail => {
           orders.map(order => {
             this.stops[order] = detail.result
           })
+          this.editingPlaceId = detail.result.place_id
           this._updateMarker()
           this._getDirections()
           this.update()
         })
     }
     else{
-      this._setStopCandidate(stopEsential)
+      this._setStopCandidate(stopEssential)
         .then(() => this.update())
-        .catch(error => console.log(error))
+        .catch(error => 
+          console.log(error))
     }
   }
 
-  _getStopDetailInformation(stopEsential){
-    return googleMapService('place/details', `place_id=${stopEsential.place_id}`)
+  _getStopDetailInformation(stopEssential){
+    return googleMapService('place/details', `place_id=${stopEssential.place_id}`)
   }
 
-  _setStopCandidate = (stopEsential) => {
-    return this._getStopDetailInformation(stopEsential)
-      .then(detail => this.stopCandidate = detail.result)
+  _setStopCandidate(stopEssential) {
+    return this._getStopDetailInformation(stopEssential)
+      .then(detail => {
+        this.stopCandidate = detail.result
+        this.editingPlaceId = detail.result.place_id
+      })
   }
 
   _addStop = (stopDetail) => {
