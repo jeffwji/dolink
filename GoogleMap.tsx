@@ -47,7 +47,6 @@ export default class GoogleMap extends React.Component<State> {
     }
   }
 
-  //_setCurrentEditCoordinate(coordinate) {
   _setCurrentEditPlaceId(place_id) {
     this.editingPlaceId = place_id
   }
@@ -88,19 +87,6 @@ export default class GoogleMap extends React.Component<State> {
       this.update()
   }
 
-  _resetStopCandidate(stop) {
-    this._setStopCandidate(stop)
-      .then(() =>
-        this._updateCurrentLocation({
-          latitude: stop.geometry.location.lat,
-          longitude: stop.geometry.location.lng,
-          latitudeDelta: this.currentLocationCoordinates.latitudeDelta,
-          longitudeDelta: this.currentLocationCoordinates.longitudeDelta
-        }, true)
-      )
-      .catch(error => console.log(error))
-  }
-
   _renderMap() {
     if(this.currentLocationCoordinates!=null) {
       return(
@@ -109,7 +95,16 @@ export default class GoogleMap extends React.Component<State> {
             <Item>
               <MapSearchInput 
                 notifyLocationChange={(details) => {
-                  this._resetStopCandidate(details)
+                  this._setStopCandidate(details)
+                    .then(() =>
+                      this._updateCurrentLocation({
+                        latitude: details.geometry.location.lat,
+                        longitude: details.geometry.location.lng,
+                        latitudeDelta: this.currentLocationCoordinates.latitudeDelta,
+                        longitudeDelta: this.currentLocationCoordinates.longitudeDelta
+                      }, true)
+                    )
+                    .catch(error => console.log(error))
                 }}
                 defaultLocations={[
                   { description: 'Home', geometry: { location: { lat: 43.8906719, lng: -79.2964162 } }, place_id: 'ChIJ1bQTc_zV1IkR_pQs6RrmKzo', isPredefinedPlace: true, name: 'Stonebridge Public School, Stonebridge Drive, Markham, ON, Canada'}
@@ -128,12 +123,6 @@ export default class GoogleMap extends React.Component<State> {
             followUserLocation={true}
             onPoiClick = { e => {
               const poi = e.nativeEvent
-
-              /*this.editingPlaceId = poi.placeId
-              this.setState({
-                stopEditModalVisiblity: true
-              })*/
-
               poi.geometry = {
                 location: {
                   lat: poi.coordinate.latitude,
@@ -143,14 +132,18 @@ export default class GoogleMap extends React.Component<State> {
               poi.place_id = poi.placeId
               this._setStopCandidate(poi)
                 .then(() => {
+                  this._updateCurrentLocation({
+                        latitude: poi.coordinate.latitude,
+                        longitude: poi.coordinate.longitude,
+                        latitudeDelta: this.currentLocationCoordinates.latitudeDelta,
+                        longitudeDelta: this.currentLocationCoordinates.longitudeDelta
+                      }, true)
                   this.editingPlaceId = poi.placeId
-                  /*this.update()*/
                   this.setState({
                     stopEditModalVisiblity: true
                 })})
                 .catch(error => console.log(error))
             }}
-            
             /*onLongPress={ e => {
               if(!e.nativeEvent.action || e.nativeEvent.action === 'press') {
                 googleMapService("geocode", `latlng=${this._coords2string(e.nativeEvent.coordinate)}`)

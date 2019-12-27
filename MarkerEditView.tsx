@@ -2,7 +2,11 @@ import React from 'react'
 import StopMarker from './StopMarker'
 
 import {
-  Button
+  Button,
+  Item,
+  Icon,
+  Left,
+  Right
 } from 'native-base'
 
 import {
@@ -35,7 +39,7 @@ export default class MarkerEditView extends React.Component<State> {
 
     this.state = {
       placeImageIndex: 0,
-      minMapViewHight: 540,
+      minMapViewHight: Dimensions.get('window').height/1.5,
       reload: 0
     }
 
@@ -77,7 +81,7 @@ export default class MarkerEditView extends React.Component<State> {
     else {
       this.props.mapView._closeStopEditModal()
       this.setState({
-        minMapViewHight: 540
+        minMapViewHight: Dimensions.get('window').height/1.5
       })
     }
   }
@@ -92,7 +96,7 @@ export default class MarkerEditView extends React.Component<State> {
           <TouchableWithoutFeedback>
           <View style={{backgroundColor: '#FFFFFF'}}>
             {this._renderMarkerInformation(m)}
-            <ScrollView style={styles.scrollableModal}
+            <ScrollView
               ref={this.stopEditScrollViewRef}
               onScroll={this._handleOnScroll}
               scrollEventThrottle={16}>
@@ -111,26 +115,37 @@ export default class MarkerEditView extends React.Component<State> {
     } //else {
       this.props.mapView._closeStopEditModal()
       this.setState({
-        minMapViewHight: 540
+        minMapViewHight: Dimensions.get('window').height/1.5
       })
     //}
   }
   
   _renderMarkerStops(marker) {
     return marker.props.orders.map((order, index) => 
-      <View key={index} style={[styles.scrollableModalContent, {backgroundColor: (index % 2 == 0)?'#87BBE0':'#A9DCD3'}]}>
-        <Button onPress={() => {
-          this.props.mapView._removeStop(order)
-        }}>
-          <Text style={styles.scrollableModalText}>Remove stop {order}</Text>
-        </Button>
+      <View
+        key={index} 
+        style={[styles.stopEditor, {backgroundColor: (index % 2 == 0)?'#87BBE0':'#A9DCD3'}]}
+      >
+          <Button onPress={() => {
+            console.log('Stop has been updated')
+          }}>
+            <Text>Update</Text>
+          </Button>
+          <Button transparent 
+            onPress={() => {
+              this.props.mapView._removeStop(order)
+          }}>
+            <Icon name='ios-close'/>
+          </Button>
       </View>
     )
   }
   
   _renderMarkerInformation(marker) {
     return(
-      <View style={{flexDirection: 'row'}}>
+      <View style={{
+        flexDirection: 'row'
+      }}>
       {this._renderPicture(marker.props.stopDetail)}
       {this._renderAddress(marker.props.stopDetail)}
       </View>
@@ -153,20 +168,27 @@ export default class MarkerEditView extends React.Component<State> {
 
   _renderAddress(detail){
     return(
-      <View style={{flexDirection: 'column'}}>
-      {(detail.icon) && 
-        <Image
-          source={{ uri: detail.icon} }
-          style={{ width: 16, height: 16 }}
-        />}
-      {(detail.name) && <Text>{detail.name}</Text>}
-      {(detail.formatted_address) && <Text>{detail.formatted_address}</Text>}
-      {(detail.formatted_phone_number) && <Text>{detail.formatted_phone_number}</Text>}
-      <Button onPress={() => {
-          this.props.mapView._addStop(detail)
-        }}>
-          <Text style={styles.scrollableModalText}>Add as new stop</Text>
-      </Button>
+      <View style={{
+        flex: 1,
+        flexDirection: 'column'
+      }}>
+        <Item>
+          {(detail.icon) && 
+            <Image
+              source={{ uri: detail.icon} }
+              style={{ width: 16, height: 16 }}
+            />}
+          {(detail.name) && <Text style={styles.scrollableModalText}>{detail.name}</Text>}
+        </Item>
+        {(detail.formatted_address) && <Text style={styles.scrollableModalText}>{detail.formatted_address}</Text>}
+        {(detail.formatted_phone_number) && <Text style={styles.scrollableModalText}>{detail.formatted_phone_number}</Text>}
+        <Button // style={{alignItems: 'center'}}
+          onPress={() => {
+            this.props.mapView._addStop(detail)
+          }}
+        >
+          <Text style={[styles.scrollableModalText, {alignItems: 'center'}]}>Add as new stop</Text>
+        </Button>
       </View>
     )
   }
@@ -189,17 +211,16 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     margin: 0,
   },
-  scrollableModal: {
-    height: 120,
-  },
-  scrollableModalContent: {
-    height: 50,
-    alignItems: 'center',
-    justifyContent: 'center',
+  stopEditor: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    justifyContent: 'center'
   },
   scrollableModalText: {
-    fontSize: 20,
-    color: 'white',
+    flex: 1,
+    fontSize: 15,
+    flexWrap: 'wrap'
   },
 
   slidingBar: {
