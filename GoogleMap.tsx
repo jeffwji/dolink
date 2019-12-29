@@ -146,6 +146,12 @@ export default class GoogleMap extends React.Component<State> {
                 })})
                 .catch(error => console.log(error))
             }}
+            onPress={ e=> {
+              if(!e.nativeEvent.action || e.nativeEvent.action === 'press') {
+                this.stopCandidate = null
+                this._closeStopEditModal()
+              }
+            } }
             /*onLongPress={ e => {
               if(!e.nativeEvent.action || e.nativeEvent.action === 'press') {
                 googleMapService("geocode", `latlng=${this._coords2string(e.nativeEvent.coordinate)}`)
@@ -201,7 +207,7 @@ export default class GoogleMap extends React.Component<State> {
   _getDirections() {
     this.directions= []
     if(this.stops.length > 1){
-      const temp_stops = this.stops.map(s => s)
+      const temp_stops = this.stops.map(({stopDetail}) => stopDetail)
       let origin = temp_stops.shift()
       do{
         const dest = temp_stops.shift()
@@ -272,25 +278,25 @@ export default class GoogleMap extends React.Component<State> {
   _updateMarker() {
     this.stopMarkers = []
     
-    this.stops.map((stopDetail, index) => {
+    this.stops.map(({stopDetail, duration}, index) => {
       const i = this.stopMarkers.findIndex(marker => {
         const s = marker.props.stopDetail
         return (s.place_id == stopDetail.place_id)
       })
 
       if (i < 0){
-        const stopMarker = this._newMarker(stopDetail, index, '#f44336', [index])
+        const stopMarker = this._newMarker(stopDetail, index, '#f44336', [{order:index, duration: () => this.stops[index].duration }]) //duration}])
         this.stopMarkers.push(stopMarker)
       }
       else {
         const marker = this.stopMarkers.splice(i, 1)[0]
-        if(marker.props.orders.findIndex(order => {
+        if(marker.props.orders.findIndex((order, duration) => {
           return order == index
         }) > -1) {
           this.stopMarkers.push(marker)
         }
         else {
-          const orders = marker.props.orders.concat(index)
+          const orders = marker.props.orders.concat({order:index,  duration: () => this.stops[index].duration })
           const stopMarker = this._newMarker(stopDetail, marker.key, '#f44336', orders)
           this.stopMarkers.push(stopMarker)
         }
@@ -317,8 +323,9 @@ export default class GoogleMap extends React.Component<State> {
     if(orders.length > 0) {
       this._getStopDetailInformation(stopEssential)
         .then(detail => {
-          orders.map(order => {
-            this.stops[order] = detail.result
+          console.log(this.stops)
+          orders.map(({order}) => {
+            this.stops[order].stopDetail = detail.result
           })
           this.editingPlaceId = detail.result.place_id
           this._updateMarker()
@@ -350,12 +357,12 @@ export default class GoogleMap extends React.Component<State> {
     return {
       days:0,
       hours:1,
-      minute:0
+      minutes:0
     }
   }
 
   _addStop = (stopDetail) => {
-    stopDetail.duration = this._getRecommandDuration(stopDetail.place_id)
+    //stopDetail.duration = this._getRecommandDuration(stopDetail.place_id)
     
     if(this.stopMarkers.length > 1 || (this.stopMarkers.length === 1 && !this._getMarkerByPlaceId(stopDetail.place_id))) {
         Alert.alert(
@@ -370,7 +377,7 @@ export default class GoogleMap extends React.Component<State> {
             {
               text: 'Add',
               onPress: () => {
-                this.stops.push(stopDetail)
+                this.stops.push({stopDetail:stopDetail, duration:this._getRecommandDuration(stopDetail.place_id)})
                 this._updateMarker()
                 this._getDirections()
               }
@@ -378,20 +385,20 @@ export default class GoogleMap extends React.Component<State> {
             {
               text: 'Insert to...', 
               onPress: () => {
-                this._insertStop(stopDetail)
+                this._insertStop({stopDetail:stopDetail, duration:this._getRecommandDuration(stopDetail.place_id)})
               }
             }
           ],
           {cancelable: false},
         )
     } else {
-      this.stops.push(stopDetail)
+      this.stops.push({stopDetail:stopDetail, duration:this._getRecommandDuration(stopDetail.place_id)})
       this._updateMarker()
       this._getDirections()
     }
   }
 
-  _insertStop(stopDetail) {
+  _insertStop(stop) {
     Alert.alert(
       null,
       "Select stop which you like to insert front to",
@@ -400,9 +407,9 @@ export default class GoogleMap extends React.Component<State> {
   }
 
   _listStopWithName() {
-    const list =  this.stops.map((stop, index) => {
+    const list =  this.stops.map(({stopDetail}, index) => {
       return {
-        text: "Stop " + index + " - " + stop.name,
+        text: "Stop " + index + " - " + stopDetail.name,
         onPress: (e => {
           console.log("stop #" + index + " is selected")
         })
@@ -427,7 +434,7 @@ export default class GoogleMap extends React.Component<State> {
       this._getDirections()
 
       // if coordinate doesn't exist any more, close edit modal.
-      const marker = this._getMarkerByPlaceId(removedStop[0].place_id)
+      const marker = this._getMarkerByPlaceId(removedStop[0].stopDetail.place_id)
       if(!marker) {
         this._setCurrentEditPlaceId(null)
         this._closeStopEditModal()

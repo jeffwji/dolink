@@ -116,7 +116,7 @@ export default class MarkerEditView extends React.Component<State> {
   }
   
   _renderMarkerStops(marker) {
-    return marker.props.orders.map((order, index) => 
+    return marker.props.orders.map(({order, duration}, index) => 
       <View
         key={index} 
         style={[styles.stopEditor, {backgroundColor: (index % 2 == 0)?'#87BBE0':'#A9DCD3'}]}
@@ -127,8 +127,14 @@ export default class MarkerEditView extends React.Component<State> {
         }}>
           <Icon name='ios-close'/>
         </Button>
-        <Text>Stop {order}: </Text>
-        <DaytimePicker title='Plan to stay for'/>
+        <Text>Stop {order+1} - Plan to stay for: </Text>
+        <DaytimePicker 
+          daytime = {this.props.mapView.stops[order].duration}
+          updateNotify={(daytime) => {
+            this.props.mapView.stops[order].duration = daytime
+            this.props.mapView.update() 
+          }}
+        />
       </View>
     )
   }

@@ -12,9 +12,13 @@ class StopMarkerPin extends React.Component {
       {(orders.length>0) && 
           <View style={styles.interestedBubble}>
             <Text style={[styles.orders, { fontSize }]}>{stopDetail.description || stopDetail.formatted_address || stopDetail.name}</Text>
-            {orders.map((order, index) => {
-              return <Text key={index} style={[styles.orders, { fontSize }]}>Stop {order}: Stay for...</Text>
-            })}
+            {
+              orders.map(({order, duration}, index) => {
+                return(
+                    <Text key={index} style={[styles.orders, { fontSize }]}>Stop {order+1}: Stay for {duration().days} days {duration().hours} hours {duration().minutes} minutes </Text>
+                )
+              })
+            }
           </View>
       }
       {(orders.length==0) && 
@@ -42,6 +46,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'column',
     alignSelf: 'flex-start',
+    width: 300
   },
   interestedBubble: {
     flex: 0,

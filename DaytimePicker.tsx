@@ -3,64 +3,78 @@ import { View, Text, StyleSheet } from 'react-native';
 import PropTypes from 'prop-types';
 import RNPickerSelect from 'react-native-picker-select'
 
+
 export default class DaytimePicker extends React.Component {
   constructor(props) {
     super(props)
-
-    this.state = {
-      days: 0,
-      hours: 1,
-      minutes: 0
+    this.state ={
+      update:0
     }
   }
+
+  //daytime = this.props.defaultValue
 
   render() {
     const daysOption = []
     for (let i = 0; i < 366; i++){
       daysOption.push(
-        { label: `${i}`, value: i, key: i, color: 'black' }
+        { label: `${i} days,`, value: i, key: i, color: 'black' }
       )
     }
 
     const hoursOption = []
     for (let i = 0; i < 24; i++){
       hoursOption.push(
-        { label: `${i}`, value: i, key: i, color: 'black' }
+        { label: `${i} hours,`, value: i, key: i, color: 'black' }
       )
     }
 
     const minutesOption = []
     for (let i = 0; i < 60; i++){
       minutesOption.push(
-        { label: `${i}`, value: i, key: i, color: 'black' }
+        { label: `${i} minutes`, value: i, key: i, color: 'black' }
       )
     }
 
     return(
       <View style={this.props.defaultStyle}>
-        <Text style={styles.text}>{this.props.title}: </Text>
         <RNPickerSelect style={styles.picker}
-          value={this.state.days}
-          onValueChange={(value) => this.setState({days: value})}
+          value={this.props.daytime.days}
+          onValueChange={(value) => {
+            //this.props.stop.duration.days = value
+            //this.daytime.days = value
+            this.props.updateNotify(
+              {...this.props.daytime, days: value}
+            )
+          }}
           items={daysOption}
         />
-        <Text style={styles.text}> Days, </Text>
 
         <RNPickerSelect
           style={styles.text}
-          value={this.state.hours}
-          onValueChange={(value) => this.setState({hours: value})}
+          value={this.props.daytime.hours}
+          onValueChange={(value) => {
+            //this.props.stop.duration.hours = value
+            //this.daytime.hours = value
+            this.props.updateNotify(
+              {...this.props.daytime, hours: value}
+            )
+          }}
           items={hoursOption}
         />
-        <Text style={styles.text}> Hours, </Text>
 
         <RNPickerSelect
           style={styles.text}
-          value={this.state.minutes}
-          onValueChange={(value) => this.setState({minutes: value})}
+          value={this.props.daytime.minutes}
+          onValueChange={(value) => {
+            //this.props.stop.duration.minutes = value
+            //this.daytime.minutes = value
+            this.props.updateNotify(
+              {...this.props.daytime, minutes: value}
+            )
+          }}
           items={minutesOption}
         />
-        <Text style={styles.text}> Minutes</Text>
       </View>
     )
   }
@@ -84,10 +98,9 @@ const styles = StyleSheet.create({
 });
 
 DaytimePicker.propTypes = {
-  title: PropTypes.string.isRequired
+  daytime: PropTypes.object.isRequired
 };
 
 DaytimePicker.defaultProps = {
-  defaultStyle: styles.defaultStyle,
-  title: ''
+  defaultStyle: styles.defaultStyle
 };
