@@ -3,9 +3,7 @@ import React from 'react'
 import {
   Button,
   Item,
-  Icon,
-  Left,
-  Right
+  Icon
 } from 'native-base'
 
 import {

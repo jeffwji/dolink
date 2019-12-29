@@ -38,6 +38,7 @@ export default class GoogleMap extends React.Component<State> {
   currentLocationCoordinates = null
   directions = []
   routes = []
+  selectedRoute = null
   stops = []
   stopMarkers = []
   stopCandidate = null
@@ -253,7 +254,9 @@ export default class GoogleMap extends React.Component<State> {
           strokeWidth={4}
           strokeColor="hotpink"
           tappable={true}
-          onPress={e => console.log(e)}
+          onPress={e => {
+            console.log(e)
+          }}
         />
       }
     })
@@ -343,7 +346,17 @@ export default class GoogleMap extends React.Component<State> {
       })
   }
 
+  _getRecommandDuration(place_id){
+    return {
+      days:0,
+      hours:1,
+      minute:0
+    }
+  }
+
   _addStop = (stopDetail) => {
+    stopDetail.duration = this._getRecommandDuration(stopDetail.place_id)
+    
     if(this.stopMarkers.length > 1 || (this.stopMarkers.length === 1 && !this._getMarkerByPlaceId(stopDetail.place_id))) {
         Alert.alert(
           'Add new stop',

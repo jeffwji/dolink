@@ -6,23 +6,26 @@ import { StyleSheet, View, Text } from 'react-native';
 
 class StopMarkerPin extends React.Component {
   render() {
-    const { fontSize, orders, stopDetail } = this.props;
-    return(
-      <View style={styles.container}>
-        {(orders.length>0) && 
-            <View style={styles.interestedBubble}>
-              <Text style={[styles.orders, { fontSize }]}>{orders.join()}</Text>
-            </View>
-        }
-        {(orders.length==0) && 
-            <View style={styles.candidateBubble}>
-            <Text style={[styles.orders, { fontSize }]}>?</Text> 
-            </View>
-        }
-        <View style={styles.arrowBorder} />
-        <View style={styles.arrow} />
-      </View>
-    )
+    const { fontSize, orders, stopDetail } = this.props
+    const content = 
+    <View style={styles.container}>
+      {(orders.length>0) && 
+          <View style={styles.interestedBubble}>
+            <Text style={[styles.orders, { fontSize }]}>{stopDetail.description || stopDetail.formatted_address || stopDetail.name}</Text>
+            {orders.map((order, index) => {
+              return <Text key={index} style={[styles.orders, { fontSize }]}>Stop {order}: Stay for...</Text>
+            })}
+          </View>
+      }
+      {(orders.length==0) && 
+          <View style={styles.candidateBubble}>
+          <Text style={[styles.orders, { fontSize }]}>{stopDetail.description || stopDetail.formatted_address || stopDetail.name}</Text> 
+          </View>
+      }
+      <View style={styles.arrowBorder} />
+      <View style={styles.arrow} />
+    </View>
+    return(content)
   }
 }
 
