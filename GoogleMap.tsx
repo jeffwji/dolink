@@ -207,13 +207,14 @@ export default class GoogleMap extends React.Component<State> {
   _getDirections() {
     this.directions= []
     if(this.stops.length > 1){
-      const temp_stops = this.stops.map(({stopDetail}) => stopDetail)
+      const temp_stops = this.stops.map(stop => stop)
       let origin = temp_stops.shift()
       do{
         const dest = temp_stops.shift()
         this._getDirection(
-          `${origin.geometry.location.lat},${origin.geometry.location.lng}`,
-          `${dest.geometry.location.lat},${dest.geometry.location.lng}`
+          `${origin.stopDetail.geometry.location.lat},${origin.stopDetail.geometry.location.lng}`,
+          `${dest.stopDetail.geometry.location.lat},${dest.stopDetail.geometry.location.lng}`,
+          `${dest.mode?dest.mode:'driving'}`
         )
         origin = dest
       }while(temp_stops.length > 0)
@@ -224,8 +225,7 @@ export default class GoogleMap extends React.Component<State> {
     return coordinate.latitude + "," + coordinate.longitude
   }
 
-  async _getDirection(origin, destination) {
-    const mode = 'driving';    // 'walking';
+  async _getDirection(origin, destination, mode='driving') {
     googleMapService("directions", `origin=${origin}&destination=${destination}&mode=${mode}`)
       .then(resp => {
         if (resp.routes.length) {
