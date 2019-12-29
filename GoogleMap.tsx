@@ -37,6 +37,7 @@ export default class GoogleMap extends React.Component<State> {
   editingPlaceId = null
   currentLocationCoordinates = null
   directions = []
+  routes = []
   stops = []
   stopMarkers = []
   stopCandidate = null
@@ -163,7 +164,7 @@ export default class GoogleMap extends React.Component<State> {
               }
             }}*/
           >
-            {this._renderRoute()}
+            {this._renderRoutes()}
             {this._renderMarkers()}
             {this._renderCurrentMarker()}
           </MapView>
@@ -217,19 +218,11 @@ export default class GoogleMap extends React.Component<State> {
   }
 
   async _getDirection(origin, destination) {
-    const mode = 'driving'; // 'walking';
+    const mode = 'driving';    // 'walking';
     googleMapService("directions", `origin=${origin}&destination=${destination}&mode=${mode}`)
       .then(resp => {
         if (resp.routes.length) {
-          const points = polyline.decode(resp.routes[0].overview_polyline.points)
-          const coords = points.map((point, index) => {
-            return  {
-                latitude : point[0],
-                longitude : point[1]
-            }
-          })
-
-          this.directions.push(coords)
+          this.directions.push(resp.routes[0])
           this.update()
         }
       })
@@ -238,15 +231,38 @@ export default class GoogleMap extends React.Component<State> {
       })
   }
 
-  _renderRoute() {
-    if(this.directions.length) {
-      return this.directions.map((route, index) => 
-        <Polyline
+  _route2coords(route){
+    const points = polyline.decode(route.overview_polyline.points)
+    return points.map((point, index) => {
+      return  {
+          latitude : point[0],
+          longitude : point[1]
+      }
+    })
+  }
+
+  _getRoutes() {
+    this.routes = this.directions.map((route, index) => {
+      const coords = this._route2coords(route)
+      
+      return {
+        polyline: <Polyline
           key={index}
-          coordinates={route}
+          route={route}
+          coordinates={coords}
           strokeWidth={4}
           strokeColor="hotpink"
-        />)
+          tappable={true}
+          onPress={e => console.log(e)}
+        />
+      }
+    })
+  }
+
+  _renderRoutes() {
+    if(this.directions.length) {
+      this._getRoutes()
+      return this.routes.map(r => r.polyline)
     }
   }
 

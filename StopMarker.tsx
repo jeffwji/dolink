@@ -1,7 +1,6 @@
 
 import React from 'react'
 import {Marker} from 'react-native-maps'
-import StopDetailCallout from './StopDetailCallout'
 import StopMarkerPin from './StopMarkerPin'
 import PropTypes from 'prop-types';
 
@@ -45,27 +44,8 @@ class StopMarker extends React.Component {
         <StopMarkerPin 
           orders={this.props.orders} 
           stopDetail={stop}/>
-  
-        {/*<StopDetailCallout
-          orders = {this.props.orders}
-          stopDetail = {stop}
-          addStop={() => {
-            this.props.addStop(this)
-          }}
-        />*/}
       </Marker>
     )
-  }
-
-  _reflashCallout() {
-    if(this.marker) {
-      this.marker.hideCallout()
-      //this.marker.showCallout()
-    }
-  }
-
-  componentDidUpdate() {
-    this._reflashCallout()
   }
 }
 

@@ -1,5 +1,4 @@
 import React from 'react'
-import StopMarker from './StopMarker'
 
 import {
   Button,
@@ -20,10 +19,8 @@ import {
 } from 'react-native'
 
 import {googleImageService, googleMapService} from './Global'
+import DaytimePicker from './DaytimePicker'
 
-////////////////////////////////
-// Stop edit modal
-//
 type State = {
   stopEditScrollOffset: null | number;
   minMapViewHight: number
@@ -112,12 +109,12 @@ export default class MarkerEditView extends React.Component<State> {
           </TouchableWithoutFeedback>
         )
       }
-    } //else {
-      this.props.mapView._closeStopEditModal()
-      this.setState({
-        minMapViewHight: Dimensions.get('window').height/1.5
-      })
-    //}
+    }
+    
+    this.props.mapView._closeStopEditModal()
+    this.setState({
+      minMapViewHight: Dimensions.get('window').height/1.5
+    })
   }
   
   _renderMarkerStops(marker) {
@@ -126,17 +123,14 @@ export default class MarkerEditView extends React.Component<State> {
         key={index} 
         style={[styles.stopEditor, {backgroundColor: (index % 2 == 0)?'#87BBE0':'#A9DCD3'}]}
       >
-          <Button onPress={() => {
-            console.log('Stop has been updated')
-          }}>
-            <Text>Update</Text>
-          </Button>
-          <Button transparent 
-            onPress={() => {
-              this.props.mapView._removeStop(order)
-          }}>
-            <Icon name='ios-close'/>
-          </Button>
+        <Button transparent 
+          onPress={() => {
+            this.props.mapView._removeStop(order)
+        }}>
+          <Icon name='ios-close'/>
+        </Button>
+        <Text>Stop {order}: </Text>
+        <DaytimePicker title='Plan to stay for'/>
       </View>
     )
   }
@@ -214,7 +208,7 @@ const styles = StyleSheet.create({
   stopEditor: {
     flex: 1,
     flexDirection: 'row',
-    alignItems: 'stretch',
+    alignItems: 'center',
     justifyContent: 'center'
   },
   scrollableModalText: {
