@@ -46,7 +46,8 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'column',
     alignSelf: 'flex-start',
-    width: 300
+    alignItems: 'center',
+    // width: 300
   },
   interestedBubble: {
     flex: 0,

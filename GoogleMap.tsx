@@ -22,7 +22,7 @@ import MapController from './MapController'
 import {askPermission, googleMapService} from './Global'
 
 type State = {
-  stopEditModalVisiblity: number;
+  stopEditModalVisiblity: string;
 };
 
 export default class GoogleMap extends React.Component<State> {
@@ -31,12 +31,13 @@ export default class GoogleMap extends React.Component<State> {
     
     this.state = {
       updateMap: 0,
-      stopEditModalVisiblity: false,
+      stopEditModalVisiblity: null,
     }
   }
 
   defaultRouteColor = 'hotpink'
   invalidRouteColor = 'gray'
+  privacyRouteColor = 'purple'
   showMarkerDetail = true
 
   editingPlaceId = null
@@ -123,7 +124,9 @@ export default class GoogleMap extends React.Component<State> {
           <MapView style={styles.mapView}
             provider={ PROVIDER_GOOGLE }
             region={this.currentLocationCoordinates}
-            onRegionChange={region => this._updateCurrentLocation(region, false)}
+            // initialRegion={this.currentLocationCoordinates}
+            // onRegionChange={region => this._updateCurrentLocation(region, false)}
+            onRegionChangeComplete={region => this._updateCurrentLocation(region, false)}
             showsUserLocation={true}
             zoomEnabled={true} 
             scrollEnabled={true}
@@ -147,13 +150,13 @@ export default class GoogleMap extends React.Component<State> {
                       }, true)
                   this.editingPlaceId = poi.placeId
                   this.setState({
-                    stopEditModalVisiblity: true
+                    stopEditModalVisiblity: "Marker"
                 })})
                 .catch(error => console.log(error))
             }}
             onPress={ e=> {
               if(!e.nativeEvent.action || e.nativeEvent.action === 'press') {
-                this.stopCandidate = null
+                //this.stopCandidate = null
                 this._closeStopEditModal()
               }
             } }
@@ -220,9 +223,9 @@ export default class GoogleMap extends React.Component<State> {
       do{
         const dest = temp_stops.shift()
         this._getDirection(
-          `${origin.stopDetail.geometry.location.lat}`,`${origin.stopDetail.geometry.location.lng}`,
-          `${dest.stopDetail.geometry.location.lat}`,`${dest.stopDetail.geometry.location.lng}`,
-          `${dest.mode?dest.mode:'driving'}`
+          origin.stopDetail.geometry.location.lat,origin.stopDetail.geometry.location.lng,
+          dest.stopDetail.geometry.location.lat,dest.stopDetail.geometry.location.lng,
+          dest.mode?dest.mode:'driving'
         )
         origin = dest
       }while(temp_stops.length > 0)
@@ -247,7 +250,7 @@ export default class GoogleMap extends React.Component<State> {
               latitude : destination_lat,
               longitude : destination_lng
             }
-          ], mode: mode, routeable: false})
+          ], mode: 'unknown', routeable: false})
         }
         this.update()
       })
@@ -341,9 +344,9 @@ export default class GoogleMap extends React.Component<State> {
   }
 
   update() {
-    if (!this.editingPlaceId && this.state.stopEditModalVisiblity)
+    if (!this.editingPlaceId && this.state.stopEditModalVisiblity!==null)
       this.setState({
-        stopEditModalVisiblity: false
+        stopEditModalVisiblity: null
       })
 
     this.setState({
@@ -495,15 +498,15 @@ export default class GoogleMap extends React.Component<State> {
   _openStopEditModal = (marker) => {
     //this._setCurrentEditCoordinate(marker.props.stopDetail.geometry.location)
     this._setCurrentEditPlaceId(marker.props.stopDetail.place_id)
-    this.setState({stopEditModalVisiblity: true} as any)
+    this.setState({stopEditModalVisiblity: "Marker"})
   }
 
   _closeStopEditModal = () => {
     this._setCurrentEditPlaceId(null)
-    this.setState({stopEditModalVisiblity: false} as any)
+    this.setState({stopEditModalVisiblity: null})
   }
 
-  _isStopEditModalVisible = () => this.state.stopEditModalVisiblity;
+  _isStopEditModalVisible = () => this.state.stopEditModalVisiblity==="Marker";
 }
 
 
