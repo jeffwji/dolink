@@ -25,25 +25,6 @@ class MapSearchInput extends React.Component {
             key: REACT_APP_GOOGLE_PLACES_API,
             language: 'en'
           }}
-          styles={{
-            textInputContainer: {
-              backgroundColor: 'rgba(0,0,0,0)',
-              borderTopWidth: 0,
-              borderBottomWidth:0,
-              width: '100%'
-            },
-            textInput: {
-              height: 38,
-              color: '#5d5d5d',
-              fontSize: 16
-            },
-            description: {
-              fontWeight: 'bold'
-            },
-            predefinedPlacesDescription: {
-              color: '#1faadb'
-            }
-          }}
           currentLocation={true}
           currentLocationLabel="Nearby"
           predefinedPlaces={this.props.defaultLocations}
@@ -65,9 +46,57 @@ class MapSearchInput extends React.Component {
           getDefaultValue={() => ''}
           enablePoweredByContainer={false}
           debounce={200}
+          styles={googleSearchInput}
         />
       )
     }
-  }
+}
 
-  export default MapSearchInput
+export default MapSearchInput
+
+const googleSearchInput = {
+  container: {
+    backgroundColor: '#fff',
+    alignSelf: 'center',
+    width: '60%',
+    marginBottom: 0,
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.18,
+    shadowRadius: 1.0,
+  },
+  textInputContainer: {
+    backgroundColor: 'rgba(0,0,0,0)',
+    borderTopWidth: 0,
+    borderBottomWidth:0,
+    width: '100%',
+    borderRadius: 0.2,
+  },
+  description: {
+    borderTopWidth: 0,
+    borderBottomWidth: 0,
+    backgroundColor: 'white',
+    color: '#00152b',
+    opacity: 0.9,
+    //fontWeight: 'bold'
+  },
+  poweredContainer: {
+    backgroundColor: '#fff',
+  },
+  textInput: {
+    height: 33,
+    fontSize: 16,
+    backgroundColor: '#fff',
+    color: '#00152b'
+  },
+  separator: {
+    backgroundColor: 'white',
+  },
+  predefinedPlacesDescription: {
+    color: '#1faadb'
+  }
+};

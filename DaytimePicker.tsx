@@ -82,6 +82,7 @@ export default class DaytimePicker extends React.Component {
 
 const styles = StyleSheet.create({
   defaultStyle: {
+    flex: 1,
     flexDirection: 'row',
     color: 'white'
   },

@@ -17,6 +17,7 @@ import {
 
 import MapSearchInput from './MapSearchInput';
 import polyline from '@mapbox/polyline'
+import MapController from './MapController'
 
 import {askPermission, googleMapService} from './Global'
 
@@ -33,6 +34,10 @@ export default class GoogleMap extends React.Component<State> {
       stopEditModalVisiblity: false,
     }
   }
+
+  defaultRouteColor = 'hotpink'
+  invalidRouteColor = 'gray'
+  showMarkerDetail = false
 
   editingPlaceId = null
   currentLocationCoordinates = null
@@ -93,7 +98,7 @@ export default class GoogleMap extends React.Component<State> {
     if(this.currentLocationCoordinates!=null) {
       return(
         <View style={styles.overallViewContainer}>
-          <View style={styles.allNonMapThings}>
+          <View style={styles.earchInput}>
             <Item>
               <MapSearchInput 
                 notifyLocationChange={(details) => {
@@ -175,6 +180,8 @@ export default class GoogleMap extends React.Component<State> {
             {this._renderMarkers()}
             {this._renderCurrentMarker()}
           </MapView>
+
+          <MapController mapView={this} />
         </View>
       )
     }
@@ -195,6 +202,7 @@ export default class GoogleMap extends React.Component<State> {
       orders = {orders}
       editStop = {(marker) => this._editStop(marker)}
       onStopLocationChange = {(stopDetail, orders) => this._onStopChange(stopDetail, orders)}
+      showDetail = {() => {return this.showMarkerDetail}}
     />
   }
 
@@ -212,8 +220,8 @@ export default class GoogleMap extends React.Component<State> {
       do{
         const dest = temp_stops.shift()
         this._getDirection(
-          `${origin.stopDetail.geometry.location.lat},${origin.stopDetail.geometry.location.lng}`,
-          `${dest.stopDetail.geometry.location.lat},${dest.stopDetail.geometry.location.lng}`,
+          `${origin.stopDetail.geometry.location.lat}`,`${origin.stopDetail.geometry.location.lng}`,
+          `${dest.stopDetail.geometry.location.lat}`,`${dest.stopDetail.geometry.location.lng}`,
           `${dest.mode?dest.mode:'driving'}`
         )
         origin = dest
@@ -225,13 +233,23 @@ export default class GoogleMap extends React.Component<State> {
     return coordinate.latitude + "," + coordinate.longitude
   }
 
-  async _getDirection(origin, destination, mode='driving') {
-    googleMapService("directions", `origin=${origin}&destination=${destination}&mode=${mode}`)
+  async _getDirection(origin_lat, origin_lng, destination_lat, destination_lng, mode='driving') {
+    googleMapService("directions", `origin=${origin_lat},${origin_lng}&destination=${destination_lat},${destination_lng}&mode=${mode}`)
       .then(resp => {
         if (resp.routes.length) {
-          this.directions.push(resp.routes[0])
-          this.update()
+          this.directions.push({route:resp.routes[0], mode: mode, routeable: true})
+        } else {
+          this.directions.push({route:[
+            {
+              latitude : origin_lat,
+              longitude : origin_lng
+            },{
+              latitude : destination_lat,
+              longitude : destination_lng
+            }
+          ], mode: mode, routeable: false})
         }
+        this.update()
       })
       .catch(e => {
         console.warn(e)
@@ -249,21 +267,35 @@ export default class GoogleMap extends React.Component<State> {
   }
 
   _getRoutes() {
-    this.routes = this.directions.map((route, index) => {
-      const coords = this._route2coords(route)
-      
-      return {
-        polyline: <Polyline
-          key={index}
-          route={route}
-          coordinates={coords}
-          strokeWidth={4}
-          strokeColor="hotpink"
-          tappable={true}
-          onPress={e => {
-            console.log(e)
-          }}
-        />
+    this.routes = this.directions.map((/*{route, mode, routeable}*/direction, index) => {
+      if(direction.routeable) {
+        return {
+          polyline: <Polyline
+            key={index}
+            direction={direction}
+            coordinates={this._route2coords(direction.route)}
+            strokeWidth={4}
+            strokeColor={this.defaultRouteColor}
+            tappable={true}
+            onPress={e => {
+              console.log(e)
+            }}
+          />
+        }
+      } else {
+        return {
+          polyline: <Polyline
+            key={index}
+            direction={direction}
+            coordinates={direction.route}
+            strokeWidth={4}
+            strokeColor={this.invalidRouteColor}
+            tappable={true}
+            onPress={e => {
+              console.log(e)
+            }}
+          />
+        }
       }
     })
   }
@@ -362,8 +394,6 @@ export default class GoogleMap extends React.Component<State> {
   }
 
   _addStop = (stopDetail) => {
-    //stopDetail.duration = this._getRecommandDuration(stopDetail.place_id)
-    
     if(this.stopMarkers.length > 1 || (this.stopMarkers.length === 1 && !this._getMarkerByPlaceId(stopDetail.place_id))) {
         Alert.alert(
           'Add new stop',
@@ -479,23 +509,25 @@ export default class GoogleMap extends React.Component<State> {
 
 const styles = StyleSheet.create({
   container: {
-    // position: 'absolute',
+    //position: 'absolute',
     width: Dimensions.get('window').width,
-    height: Dimensions.get('window').height,
+    //height: Dimensions.get('window').height,
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'space-between'
   },
   overallViewContainer: {
+    flex: 1,
     width: Dimensions.get('window').width,
-    height: Dimensions.get('window').height,
+    //height: Dimensions.get('window').height,
   },
-  allNonMapThings: {
+  earchInput: {
     alignItems: 'center',
     width: '100%'
   },
   mapView: {
-    flex: 1
+    flex: 1,
+    height: '100%'
   }
 });
 

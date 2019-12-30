@@ -5,6 +5,9 @@ import StopMarkerPin from './StopMarkerPin'
 import PropTypes from 'prop-types';
 
 import  {googleMapService} from './Global'
+import {
+  Image
+} from 'react-native'
 
 class StopMarker extends React.Component {
   constructor(props) {
@@ -41,9 +44,12 @@ class StopMarker extends React.Component {
         }}
         draggable
       >
-        <StopMarkerPin 
-          orders={this.props.orders} 
-          stopDetail={stop}/>
+      {
+        (this.props.showDetail()) && <StopMarkerPin orders={this.props.orders} stopDetail={stop}/>
+      }
+      {
+        (!this.props.showDetail()) && <Image source={require("./assets/LandMarker.png")} style={{width: 32, height: 32}} />
+      }
       </Marker>
     )
   }
@@ -53,5 +59,9 @@ StopMarker.propTypes = {
   orders: PropTypes.array.isRequired,
   style: PropTypes.object,
 }
+
+StopMarker.defaultProps = {
+  showDetail() {return true}
+};
 
 export default StopMarker

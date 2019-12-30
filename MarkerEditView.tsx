@@ -13,7 +13,8 @@ import {
   StyleSheet,
   TouchableWithoutFeedback,
   Image,
-  Dimensions
+  Dimensions,
+  Platform
 } from 'react-native'
 
 import {googleImageService, googleMapService} from './Global'
@@ -33,9 +34,9 @@ export default class MarkerEditView extends React.Component<State> {
     })
 
     this.state = {
+      reload: 0,
       placeImageIndex: 0,
       minMapViewHight: Dimensions.get('window').height/1.5,
-      reload: 0
     }
 
     this.HEIGHT = Dimensions.get('window').height
@@ -71,7 +72,7 @@ export default class MarkerEditView extends React.Component<State> {
   _handleResponderMove =(evt) => {
     if(this.HEIGHT-evt.nativeEvent.pageY > 50)
       this.setState({
-        minMapViewHight: evt.nativeEvent.pageY
+        minMapViewHight: Platform.OS === "android"?evt.nativeEvent.pageY-40:evt.nativeEvent.pageY
       })
     else {
       this.props.mapView._closeStopEditModal()
@@ -154,11 +155,11 @@ export default class MarkerEditView extends React.Component<State> {
     const photos = detail.photos
     if(photos && photos.length > 0) {
       const photo = photos[this.state.placeImageIndex]
-      const uri=googleImageService(photo.photo_reference, 205, 205)
+      const uri=googleImageService(photo.photo_reference, Dimensions.get('window').width/2)
       return(
         <Image
           source={{ uri: uri} }
-          style={{ width: 205, height: 205 }}
+          style={styles.scrollableModalImage}
         />
       )
     }
@@ -205,10 +206,6 @@ export default class MarkerEditView extends React.Component<State> {
 }
 
 const styles = StyleSheet.create({
-  modal: {
-    justifyContent: 'flex-end',
-    margin: 0,
-  },
   stopEditor: {
     flex: 1,
     flexDirection: 'row',
@@ -217,18 +214,21 @@ const styles = StyleSheet.create({
   },
   scrollableModalText: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 12,
     flexWrap: 'wrap'
   },
-
+  scrollableModalImage: {
+    width: Dimensions.get('window').width/2,
+    height: Dimensions.get('window').width/2
+  },
   slidingBar: {
     height: 20, 
     width: Dimensions.get('window').width, 
     backgroundColor: 'black'
   },
   overlay: {
-    flex: 1,
-    position: 'absolute',
+    //flex: 1,
+    //position: 'absolute',
     left: 0,
     bottom: 0,
     backgroundColor: 'white',
