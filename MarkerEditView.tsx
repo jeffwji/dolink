@@ -46,7 +46,7 @@ export default class MarkerEditView extends React.Component<State> {
   }
 
   render() {
-    const stopEditModalVisiblity = this.props.mapView.state.stopEditModalVisiblity
+    const stopEditModalVisiblity = (this.props.mapView.state.showEditor==="Marker")
     if(stopEditModalVisiblity)
     {
       return (
@@ -128,7 +128,7 @@ export default class MarkerEditView extends React.Component<State> {
         }}>
           <Icon name='ios-close'/>
         </Button>
-        <Text>Stop {order+1} - Plan to stay for: </Text>
+        <Text style={{color:'white'}}>Stop {order+1} - Plan to stay for: </Text>
         <DaytimePicker 
           daytime = {this.props.mapView.stops[order].duration}
           updateNotify={(daytime) => {

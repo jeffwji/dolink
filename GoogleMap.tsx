@@ -22,7 +22,7 @@ import MapController from './MapController'
 import {askPermission, googleMapService} from './Global'
 
 type State = {
-  stopEditModalVisiblity: string;
+  showEditor: string;
 };
 
 export default class GoogleMap extends React.Component<State> {
@@ -31,14 +31,15 @@ export default class GoogleMap extends React.Component<State> {
     
     this.state = {
       updateMap: 0,
-      stopEditModalVisiblity: null,
+      showEditor: null,
     }
   }
 
   defaultRouteColor = 'hotpink'
+  selectedRouteColor = 'blue'
   invalidRouteColor = 'gray'
   privacyRouteColor = 'purple'
-  showMarkerDetail = true
+  showMarkerDetail = 0
 
   editingPlaceId = null
   currentLocationCoordinates = null
@@ -150,13 +151,14 @@ export default class GoogleMap extends React.Component<State> {
                       }, true)
                   this.editingPlaceId = poi.placeId
                   this.setState({
-                    stopEditModalVisiblity: "Marker"
+                    showEditor: "Marker"
                 })})
                 .catch(error => console.log(error))
             }}
             onPress={ e=> {
               if(!e.nativeEvent.action || e.nativeEvent.action === 'press') {
                 //this.stopCandidate = null
+                this.selectedRoute = null
                 this._closeStopEditModal()
               }
             } }
@@ -217,6 +219,8 @@ export default class GoogleMap extends React.Component<State> {
 
   _getDirections() {
     this.directions= []
+    this.selectedRoute = null
+
     if(this.stops.length > 1){
       const temp_stops = this.stops.map(stop => stop)
       let origin = temp_stops.shift()
@@ -269,8 +273,15 @@ export default class GoogleMap extends React.Component<State> {
     })
   }
 
+  _getRouteColor(index) {
+    if (index === this.selectedRoute)
+      return this.selectedRouteColor
+    else
+      return this.defaultRouteColor
+  }
+
   _getRoutes() {
-    this.routes = this.directions.map((/*{route, mode, routeable}*/direction, index) => {
+    this.routes = this.directions.map((direction, index) => {
       if(direction.routeable) {
         return {
           polyline: <Polyline
@@ -278,10 +289,11 @@ export default class GoogleMap extends React.Component<State> {
             direction={direction}
             coordinates={this._route2coords(direction.route)}
             strokeWidth={4}
-            strokeColor={this.defaultRouteColor}
+            strokeColor={this._getRouteColor(index)}
             tappable={true}
             onPress={e => {
-              console.log(e)
+              this.selectedRoute = index
+              this.update()
             }}
           />
         }
@@ -344,9 +356,9 @@ export default class GoogleMap extends React.Component<State> {
   }
 
   update() {
-    if (!this.editingPlaceId && this.state.stopEditModalVisiblity!==null)
+    if (!this.editingPlaceId && this.state.showEditor!==null)
       this.setState({
-        stopEditModalVisiblity: null
+        showEditor: null
       })
 
     this.setState({
@@ -498,15 +510,15 @@ export default class GoogleMap extends React.Component<State> {
   _openStopEditModal = (marker) => {
     //this._setCurrentEditCoordinate(marker.props.stopDetail.geometry.location)
     this._setCurrentEditPlaceId(marker.props.stopDetail.place_id)
-    this.setState({stopEditModalVisiblity: "Marker"})
+    this.setState({showEditor: "Marker"})
   }
 
   _closeStopEditModal = () => {
     this._setCurrentEditPlaceId(null)
-    this.setState({stopEditModalVisiblity: null})
+    this.setState({showEditor: null})
   }
 
-  _isStopEditModalVisible = () => this.state.stopEditModalVisiblity==="Marker";
+  _isStopEditModalVisible = () => this.state.showEditor==="Marker";
 }
 
 

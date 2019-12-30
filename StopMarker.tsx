@@ -44,12 +44,7 @@ class StopMarker extends React.Component {
         }}
         draggable
       >
-      {
-        (this.props.showDetail()) && <StopMarkerPin orders={this.props.orders} stopDetail={stop}/>
-      }
-      {
-        (!this.props.showDetail()) && <Image source={require("./assets/LandMarker_64.png")} style={{width: 32, height: 32}} />
-      }
+      <StopMarkerPin mode={this.props.showDetail()} orders={this.props.orders} stopDetail={stop}/>
       </Marker>
     )
   }

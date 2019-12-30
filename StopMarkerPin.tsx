@@ -1,44 +1,76 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { StyleSheet, View, Text } from 'react-native';
+import { StyleSheet, View, Text, Image } from 'react-native';
 
 
 class StopMarkerPin extends React.Component {
   render() {
     const { fontSize, orders, stopDetail } = this.props
-    const content = 
-    <View style={styles.container}>
-      {(orders.length>0) && 
-          <View style={styles.interestedBubble}>
-            <Text style={[styles.orders, { fontSize }]}>{stopDetail.description || stopDetail.formatted_address || stopDetail.name}</Text>
-            {
-              orders.map(({order, duration}, index) => {
-                return(
-                    <Text key={index} style={[styles.orders, { fontSize }]}>Stop {order+1}: Stay for {duration().days} days {duration().hours} hours {duration().minutes} minutes </Text>
-                )
-              })
+
+    switch(this.props.mode){
+      case 0:
+        let content = 
+          <View style={styles.container}>
+            {(orders.length>0) && 
+                <View style={styles.interestedBubble}>
+                  <Text style={[styles.orders, { fontSize }]}>{stopDetail.description || stopDetail.formatted_address || stopDetail.name}</Text>
+                  {
+                    orders.map(({order, duration}, index) => {
+                      return(
+                        <Text key={index} style={[styles.orders, { fontSize }]}>Stop {order+1}: Stay for {duration().days===0?'':duration().days+' days'} {duration().hours===0?'':duration().hours+' hours'} {duration().minutes===0?'':duration().minutes+' minutes'}</Text>
+                      )
+                    })
+                  }
+                </View>
             }
+            {(orders.length==0) && 
+                <View style={styles.candidateBubble}>
+                <Text style={[styles.orders, { fontSize }]}>{stopDetail.description || stopDetail.formatted_address || stopDetail.name}</Text> 
+                </View>
+            }
+            <View style={styles.arrowBorder} />
+            <View style={styles.arrow} />
           </View>
-      }
-      {(orders.length==0) && 
-          <View style={styles.candidateBubble}>
-          <Text style={[styles.orders, { fontSize }]}>{stopDetail.description || stopDetail.formatted_address || stopDetail.name}</Text> 
+        return(content)
+
+      case 1:
+        content = 
+          <View style={styles.container}>
+            {(orders.length>0) && 
+                <View style={styles.interestedBubble}>
+                  <Text style={[styles.orders, { fontSize }]}>{orders.map(o=>o.order+1).join()}</Text>
+                </View>
+            }
+            {(orders.length==0) && 
+                <View style={styles.candidateBubble}>
+                  <Text style={[styles.orders, { fontSize }]}>?</Text> 
+                </View>
+            }
+            <View style={styles.arrowBorder} />
+            <View style={styles.arrow} />
           </View>
-      }
-      <View style={styles.arrowBorder} />
-      <View style={styles.arrow} />
-    </View>
-    return(content)
+        return(content)
+
+      case 2:
+        return(
+          <View style={styles.container}>
+            {(orders.length>0) && <Image source={require("./assets/LandMarker_selected_64.png")} style={{width: 32, height: 32}} />}
+            {(orders.length==0) && <Image source={require("./assets/LandMarker_unselected_64.png")} style={{width: 32, height: 32}} />}
+          </View>
+        )
+    }
   }
 }
 
 StopMarkerPin.propTypes =  {
   orders: PropTypes.array.isRequired,
+  mode: PropTypes.number.isRequired,
   fontSize: PropTypes.number,
 };
 
 StopMarkerPin.defaultProps = {
+  mode: 0,
   fontSize: 13,
 };
 

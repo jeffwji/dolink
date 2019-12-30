@@ -21,7 +21,7 @@ export default class MapController extends React.Component {
         <Item>
           <TouchableOpacity
               onPress={() => {
-                this.props.mapView.showMarkerDetail=!this.props.mapView.showMarkerDetail
+                this.props.mapView.showMarkerDetail=this.props.mapView.showMarkerDetail===0?2:this.props.mapView.showMarkerDetail-1
                 this.props.mapView.update()
               }}>
             <Image 
@@ -34,10 +34,14 @@ export default class MapController extends React.Component {
   }
 
   _getShowMarkerDetailIcon() {
-    if(this.props.mapView.showMarkerDetail)
-      return require("./assets/showMarkerDetail_square.png")
-    else
-      return require("./assets/showMarkerDetail_square_gray.png")
+    switch(this.props.mapView.showMarkerDetail) {
+      case 0:
+        return require("./assets/showMarkerDetail_square_0.png")
+      case 1:
+        return require("./assets/showMarkerDetail_square_1.png")
+      case 2:
+        return require("./assets/showMarkerDetail_square_2.png")
+    }
   }
 }
 
