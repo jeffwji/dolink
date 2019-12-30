@@ -37,7 +37,7 @@ export default class GoogleMap extends React.Component<State> {
 
   defaultRouteColor = 'hotpink'
   invalidRouteColor = 'gray'
-  showMarkerDetail = false
+  showMarkerDetail = true
 
   editingPlaceId = null
   currentLocationCoordinates = null

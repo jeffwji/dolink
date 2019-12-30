@@ -163,6 +163,14 @@ export default class MarkerEditView extends React.Component<State> {
         />
       )
     }
+    else {
+      return(
+        <Image
+          source={require('./assets/LandMarker_128-256.png')}
+          style={styles.scrollableModalImage}
+        />
+      )
+    }
   }
 
   _renderAddress(detail){
@@ -176,7 +184,8 @@ export default class MarkerEditView extends React.Component<State> {
             <Image
               source={{ uri: detail.icon} }
               style={{ width: 16, height: 16 }}
-            />}
+            />
+          }
           {(detail.name) && <Text style={styles.scrollableModalText}>{detail.name}</Text>}
         </Item>
         {(detail.formatted_address) && <Text style={styles.scrollableModalText}>{detail.formatted_address}</Text>}
