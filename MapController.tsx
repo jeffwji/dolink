@@ -18,15 +18,24 @@ export default class MapController extends React.Component {
   render() {
     return(
       <Container style={styles.mapStuffsControlBar}>
-        <Item>
+        <Item style={{flexDirection: 'row'}}>
           <TouchableOpacity
               onPress={() => {
-                this.props.mapView.showMarkerDetail=this.props.mapView.showMarkerDetail===0?2:this.props.mapView.showMarkerDetail-1
-                this.props.mapView.update()
+                this.props.mapView._setShowMarkerDetail(this.props.mapView.state.showMarkerDetail===0?2:this.props.mapView.state.showMarkerDetail-1)
               }}>
             <Image 
               source={this._getShowMarkerDetailIcon()}
-              style={{width: 32, height: 32}} />
+              style={{width: 32, height: 32, marginLeft: 10, marginRight: 10}} />
+          </TouchableOpacity>
+          <TouchableOpacity
+              onPress={() => {
+                this.props.mapView._setFindBar()
+                console.log(this.props.mapView.currentLocationCoordinates)
+                console.log(this.props.mapView.map.props.region)
+              }}>
+            <Image
+              source={this._getBarIcon()}
+              style={{width: 32, height: 32, marginLeft: 10, marginRight: 10}}/>
           </TouchableOpacity>
         </Item>
       </Container>
@@ -34,13 +43,22 @@ export default class MapController extends React.Component {
   }
 
   _getShowMarkerDetailIcon() {
-    switch(this.props.mapView.showMarkerDetail) {
+    switch(this.props.mapView.state.showMarkerDetail) {
       case 0:
         return require("./assets/showMarkerDetail_square_0.png")
       case 1:
         return require("./assets/showMarkerDetail_square_1.png")
       case 2:
         return require("./assets/showMarkerDetail_square_2.png")
+    }
+  }
+
+  _getBarIcon() {
+    switch(this.props.mapView.state.findBar){
+      case false:
+          return require("./assets/bar_disabled.png")
+      case true:
+          return require("./assets/bar_enabled.png")
     }
   }
 }

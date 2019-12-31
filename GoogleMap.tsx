@@ -30,16 +30,19 @@ export default class GoogleMap extends React.Component<State> {
     super(props)
     
     this.state = {
-      updateMap: 0,
+      updateMap: false,
       showEditor: null,
+      showMarkerDetail: 1,
+      findBar: false
     }
   }
+
+  map = null
 
   defaultRouteColor = 'rgba(255, 20, 147, 0.5)'  // 'hotpink'
   selectedRouteColor = 'blue'
   invalidRouteColor = 'rgba(105,105,105,0.5)' //'gray'
   privacyRouteColor = 'rgba(128,0,12, 0.5)'  //'purple'
-  showMarkerDetail = 1
 
   editingPlaceId = null
   currentLocationCoordinates = null
@@ -54,6 +57,14 @@ export default class GoogleMap extends React.Component<State> {
     if(this.currentLocationCoordinates==null ) {
       this._getCurrentPosition()
     }
+  }
+
+  _setShowMarkerDetail(level){
+    this.setState({showMarkerDetail: level})
+  }
+
+  _setFindBar(){
+    this.setState({findBar: !this.state.findBar})
   }
 
   _setCurrentEditPlaceId(place_id) {
@@ -123,15 +134,24 @@ export default class GoogleMap extends React.Component<State> {
           </View>
 
           <MapView style={styles.mapView}
+            ref = {map=> this.map = map }
             provider={ PROVIDER_GOOGLE }
             region={this.currentLocationCoordinates}
             // initialRegion={this.currentLocationCoordinates}
-            // onRegionChange={region => this._updateCurrentLocation(region, false)}
-            onRegionChangeComplete={region => this._updateCurrentLocation(region, false)}
+            onRegionChange={region => this._updateCurrentLocation(region, false)}
+            //onRegionChangeComplete={region => this._updateCurrentLocation(region, false)}
             showsUserLocation={true}
             zoomEnabled={true} 
             scrollEnabled={true}
             followUserLocation={true}
+            onMarkerPress = {e => {
+              this.map.animateToRegion({
+                latitude: e.nativeEvent.coordinate.latitude,
+                longitude: e.nativeEvent.coordinate.longitude,
+                latitudeDelta: this.currentLocationCoordinates.latitudeDelta,
+                longitudeDelta: this.currentLocationCoordinates.longitudeDelta
+              })
+            }}
             onPoiClick = { e => {
               const poi = e.nativeEvent
               poi.geometry = {
@@ -143,16 +163,26 @@ export default class GoogleMap extends React.Component<State> {
               poi.place_id = poi.placeId
               this._setStopCandidate(poi)
                 .then(() => {
-                  this._updateCurrentLocation({
+                  /*this._updateCurrentLocation({
                         latitude: poi.coordinate.latitude,
                         longitude: poi.coordinate.longitude,
                         latitudeDelta: this.currentLocationCoordinates.latitudeDelta,
                         longitudeDelta: this.currentLocationCoordinates.longitudeDelta
-                      }, true)
+                      }, true)*/
                   this.editingPlaceId = poi.placeId
                   this.setState({
                     showEditor: "Marker"
-                })})
+                  })
+                })
+                .then(() => {
+                  this.map.animateToRegion({
+                    latitude: poi.coordinate.latitude,
+                    longitude: poi.coordinate.longitude,
+                    latitudeDelta: this.currentLocationCoordinates.latitudeDelta,
+                    longitudeDelta: this.currentLocationCoordinates.longitudeDelta
+                  })
+                  this.update()
+                })
                 .catch(error => console.log(error))
             }}
             onPress={ e=> {
@@ -206,7 +236,7 @@ export default class GoogleMap extends React.Component<State> {
       orders = {orders}
       editStop = {(marker) => this._editStop(marker)}
       onStopLocationChange = {(stopDetail, orders) => this._onStopChange(stopDetail, orders)}
-      showDetail = {() => {return this.showMarkerDetail}}
+      showDetail = {() => {return this.state.showMarkerDetail}}
     />
   }
 
@@ -218,7 +248,6 @@ export default class GoogleMap extends React.Component<State> {
 
   async _getDirections() {
     this.directions= []
-    //this.selectedRoute = null
 
     if(this.stops.length > 1){
       const temp_stops = this.stops.map((stop, index) => {
@@ -251,7 +280,6 @@ export default class GoogleMap extends React.Component<State> {
         .then(resp => {
           if (resp.routes.length) {
             this.directions.push({route:resp.routes[0], destination: dest.index, origin: origin.index, routeable: true})
-            //this.update()
           } else {
             this.directions.push({
               route:[{
@@ -261,12 +289,10 @@ export default class GoogleMap extends React.Component<State> {
                 latitude:dest.stop.stopDetail.geometry.location.lat,
                 longitude:dest.stop.stopDetail.geometry.location.lng
               }],
-              //way_points: resp.geocoded_waypoints,
               destination: dest.index,
               origin: origin.index,
               routeable: false
             })
-            //this.update()
           }
         })
         .catch(e => {
@@ -345,7 +371,6 @@ export default class GoogleMap extends React.Component<State> {
 
   _updateMarker() {
     this.stopMarkers = []
-    // this.selectedRoute = null
     
     this.stops.map(({stopDetail, duration}, index) => {
       const i = this.stopMarkers.findIndex(marker => {
@@ -383,8 +408,11 @@ export default class GoogleMap extends React.Component<State> {
         showEditor: null
       })
 
+    //if(this.map !== null)
+    //  this.map.animateToRegion(this.currentLocationCoordinates)
+
     this.setState({
-      updateMap: this.state.updateMap + 1
+      updateMap: !this.state.updateMap
     })
   }
 

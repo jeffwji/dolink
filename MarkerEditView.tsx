@@ -85,8 +85,6 @@ export default class MarkerEditView extends React.Component<State> {
   }
 
   _renderRouteEdit(){
-    console.log("Selected route: " + this.props.mapView.selectedRoute)
-
     if(this.props.mapView.selectedRoute!==null){
       const {route, destination, origin, routeable} = this.props.mapView.routes[this.props.mapView.selectedRoute].polyline.props.direction
       if(routeable) {
