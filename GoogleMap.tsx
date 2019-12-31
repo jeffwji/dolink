@@ -35,11 +35,11 @@ export default class GoogleMap extends React.Component<State> {
     }
   }
 
-  defaultRouteColor = 'hotpink'
+  defaultRouteColor = 'rgba(255, 20, 147, 0.5)'  // 'hotpink'
   selectedRouteColor = 'blue'
-  invalidRouteColor = 'gray'
-  privacyRouteColor = 'purple'
-  showMarkerDetail = 0
+  invalidRouteColor = 'rgba(105,105,105,0.5)' //'gray'
+  privacyRouteColor = 'rgba(128,0,12, 0.5)'  //'purple'
+  showMarkerDetail = 1
 
   editingPlaceId = null
   currentLocationCoordinates = null
@@ -158,7 +158,6 @@ export default class GoogleMap extends React.Component<State> {
             onPress={ e=> {
               if(!e.nativeEvent.action || e.nativeEvent.action === 'press') {
                 //this.stopCandidate = null
-                this.selectedRoute = null
                 this._closeStopEditModal()
               }
             } }
@@ -217,50 +216,71 @@ export default class GoogleMap extends React.Component<State> {
     )
   }
 
-  _getDirections() {
+  async _getDirections() {
     this.directions= []
-    this.selectedRoute = null
+    //this.selectedRoute = null
 
     if(this.stops.length > 1){
-      const temp_stops = this.stops.map(stop => stop)
+      const temp_stops = this.stops.map((stop, index) => {
+        return {
+          stop:stop,
+          index:index
+        }
+      })
       let origin = temp_stops.shift()
       do{
         const dest = temp_stops.shift()
-        this._getDirection(
-          origin.stopDetail.geometry.location.lat,origin.stopDetail.geometry.location.lng,
-          dest.stopDetail.geometry.location.lat,dest.stopDetail.geometry.location.lng,
-          dest.mode?dest.mode:'driving'
-        )
+        const value = await this._getDirection(origin, dest)
         origin = dest
       }while(temp_stops.length > 0)
+      this.update()
     }
   }
 
   _coords2string(coordinate){
-    return coordinate.latitude + "," + coordinate.longitude
+    if(coordinate.latitude)
+      return coordinate.latitude + "," + coordinate.longitude
+    else
+      return coordinate.lat + "," + coordinate.lng
   }
 
-  async _getDirection(origin_lat, origin_lng, destination_lat, destination_lng, mode='driving') {
-    googleMapService("directions", `origin=${origin_lat},${origin_lng}&destination=${destination_lat},${destination_lng}&mode=${mode}`)
-      .then(resp => {
-        if (resp.routes.length) {
-          this.directions.push({route:resp.routes[0], mode: mode, routeable: true})
-        } else {
-          this.directions.push({route:[
-            {
-              latitude : origin_lat,
-              longitude : origin_lng
-            },{
-              latitude : destination_lat,
-              longitude : destination_lng
-            }
-          ], mode: 'unknown', routeable: false})
-        }
-        this.update()
-      })
-      .catch(e => {
-        console.warn(e)
-      })
+  async _getDirection(origin, dest) {
+    if(origin.stop.stopDetail.place_id != dest.stop.stopDetail.place_id){
+      const mode = dest.stop.transit_mode?dest.stop.transit_mode:'driving'
+      return googleMapService("directions", `origin=${this._coords2string(origin.stop.stopDetail.geometry.location)}&destination=${this._coords2string(dest.stop.stopDetail.geometry.location)}&mode=${mode}`)
+        .then(resp => {
+          if (resp.routes.length) {
+            this.directions.push({route:resp.routes[0], destination: dest.index, origin: origin.index, routeable: true})
+            //this.update()
+          } else {
+            this.directions.push({
+              route:[{
+                latitude:origin.stop.stopDetail.geometry.location.lat,
+                longitude:origin.stop.stopDetail.geometry.location.lng
+              },{
+                latitude:dest.stop.stopDetail.geometry.location.lat,
+                longitude:dest.stop.stopDetail.geometry.location.lng
+              }],
+              //way_points: resp.geocoded_waypoints,
+              destination: dest.index,
+              origin: origin.index,
+              routeable: false
+            })
+            //this.update()
+          }
+        })
+        .catch(e => {
+          console.warn(e)
+        })
+    }
+  }
+
+  _setTransitMode(stopIndex, mode) {
+    this.stops[stopIndex].transit_mode=mode
+  }
+
+  _getTransitMode(stopIndex) {
+    return this.stops[stopIndex].transit_mode?this.stops[stopIndex].transit_mode:'driving'
   }
 
   _route2coords(route){
@@ -293,7 +313,7 @@ export default class GoogleMap extends React.Component<State> {
             tappable={true}
             onPress={e => {
               this.selectedRoute = index
-              this.update()
+              this.setState({showEditor: "Route"})
             }}
           />
         }
@@ -307,7 +327,8 @@ export default class GoogleMap extends React.Component<State> {
             strokeColor={this.invalidRouteColor}
             tappable={true}
             onPress={e => {
-              console.log(e)
+              this.selectedRoute = index
+              this.setState({showEditor: "Route"})
             }}
           />
         }
@@ -324,6 +345,7 @@ export default class GoogleMap extends React.Component<State> {
 
   _updateMarker() {
     this.stopMarkers = []
+    // this.selectedRoute = null
     
     this.stops.map(({stopDetail, duration}, index) => {
       const i = this.stopMarkers.findIndex(marker => {
@@ -377,7 +399,6 @@ export default class GoogleMap extends React.Component<State> {
           this.editingPlaceId = detail.result.place_id
           this._updateMarker()
           this._getDirections()
-          this.update()
         })
     }
     else{
@@ -481,7 +502,6 @@ export default class GoogleMap extends React.Component<State> {
       // if coordinate doesn't exist any more, close edit modal.
       const marker = this._getMarkerByPlaceId(removedStop[0].stopDetail.place_id)
       if(!marker) {
-        this._setCurrentEditPlaceId(null)
         this._closeStopEditModal()
       }
     }
@@ -503,19 +523,25 @@ export default class GoogleMap extends React.Component<State> {
   }
   
   _renderMarkerEditView() {
-    //return(<MarkerEditModal mapView = {this} />)
     return(<MarkerEditView mapView = {this} />)
   }
 
   _openStopEditModal = (marker) => {
-    //this._setCurrentEditCoordinate(marker.props.stopDetail.geometry.location)
     this._setCurrentEditPlaceId(marker.props.stopDetail.place_id)
     this.setState({showEditor: "Marker"})
   }
 
   _closeStopEditModal = () => {
-    this._setCurrentEditPlaceId(null)
-    this.setState({showEditor: null})
+    if(this.selectedRoute !== null)
+      this.selectedRoute = null
+
+    if(this.editingPlaceId !== null){
+      this._setCurrentEditPlaceId(null)
+      this.setState({showEditor: null})
+    }
+    
+    if(this.state.showEditor !== null)
+      this.setState({showEditor: null})
   }
 
   _isStopEditModalVisible = () => this.state.showEditor==="Marker";

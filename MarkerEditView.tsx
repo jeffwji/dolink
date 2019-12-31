@@ -19,11 +19,21 @@ import {
 
 import {googleImageService, googleMapService} from './Global'
 import DaytimePicker from './DaytimePicker'
+import RNPickerSelect from 'react-native-picker-select'
 
 type State = {
   stopEditScrollOffset: null | number;
   minMapViewHight: number
 };
+
+const modes = [
+  { label: `Driving`, value: 'driving', key: 0, color: 'black' },
+  { label: `Walking`, value: 'walking', key: 1, color: 'black' },
+  { label: `Transit`, value: 'transit', key: 2, color: 'black' },
+  { label: `Flight`, value: 'flight', key: 3, color: 'black' }
+]
+
+
 
 export default class MarkerEditView extends React.Component<State> {
   public stopEditScrollViewRef: React.RefObject<ScrollView>;
@@ -34,7 +44,7 @@ export default class MarkerEditView extends React.Component<State> {
     })
 
     this.state = {
-      reload: 0,
+      reload: false,
       placeImageIndex: 0,
       minMapViewHight: Dimensions.get('window').height/1.5,
     }
@@ -46,22 +56,72 @@ export default class MarkerEditView extends React.Component<State> {
   }
 
   render() {
-    const stopEditModalVisiblity = (this.props.mapView.state.showEditor==="Marker")
-    if(stopEditModalVisiblity)
-    {
-      return (
-        <View style={[styles.overlay, { height: this.HEIGHT-this.state.minMapViewHight }]}>
-          <View 
-            style={styles.slidingBar}
-            onMoveShouldSetResponder={this._handleMoveShouldSetResponder}
-            onResponderMove={this._handleResponderMove}
-          />
-          {this._renderMarkerEdit()}
+    switch(this.props.mapView.state.showEditor){
+      case 'Marker':
+        return (
+          <View style={[styles.overlay, { height: this.HEIGHT-this.state.minMapViewHight }]}>
+            <View 
+              style={styles.slidingBar}
+              onMoveShouldSetResponder={this._handleMoveShouldSetResponder}
+              onResponderMove={this._handleResponderMove}
+            />
+            {this._renderMarkerEdit()}
+          </View>
+        )
+      case 'Route':
+          return (
+            <View style={[styles.overlay, { height: this.HEIGHT-this.state.minMapViewHight }]}>
+              <View 
+                style={styles.slidingBar}
+                onMoveShouldSetResponder={this._handleMoveShouldSetResponder}
+                onResponderMove={this._handleResponderMove}
+              />
+              {this._renderRouteEdit()}
+            </View>
+          )
+      default:
+        return(<View></View>)
+    }
+  }
+
+  _renderRouteEdit(){
+    console.log("Selected route: " + this.props.mapView.selectedRoute)
+
+    if(this.props.mapView.selectedRoute!==null){
+      const {route, destination, origin, routeable} = this.props.mapView.routes[this.props.mapView.selectedRoute].polyline.props.direction
+      if(routeable) {
+        const {duration, distance, start_address, end_address} = route.legs[0]
+        return(
+          <View>
+            <Text>From: (Stop {origin+1}) {start_address}</Text>
+            <Text>To: (Stop {destination+1}) {end_address}</Text>
+            <Text>Distance: {distance.text}</Text>
+            <Text>Duration: {duration.text}</Text>
+
+            <Text>Transit by: </Text><RNPickerSelect
+              value={this.props.mapView._getTransitMode(destination)}
+              onValueChange={(v) => {
+                this.props.mapView._setTransitMode(destination, v)
+                this.setState({reload:!this.state.reload})
+                this.props.mapView._getDirections()
+              }}
+              items={modes}
+            />
+          </View>
+        )
+      } else {
+        const way_points = this.props.mapView.routes[this.props.mapView.selectedRoute].polyline.props.direction.way_points
+        console.log(way_points)
+        return(
+          <View>
+          </View>
+        )
+      }
+    } else {
+      return(
+        <View>
         </View>
       )
-    }
-    else {
-      return(<View></View>)
     }
   }
 

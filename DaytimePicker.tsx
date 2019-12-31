@@ -41,8 +41,6 @@ export default class DaytimePicker extends React.Component {
         <RNPickerSelect style={styles.picker}
           value={this.props.daytime.days}
           onValueChange={(value) => {
-            //this.props.stop.duration.days = value
-            //this.daytime.days = value
             this.props.updateNotify(
               {...this.props.daytime, days: value}
             )
@@ -54,8 +52,6 @@ export default class DaytimePicker extends React.Component {
           style={styles.text}
           value={this.props.daytime.hours}
           onValueChange={(value) => {
-            //this.props.stop.duration.hours = value
-            //this.daytime.hours = value
             this.props.updateNotify(
               {...this.props.daytime, hours: value}
             )
@@ -67,8 +63,6 @@ export default class DaytimePicker extends React.Component {
           style={styles.text}
           value={this.props.daytime.minutes}
           onValueChange={(value) => {
-            //this.props.stop.duration.minutes = value
-            //this.daytime.minutes = value
             this.props.updateNotify(
               {...this.props.daytime, minutes: value}
             )
