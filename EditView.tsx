@@ -10,27 +10,28 @@ import {
 import RouteEditView from './RouteEditView'
 import MarkerEditView from './MarkerEditView'
 
-type State = {
+/*type State = {
   defaultMapViewHight: number
-};
+};*/
 
-export default class EditView extends React.Component<State> {
+export default class EditView extends React.Component/*<State>*/ {
   constructor(props) {
     super(props)
 
     this.state = {
       reload: false,
       placeImageIndex: 0,
-      defaultMapViewHight: Dimensions.get('window').height/1.5,
+      // defaultMapViewHight: Dimensions.get('window').height/1.5,
     }
   }
 
+  defaultMapViewHight = Dimensions.get('window').height/1.5
   HEIGHT = Dimensions.get('window').height
 
   render() {
     if(this.props.mapView.state.showEditor)
       return(
-        <View style={[styles.overlay, { height: this.HEIGHT-this.state.defaultMapViewHight }]}>
+        <View style={[styles.overlay, { height: this.HEIGHT-this.defaultMapViewHight }]}>
           <View
             style={styles.slidingBar}
             onMoveShouldSetResponder={this._handleMoveShouldSetResponder}
@@ -63,14 +64,17 @@ export default class EditView extends React.Component<State> {
   }
 
   _handleResponderMove =(evt) => {
-    if(this.HEIGHT-evt.nativeEvent.pageY > 50)
+    if(this.HEIGHT-evt.nativeEvent.pageY > 50) {
+      this.defaultMapViewHight = Platform.OS === "android"?evt.nativeEvent.pageY-40:evt.nativeEvent.pageY
       this.setState({
-        defaultMapViewHight: Platform.OS === "android"?evt.nativeEvent.pageY-40:evt.nativeEvent.pageY
+        reload: !this.state.reload
       })
+    }
     else {
       this.props.mapView._closeStopEditModal()
+      this.defaultMapViewHight = Dimensions.get('window').height/1.5
       this.setState({
-        defaultMapViewHight: Dimensions.get('window').height/1.5
+        reload: !this.state.reload
       })
     }
   }
@@ -83,9 +87,7 @@ export default class EditView extends React.Component<State> {
     }
     
     this.props.mapView._closeStopEditModal()
-    this.setState({
-      defaultMapViewHight: Dimensions.get('window').height/1.5
-    })
+    this.defaultMapViewHight = Dimensions.get('window').height/1.5
   }
 }
 

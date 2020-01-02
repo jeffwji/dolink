@@ -181,9 +181,7 @@ export default class GoogleMap extends React.Component<State> {
               this._setStopCandidate(poi)
                 .then(() => {
                   this.editingPlaceId = poi.placeId
-                  this.setState({
-                    showEditor: "Marker"
-                  })
+                  this.setShowEditorMode("Marker")
                 })
                 .then(() => {
                   this.map.animateToRegion({
@@ -221,9 +219,9 @@ export default class GoogleMap extends React.Component<State> {
             }}*/
           >
             {this._renderRoutes()}
+            {this._renderInterestings()}
             {this._renderMarkers()}
             {this._renderCurrentMarker()}
-            {this._renderInterestings()}
           </MapView>
 
           {this.mapController}
@@ -371,7 +369,7 @@ export default class GoogleMap extends React.Component<State> {
             tappable={true}
             onPress={e => {
               this.selectedRoute = index
-              this.setState({showEditor: "Route"})
+              this.setShowEditorMode("Route")
             }}
           />
         }
@@ -386,7 +384,7 @@ export default class GoogleMap extends React.Component<State> {
             tappable={true}
             onPress={e => {
               this.selectedRoute = index
-              this.setState({showEditor: "Route"})
+              this.setShowEditorMode("Route")
             }}
           />
         }
@@ -435,10 +433,8 @@ export default class GoogleMap extends React.Component<State> {
   }
 
   update() {
-    if (!this.editingPlaceId && this.state.showEditor!==null)
-      this.setState({
-        showEditor: null
-      })
+    if (!this.editingPlaceId && this._isStopEditModalVisible())
+    this.setShowEditorMode(null)
 
     this.setState({
       updateMap: !this.state.updateMap
@@ -584,7 +580,11 @@ export default class GoogleMap extends React.Component<State> {
 
   _openStopEditModal = (marker) => {
     this._setCurrentEditPlaceId(marker.props.stopDetail.place_id)
-    this.setState({showEditor: "Marker"})
+    this.setShowEditorMode("Marker")
+  }
+
+  setShowEditorMode(mode) {
+    this.setState({showEditor: mode})
   }
 
   _closeStopEditModal = () => {
@@ -593,14 +593,14 @@ export default class GoogleMap extends React.Component<State> {
 
     if(this.editingPlaceId !== null){
       this._setCurrentEditPlaceId(null)
-      this.setState({showEditor: null})
+      this.setShowEditorMode(null)
     }
     
-    if(this.state.showEditor !== null)
-      this.setState({showEditor: null})
+    if(this._isStopEditModalVisible())
+    this.setShowEditorMode(null)
   }
 
-  _isStopEditModalVisible = () => this.state.showEditor==="Marker";
+  _isStopEditModalVisible = () => this.state.showEditor!==null;
 }
 
 

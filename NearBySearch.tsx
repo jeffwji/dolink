@@ -3,28 +3,7 @@ import React from 'react'
 import {googleMapService} from './Global'
 import {getRadius} from './Location'
 import FixedMarker from './FixedMarker'
-
-/*import {Marker} from 'react-native-maps'
-
-class FixedMarker extends React.Component{
-  marker = null
-
-  render() {
-    const detail = this.props.detail
-    const coord = {latitude: detail.geometry.location.lat, longitude: detail.geometry.location.lng }
-    const marker=
-      <Marker
-        coordinate={coord}
-        ref = {marker => this.marker = marker}
-        title = {detail.description || detail.formatted_address || detail.name}
-        onPress={e => {
-          this.props.showDetail(this)
-        }}
-      >
-      </Marker>
-    return(marker)
-  }
-}*/
+import {View, Text } from 'react-native';
 
 type State = {
   mapView: string;
@@ -121,12 +100,22 @@ export default class NearBySearch extends React.Component<State> {
       .catch(error => console.log(error))
   }
 
-  _newMarker(detail, key=0, color='#F9AF77'){
+  _newMarker(detail, key=0, color='rgba(240, 218, 55, 0.8)'){
     return <FixedMarker
       key = {key}
       detail={detail}
       color={color}
-      showDetail = {(marker) => console.log(marker.props.detail)}
+      showDetail = {(marker) => {
+        console.log(marker.props.detail)
+      }}
+      onShow = {detail => {
+        return(
+          <View>
+            <Text style={{color: 'hotpink'}}>{detail.description || detail.formatted_address || detail.name}</Text>
+            {(detail.rating) && <Text style={{color: 'blue'}}>Rating: {detail.rating}</Text>}
+          </View>
+        ) 
+      }}
     />
   }
 }
