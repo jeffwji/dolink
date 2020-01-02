@@ -27,7 +27,6 @@ type State = {
   showEditor: string;
 };
 
-
 export default class GoogleMap extends React.Component<State> {
   constructor(props) {
     super(props)
@@ -50,10 +49,12 @@ export default class GoogleMap extends React.Component<State> {
   privacyRouteColor = 'rgba(128,0,12, 0.5)'  //'purple'
 
   editingPlaceId = null
+  selectedRoute = null
+  editView = null
+
   currentLocationCoordinates = null
   directions = []
   routes = []
-  selectedRoute = null
   stops = []
   stopMarkers = []
   stopCandidate = null
@@ -433,7 +434,7 @@ export default class GoogleMap extends React.Component<State> {
   }
 
   update() {
-    if (!this.editingPlaceId && this._isStopEditModalVisible())
+    if (!this.editingPlaceId && this._isEditViewVisible())
     this.setShowEditorMode(null)
 
     this.setState({
@@ -575,7 +576,7 @@ export default class GoogleMap extends React.Component<State> {
   }
   
   _renderEditView() {
-    return(<EditView mapView = {this} />)
+    return(this.editView)
   }
 
   _openStopEditModal = (marker) => {
@@ -583,7 +584,8 @@ export default class GoogleMap extends React.Component<State> {
     this.setShowEditorMode("Marker")
   }
 
-  setShowEditorMode(mode) {
+  setShowEditorMode(mode, parameters=null) {
+    this.editView = <EditView mapView = {this} parameters={parameters} />
     this.setState({showEditor: mode})
   }
 
@@ -596,11 +598,11 @@ export default class GoogleMap extends React.Component<State> {
       this.setShowEditorMode(null)
     }
     
-    if(this._isStopEditModalVisible())
+    if(this._isEditViewVisible())
     this.setShowEditorMode(null)
   }
 
-  _isStopEditModalVisible = () => this.state.showEditor!==null;
+  _isEditViewVisible = () => this.state.showEditor!==null;
 }
 
 

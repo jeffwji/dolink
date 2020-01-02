@@ -9,6 +9,7 @@ import {
 
 import RouteEditView from './RouteEditView'
 import MarkerEditView from './MarkerEditView'
+import BarEditView from './BarEditView'
 
 /*type State = {
   defaultMapViewHight: number
@@ -51,9 +52,9 @@ export default class EditView extends React.Component/*<State>*/ {
           this._renderMarkerEdit()
         )
       case 'Route':
-        return(
-          <RouteEditView mapView={this.props.mapView}/>
-        )
+        return(<RouteEditView mapView={this.props.mapView} parameters={this.props.parameters}/>)
+      case 'Bar':
+        return(<BarEditView mapView={this.props.mapView} parameters={this.props.parameters}/>)
       default:
         return(<View></View>)
     }
@@ -82,7 +83,7 @@ export default class EditView extends React.Component/*<State>*/ {
   _renderMarkerEdit() {
     if(this.props.mapView.editingPlaceId || this.props.mapView.stopCandidate) {
       return(
-        <MarkerEditView mapView={this.props.mapView} />
+        <MarkerEditView mapView={this.props.mapView} parameters={this.props.parameters}/>
       )
     }
     

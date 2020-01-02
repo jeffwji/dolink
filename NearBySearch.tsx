@@ -72,11 +72,16 @@ export default class NearBySearch extends React.Component<State> {
 
   updateFoodAndEntertainment() {
     if(this.props.mapView.find_food_entertainment){
-      this._updateInterestings('food_entertainment', 'bar', this.props.mapView.currentLocationCoordinates)
+      this._updateInterestings(
+        'food_entertainment', 
+        'bar',
+        this.props.mapView.currentLocationCoordinates,
+        (result, index) => this._newFoodEntertainmentMarker(result, index)
+      )
     }
   }
 
-  _updateInterestings(category, name, location, page_token=null, page=0) {
+  _updateInterestings(category, name, location, markerGenerator, page_token=null, page=0) {
     if(page===0)
       this.interestings[category][name]=[]
     
@@ -84,29 +89,29 @@ export default class NearBySearch extends React.Component<State> {
     const getDefaultRadius = this.props.mapView.getDefaultRadius()
     return googleMapService("place/nearbysearch", `location=${location.latitude},${location.longitude}&radius=${(r>getDefaultRadius?getDefaultRadius:r)/2}&type=${name}${page_token==null?'':('&pagetoken='+page_token)}`)
       .then(json => {
-        //console.log(r, json.status, json.next_page_token)
         if(json.results.length > 0){
           json.results.map((result, index) => {
-            const marker = this._newMarker(result, page*20+index)
+            const marker = markerGenerator(result, page*20+index) //this._newMarker(result, page*20+index)
             this.interestings[category][name].push(marker)
           })
           this.props.mapView.update()
 
           if(json.next_page_token){
-            setTimeout(() => this._updateInterestings(category, name, location, json.next_page_token, page+1), 2000)
+            setTimeout(() => this._updateInterestings(category, name, location, markerGenerator, json.next_page_token, page+1), 2000)
           }
         }
       })
       .catch(error => console.log(error))
   }
 
-  _newMarker(detail, key=0, color='rgba(240, 218, 55, 0.8)'){
+  _newFoodEntertainmentMarker(detail, key=0, color='rgba(240, 218, 55, 0.8)'){
     return <FixedMarker
       key = {key}
       detail={detail}
       color={color}
       showDetail = {(marker) => {
-        console.log(marker.props.detail)
+        this.props.mapView.setShowEditorMode('Bar', {marker:marker})
+        //console.log(marker.props.detail)
       }}
       onShow = {detail => {
         return(
