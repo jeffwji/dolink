@@ -181,7 +181,7 @@ export default class GoogleMap extends React.Component<State> {
               poi.place_id = poi.placeId
               this._setStopCandidate(poi)
                 .then(() => {
-                  this.editingPlaceId = poi.placeId
+                  this._setCurrentEditPlaceId(poi.placeId)
                   this.setShowEditorMode("Marker")
                 })
                 .then(() => {
@@ -245,11 +245,16 @@ export default class GoogleMap extends React.Component<State> {
       const food_entertainment = this.nearBySearch.getInterestings('food_entertainment')
       for(let key in food_entertainment) {
         if (Object.prototype.hasOwnProperty.call(food_entertainment, key)) {
-          food_entertainment[key].map(value => results.push(value))
+          food_entertainment[key].map(value => {
+            results.push(value)
+          })
         }
       }
 
-      return results
+      return results.filter(result => {
+        const r = this.stopMarkers.findIndex(marker => marker.props.stopDetail.place_id === result.props.detail.place_id)
+        return r===-1
+      })
     }
   }
 
@@ -449,7 +454,7 @@ export default class GoogleMap extends React.Component<State> {
           orders.map(({order}) => {
             this.stops[order].stopDetail = detail.result
           })
-          this.editingPlaceId = detail.result.place_id
+          this._setCurrentEditPlaceId(detail.result.place_id)
           this._updateMarker()
           this._getDirections()
         })
@@ -470,7 +475,7 @@ export default class GoogleMap extends React.Component<State> {
     return this._getStopDetailInformation(stopEssential)
       .then(detail => {
         this.stopCandidate = detail.result
-        this.editingPlaceId = detail.result.place_id
+        this._setCurrentEditPlaceId(detail.result.place_id)
       })
   }
 

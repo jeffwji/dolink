@@ -18,12 +18,7 @@ import {
 import {googleImageService, googleMapService} from './Global'
 import DaytimePicker from './DaytimePicker'
 
-type State = {
-  defaultMapViewHight: number
-};
-
-export default class MarkerEditView extends React.Component<State> {
-
+export default class MarkerEditView extends React.Component {
   constructor(props) {
     super(props)
 
@@ -31,7 +26,7 @@ export default class MarkerEditView extends React.Component<State> {
       reload: false,
       placeImageIndex: 0,
     }
-}
+  }
 
   render() {
       let m = this.props.mapView._getMarkerByPlaceId(this.props.mapView.editingPlaceId)

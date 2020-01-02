@@ -11,18 +11,14 @@ import RouteEditView from './RouteEditView'
 import MarkerEditView from './MarkerEditView'
 import BarEditView from './BarEditView'
 
-/*type State = {
-  defaultMapViewHight: number
-};*/
 
-export default class EditView extends React.Component/*<State>*/ {
+export default class EditView extends React.Component {
   constructor(props) {
     super(props)
 
     this.state = {
       reload: false,
       placeImageIndex: 0,
-      // defaultMapViewHight: Dimensions.get('window').height/1.5,
     }
   }
 
