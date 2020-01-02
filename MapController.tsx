@@ -2,7 +2,6 @@ import React from 'react'
 
 import {
   Image,
-  Text,
   TouchableOpacity,
   StyleSheet
 } from 'react-native'
@@ -18,7 +17,7 @@ export default class MapController extends React.Component {
   render() {
     return(
       <Container style={styles.mapStuffsControlBar}>
-        <Item style={{flexDirection: 'row'}}>
+        <Item style={{flexDirection: 'row', alignItems:'center'}}>
           <TouchableOpacity
               onPress={() => {
                 this.props.mapView._setShowMarkerDetail(this.props.mapView.state.showMarkerDetail===0?2:this.props.mapView.state.showMarkerDetail-1)
@@ -29,12 +28,11 @@ export default class MapController extends React.Component {
           </TouchableOpacity>
           <TouchableOpacity
               onPress={() => {
-                this.props.mapView._setFindBar()
-                console.log(this.props.mapView.currentLocationCoordinates)
-                console.log(this.props.mapView.map.props.region)
+                this.props.mapView._setFindFoodEntertainment()
+                this.props.mapView.nearBySearch.updateFoodAndEntertainment()
               }}>
             <Image
-              source={this._getBarIcon()}
+              source={this._getFoodEntertainmentIcon()}
               style={{width: 32, height: 32, marginLeft: 10, marginRight: 10}}/>
           </TouchableOpacity>
         </Item>
@@ -53,8 +51,8 @@ export default class MapController extends React.Component {
     }
   }
 
-  _getBarIcon() {
-    switch(this.props.mapView.state.findBar){
+  _getFoodEntertainmentIcon() {
+    switch(this.props.mapView.find_food_entertainment){
       case false:
           return require("./assets/bar_disabled.png")
       case true:

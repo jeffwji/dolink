@@ -1,14 +1,6 @@
 import * as Permissions from 'expo-permissions'
 
-import {
-  Alert,              // 对话框
-  Linking,
-  Platform
-} from 'react-native'
-
-import * as IntentLauncher from 'expo-intent-launcher'
 import axios from 'axios'
-// import https from 'https-browserify'
 
 module.exports = {
   BASE_URL: 'http://192.168.10.112:9000',

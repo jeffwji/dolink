@@ -1,7 +1,7 @@
 import React from 'react'
 import MapView, {PROVIDER_GOOGLE, Polyline } from 'react-native-maps'
 import StopMarker from './StopMarker'
-import MarkerEditView from './MarkerEditView'
+import EditView from './EditView'
 
 import {
   Container,
@@ -18,12 +18,15 @@ import {
 import MapSearchInput from './MapSearchInput';
 import polyline from '@mapbox/polyline'
 import MapController from './MapController'
+import NearBySearch from './NearBySearch'
 
 import {askPermission, googleMapService} from './Global'
+import {getRegion} from './Location'
 
 type State = {
   showEditor: string;
 };
+
 
 export default class GoogleMap extends React.Component<State> {
   constructor(props) {
@@ -33,11 +36,13 @@ export default class GoogleMap extends React.Component<State> {
       updateMap: false,
       showEditor: null,
       showMarkerDetail: 1,
-      findBar: false
     }
   }
 
+  defaultRadius = 10000
+
   map = null
+  find_food_entertainment = false
 
   defaultRouteColor = 'rgba(255, 20, 147, 0.5)'  // 'hotpink'
   selectedRouteColor = 'blue'
@@ -52,6 +57,9 @@ export default class GoogleMap extends React.Component<State> {
   stops = []
   stopMarkers = []
   stopCandidate = null
+  mapController = <MapController mapView={this} />
+
+  nearBySearch = new NearBySearch({mapView: this})
 
   componentDidMount () {
     if(this.currentLocationCoordinates==null ) {
@@ -59,12 +67,21 @@ export default class GoogleMap extends React.Component<State> {
     }
   }
 
+  getDefaultRadius() {
+    return this.defaultRadius
+  }
+
   _setShowMarkerDetail(level){
     this.setState({showMarkerDetail: level})
   }
 
-  _setFindBar(){
-    this.setState({findBar: !this.state.findBar})
+  _setFindFoodEntertainment(){
+    if(this.find_food_entertainment){
+      this.find_food_entertainment = false
+      this.update()
+    } else {
+      this.find_food_entertainment = true
+    }
   }
 
   _setCurrentEditPlaceId(place_id) {
@@ -76,12 +93,7 @@ export default class GoogleMap extends React.Component<State> {
       if(permit) {
         this._getLocation(
           data => {
-            const region = {
-              latitude: data.coords.latitude,
-              longitude: data.coords.longitude,
-              latitudeDelta: 0.0922,
-              longitudeDelta: 0.0421
-            }
+            const region = getRegion(data.coords.latitude, data.coords.longitude, this.getDefaultRadius())
             this._updateCurrentLocation(region, true)
           },
           error => {
@@ -136,10 +148,15 @@ export default class GoogleMap extends React.Component<State> {
           <MapView style={styles.mapView}
             ref = {map=> this.map = map }
             provider={ PROVIDER_GOOGLE }
-            region={this.currentLocationCoordinates}
-            // initialRegion={this.currentLocationCoordinates}
-            onRegionChange={region => this._updateCurrentLocation(region, false)}
-            //onRegionChangeComplete={region => this._updateCurrentLocation(region, false)}
+            // region={this.currentLocationCoordinates}
+            /*onRegionChange={region => {
+              console.log('onRegionChange', region)
+            }}*/
+            initialRegion={this.currentLocationCoordinates}
+            onRegionChangeComplete={region => {
+              this._updateCurrentLocation(region, false)
+              // this._afterRegionChange()
+            }}
             showsUserLocation={true}
             zoomEnabled={true} 
             scrollEnabled={true}
@@ -163,12 +180,6 @@ export default class GoogleMap extends React.Component<State> {
               poi.place_id = poi.placeId
               this._setStopCandidate(poi)
                 .then(() => {
-                  /*this._updateCurrentLocation({
-                        latitude: poi.coordinate.latitude,
-                        longitude: poi.coordinate.longitude,
-                        latitudeDelta: this.currentLocationCoordinates.latitudeDelta,
-                        longitudeDelta: this.currentLocationCoordinates.longitudeDelta
-                      }, true)*/
                   this.editingPlaceId = poi.placeId
                   this.setState({
                     showEditor: "Marker"
@@ -187,7 +198,6 @@ export default class GoogleMap extends React.Component<State> {
             }}
             onPress={ e=> {
               if(!e.nativeEvent.action || e.nativeEvent.action === 'press') {
-                //this.stopCandidate = null
                 this._closeStopEditModal()
               }
             } }
@@ -213,11 +223,34 @@ export default class GoogleMap extends React.Component<State> {
             {this._renderRoutes()}
             {this._renderMarkers()}
             {this._renderCurrentMarker()}
+            {this._renderInterestings()}
           </MapView>
 
-          <MapController mapView={this} />
+          {this.mapController}
         </View>
       )
+    }
+  }
+
+  _afterRegionChange() {
+    this.nearBySearch.updateFoodAndEntertainment()
+  }
+
+  _renderInterestings() {
+    return this._renderFoodEntertainment()
+  }
+
+  _renderFoodEntertainment(){
+    if(this.find_food_entertainment){
+      const results = []
+      const food_entertainment = this.nearBySearch.getInterestings('food_entertainment')
+      for(let key in food_entertainment) {
+        if (Object.prototype.hasOwnProperty.call(food_entertainment, key)) {
+          food_entertainment[key].map(value => results.push(value))
+        }
+      }
+
+      return results
     }
   }
 
@@ -232,7 +265,6 @@ export default class GoogleMap extends React.Component<State> {
     return <StopMarker
       key = {key}
       stopDetail={detail}
-      color={color}
       orders = {orders}
       editStop = {(marker) => this._editStop(marker)}
       onStopLocationChange = {(stopDetail, orders) => this._onStopChange(stopDetail, orders)}
@@ -242,7 +274,7 @@ export default class GoogleMap extends React.Component<State> {
 
   _renderMarkers() {
     return(
-      this.stopMarkers.map(marker => marker)
+      this.stopMarkers
     )
   }
 
@@ -408,9 +440,6 @@ export default class GoogleMap extends React.Component<State> {
         showEditor: null
       })
 
-    //if(this.map !== null)
-    //  this.map.animateToRegion(this.currentLocationCoordinates)
-
     this.setState({
       updateMap: !this.state.updateMap
     })
@@ -420,7 +449,6 @@ export default class GoogleMap extends React.Component<State> {
     if(orders.length > 0) {
       this._getStopDetailInformation(stopEssential)
         .then(detail => {
-          console.log(this.stops)
           orders.map(({order}) => {
             this.stops[order].stopDetail = detail.result
           })
@@ -545,13 +573,13 @@ export default class GoogleMap extends React.Component<State> {
     return (
       <Container style={styles.container}>
         {this._renderMap()}
-        {this._renderMarkerEditView()}
+        {this._renderEditView()}
       </Container>
     )
   }
   
-  _renderMarkerEditView() {
-    return(<MarkerEditView mapView = {this} />)
+  _renderEditView() {
+    return(<EditView mapView = {this} />)
   }
 
   _openStopEditModal = (marker) => {

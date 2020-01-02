@@ -7,7 +7,6 @@ import {Animated, Easing} from 'react-native';
 
 import EditPlan from './EditPlan'
 import PlanMap from './GoogleMap'
-import StopEditModal from './StopEditModal';
 
 const EditPlanNavigator = createStackNavigator(
   {
