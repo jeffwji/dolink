@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 
 import { StyleSheet, View, Text, Image } from 'react-native';
 
-
 class StopMarkerPin extends React.Component {
   render() {
     const { fontSize, orders, stopDetail } = this.props
@@ -77,15 +76,15 @@ StopMarkerPin.defaultProps = {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'column',
-    alignSelf: 'flex-start',
+    alignSelf: 'center',
     alignItems: 'center',
-    // width: 300
+    width: 200
   },
   interestedBubble: {
     flex: 0,
     flexDirection: 'column',
     alignItems: 'center',
-    alignSelf: 'flex-start',
+    alignSelf: 'center',
     backgroundColor: '#FF5A5F',
     padding: 10,
     borderRadius: 3,
@@ -96,7 +95,7 @@ const styles = StyleSheet.create({
     flex: 0,
     flexDirection: 'column',
     alignItems: 'center',
-    alignSelf: 'flex-start',
+    alignSelf: 'center',
     backgroundColor: '#ffaca6',
     padding: 10,
     borderRadius: 3,

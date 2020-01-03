@@ -181,7 +181,7 @@ export default class GoogleMap extends React.Component<State> {
               poi.place_id = poi.placeId
               this._setStopCandidate(poi)
                 .then(() => {
-                  this._setCurrentEditPlaceId(poi.placeId)
+                  //this._setCurrentEditPlaceId(poi.placeId)
                   this.setShowEditorMode("Marker")
                 })
                 .then(() => {
@@ -488,38 +488,9 @@ export default class GoogleMap extends React.Component<State> {
   }
 
   _addStop = (stopDetail) => {
-    if(this.stopMarkers.length > 1 || (this.stopMarkers.length === 1 && !this._getMarkerByPlaceId(stopDetail.place_id))) {
-        Alert.alert(
-          'Add new stop',
-          'Press \'Add\' to append to the end of route, or \'Insert to...\' to front of an existing stop.',
-          [
-            {
-              text: 'Cancle',
-              onPress: () => console.log('Cancel Pressed'),
-              style: 'cancel',
-            },
-            {
-              text: 'Add',
-              onPress: () => {
-                this.stops.push({stopDetail:stopDetail, duration:this._getRecommandDuration(stopDetail.place_id)})
-                this._updateMarker()
-                this._getDirections()
-              }
-            },
-            {
-              text: 'Insert to...', 
-              onPress: () => {
-                this._insertStop({stopDetail:stopDetail, duration:this._getRecommandDuration(stopDetail.place_id)})
-              }
-            }
-          ],
-          {cancelable: false},
-        )
-    } else {
       this.stops.push({stopDetail:stopDetail, duration:this._getRecommandDuration(stopDetail.place_id)})
       this._updateMarker()
       this._getDirections()
-    }
   }
 
   _insertStop(stop) {

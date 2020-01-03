@@ -12,11 +12,14 @@ import {
   ScrollView,
   StyleSheet,
   Image,
-  Dimensions
+  Dimensions,
+  Alert
 } from 'react-native'
 
 import {googleImageService, googleMapService} from './Global'
 import DaytimePicker from './DaytimePicker'
+import ChangeStopModal from './ChangeStopModal'
+
 
 export default class MarkerEditView extends React.Component {
   constructor(props) {
@@ -25,6 +28,7 @@ export default class MarkerEditView extends React.Component {
     this.state = {
       reload: false,
       placeImageIndex: 0,
+      changeStopModal: null
     }
   }
 
@@ -38,14 +42,14 @@ export default class MarkerEditView extends React.Component {
             {this._renderMarkerInformation(m)}
             <ScrollView>
                 <View>
-                {
-                  this._renderMarkerStops(m)
-                }
+                {this._renderMarkerStops(m)}
+                {this._renderChangeStopMode()}
                 </View>
             </ScrollView>
           </View>
         )
-      }
+      } else
+        return null
     }
   
   _renderMarkerStops(marker) {
@@ -54,13 +58,7 @@ export default class MarkerEditView extends React.Component {
         key={index} 
         style={[styles.stopEditor, {backgroundColor: (index % 2 == 0)?'#87BBE0':'#A9DCD3'}]}
       >
-        <Button transparent 
-          onPress={() => {
-            this.props.mapView._removeStop(order)
-        }}>
-          <Icon name='ios-close'/>
-        </Button>
-        <Text style={{color:'white'}}>Stop {order+1} - Plan to stay for: </Text>
+        <Text>Stop {order+1} - Stay for </Text>
         <DaytimePicker 
           daytime = {this.props.mapView.stops[order].duration}
           updateNotify={(daytime) => {
@@ -68,8 +66,53 @@ export default class MarkerEditView extends React.Component {
             this.props.mapView.update() 
           }}
         />
+        <Button transparent 
+          onPress={() => {
+            if(this.props.mapView.stops.length > 1)
+            {
+              Alert.alert(
+                'Change stop',
+                'You want change stop order or location?',
+                [
+                  { text: 'Change location', onPress: () => this.setState({changeStopModal: this._createChangeStopModal('CHANGE_LOCATION')}) },
+                  { text: 'Change order', onPress: () => this.setState({changeStopModal: this._createChangeStopModal('CHANGE_ORDER')}) },
+                  { text: 'Cancel', onPress: () => console.log('Cancel Pressed'), style: 'cancel',
+                  },
+                ],
+                {cancelable: false},
+              );
+            } else {
+              this.setState({
+                changeStopModal: this._createChangeStopModal('CHANGE_LOCATION')
+              })
+            }
+          }}
+        >
+          <Icon name='ios-pin'/>
+        </Button>
+        <Button transparent 
+          onPress={() => {
+            this.props.mapView._removeStop(order)
+          }}
+        >
+          <Icon name='ios-close'/>
+        </Button>
       </View>
     )
+  }
+
+  _createChangeStopModal(mode) {
+    const modal = <ChangeStopModal
+      mode={mode}
+      close={() => this._closeChangeStopModal}
+    />
+    return modal
+  }
+
+  _closeChangeStopModal = () => {
+    this.setState({
+      changeStopModal: null
+    })
   }
   
   _renderMarkerInformation(marker) {
@@ -77,10 +120,17 @@ export default class MarkerEditView extends React.Component {
       <View style={{
         flexDirection: 'row'
       }}>
-      {this._renderPicture(marker.props.stopDetail)}
-      {this._renderAddress(marker.props.stopDetail)}
+        {this._renderPicture(marker.props.stopDetail)}
+        {this._renderAddress(marker.props.stopDetail)}
       </View>
     )
+  }
+
+  _renderChangeStopMode() {
+    if (this.state.changeStopModal !== null){
+      return this.state.changeStopModal
+    } else
+      return null
   }
   
   _renderPicture(detail) {

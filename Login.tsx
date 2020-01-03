@@ -56,7 +56,7 @@ export default class Login extends React.Component {
         </Header>
         <Form>
           <FormItem floatingLabel>
-            <Label>Email</Label>
+            <Label>Email</Label>  
             <Input autoCapitalize = 'none'
               onChangeText={ (text) => {
                 this.setState({username: text.toLowerCase()})
@@ -68,7 +68,8 @@ export default class Login extends React.Component {
               autoCapitalize = 'none'
               onChangeText={ (text) => {
                 this.setState({password: text})
-            }}/>
+              }
+            }/>
           </FormItem>
 
           <Button full primary style={{ paddingBottom: 4 }}
@@ -82,8 +83,8 @@ export default class Login extends React.Component {
           <Button full light primary
             onPress={() => {
               if (navigate) {
-                  navigate("SignUp")
-                }
+                navigate("SignUp")
+              }
             }}
           >
             <Text> Sign Up </Text>

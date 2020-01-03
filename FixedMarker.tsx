@@ -45,15 +45,15 @@ export default class FixedMarker extends React.Component{
 const styles = StyleSheet.create({
     container: {
       flexDirection: 'column',
-      alignSelf: 'flex-start',
+      alignSelf: 'center',
       alignItems: 'center',
+      width: 200
     },
     interestedBubble: {
       flex: 0,
       flexDirection: 'column',
       alignItems: 'center',
-      alignSelf: 'flex-start',
-      // backgroundColor: '#FF5A5F',
+      alignSelf: 'center',
       padding: 10,
       borderRadius: 3,
       borderColor: '#D23F44',
