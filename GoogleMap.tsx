@@ -199,7 +199,7 @@ export default class GoogleMap extends React.Component<State> {
               if(!e.nativeEvent.action || e.nativeEvent.action === 'press') {
                 this._closeStopEditModal()
               }
-            } }
+            }}
             /*onLongPress={ e => {
               if(!e.nativeEvent.action || e.nativeEvent.action === 'press') {
                 googleMapService("geocode", `latlng=${this._coords2string(e.nativeEvent.coordinate)}`)
@@ -445,6 +445,12 @@ export default class GoogleMap extends React.Component<State> {
     this.setState({
       updateMap: !this.state.updateMap
     })
+  }
+
+  updateStops(stops){
+    this.stops = stops
+    this._updateMarker()
+    this._getDirections()
   }
 
   _onStopChange(stopEssential, orders) {

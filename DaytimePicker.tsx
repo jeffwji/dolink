@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import PropTypes from 'prop-types';
-import PickerSelect from 'react-native-picker-select'
+import RNPickerSelect from 'react-native-picker-select'
 
 
 export default class DaytimePicker extends React.Component {
@@ -36,7 +36,7 @@ export default class DaytimePicker extends React.Component {
 
     return(
       <View style={this.props.defaultStyle}>
-        <PickerSelect
+        <RNPickerSelect
           style={pickerStyle}
           value={this.props.daytime.days}
           onValueChange={(value) => {
@@ -47,7 +47,7 @@ export default class DaytimePicker extends React.Component {
           items={daysOption}
         />
 
-        <PickerSelect
+        <RNPickerSelect
           style={pickerStyle}
           value={this.props.daytime.hours}
           onValueChange={(value) => {
@@ -58,7 +58,7 @@ export default class DaytimePicker extends React.Component {
           items={hoursOption}
         />
 
-        <PickerSelect
+        <RNPickerSelect
           style={pickerStyle}
           value={this.props.daytime.minutes}
           onValueChange={(value) => {
@@ -73,7 +73,7 @@ export default class DaytimePicker extends React.Component {
   }
 }
 
-const pickerStyle = {
+const pickerStyle = StyleSheet.create({
 	inputIOS: {
 		color: 'white',
 		//paddingTop: 13,
@@ -84,23 +84,8 @@ const pickerStyle = {
 	inputAndroid: {
 		color: 'white',
 	},
-	placeholderColor: 'white',
-	underline: { borderTopWidth: 0 },
-	icon: {
-		position: 'absolute',
-		backgroundColor: 'transparent',
-		borderTopWidth: 5,
-		borderTopColor: '#00000099',
-		borderRightWidth: 5,
-		borderRightColor: 'transparent',
-		borderLeftWidth: 5,
-		borderLeftColor: 'transparent',
-		width: 0,
-		height: 0,
-		top: 20,
-		right: 15,
-	},
-};
+	underline: { borderTopWidth: 0 }
+});
 
 const styles = StyleSheet.create({
   defaultStyle: {

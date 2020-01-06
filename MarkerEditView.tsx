@@ -59,7 +59,7 @@ export default class MarkerEditView extends React.Component {
         style={[styles.stopEditor, {backgroundColor: (index % 2 == 0)?'#87BBE0':'#A9DCD3'}]}
       >
         <Text>Stop {order+1} - Stay for </Text>
-        <DaytimePicker 
+        <DaytimePicker
           daytime = {this.props.mapView.stops[order].duration}
           updateNotify={(daytime) => {
             this.props.mapView.stops[order].duration = daytime
@@ -74,8 +74,8 @@ export default class MarkerEditView extends React.Component {
                 'Change stop',
                 'You want change stop order or location?',
                 [
-                  { text: 'Change location', onPress: () => this.setState({changeStopModal: this._createChangeStopModal('CHANGE_LOCATION')}) },
                   { text: 'Change order', onPress: () => this.setState({changeStopModal: this._createChangeStopModal('CHANGE_ORDER')}) },
+                  { text: 'Change location', onPress: () => this.setState({changeStopModal: this._createChangeStopModal('CHANGE_LOCATION')}) },
                   { text: 'Cancel', onPress: () => console.log('Cancel Pressed'), style: 'cancel',
                   },
                 ],
@@ -104,7 +104,9 @@ export default class MarkerEditView extends React.Component {
   _createChangeStopModal(mode) {
     const modal = <ChangeStopModal
       mode={mode}
+      mapView = {this.props.mapView}
       close={() => this._closeChangeStopModal}
+      confirm={() => console.log('Confirm change') }
     />
     return modal
   }
