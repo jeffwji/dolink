@@ -6,10 +6,8 @@
 import * as React from 'react';
 import { 
   Image,
-  ScrollView,
   View,
   StyleSheet,
-  Alert
 } from 'react-native';
 
 import {

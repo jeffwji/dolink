@@ -453,6 +453,12 @@ export default class GoogleMap extends React.Component<State> {
     this._getDirections()
   }
 
+  updateStop(stopDetail, order){
+    this.stops[order].stopDetail = stopDetail
+    this._updateMarker()
+    this._getDirections()
+  }
+
   _onStopChange(stopEssential, orders) {
     if(orders.length > 0) {
       this._getStopDetailInformation(stopEssential)

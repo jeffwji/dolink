@@ -75,7 +75,10 @@ export default class MarkerEditView extends React.Component {
                 'You want change stop order or location?',
                 [
                   { text: 'Change order', onPress: () => this.setState({changeStopModal: this._createChangeStopModal('CHANGE_ORDER')}) },
-                  { text: 'Change location', onPress: () => this.setState({changeStopModal: this._createChangeStopModal('CHANGE_LOCATION')}) },
+                  { text: 'Change location', onPress: () => {
+                      this.setState({changeStopModal: this._createChangeStopModal('CHANGE_LOCATION', {order: order})})
+                    }
+                  },
                   { text: 'Cancel', onPress: () => console.log('Cancel Pressed'), style: 'cancel',
                   },
                 ],
@@ -83,7 +86,7 @@ export default class MarkerEditView extends React.Component {
               );
             } else {
               this.setState({
-                changeStopModal: this._createChangeStopModal('CHANGE_LOCATION')
+                changeStopModal: this._createChangeStopModal('CHANGE_LOCATION', {order: order})
               })
             }
           }}
@@ -101,17 +104,18 @@ export default class MarkerEditView extends React.Component {
     )
   }
 
-  _createChangeStopModal(mode) {
+  _createChangeStopModal(mode, parameters=null) {
     const modal = <ChangeStopModal
       mode={mode}
       mapView = {this.props.mapView}
-      close={() => this._closeChangeStopModal}
+      close={() => this._closeChangeStopModal()}
       confirm={() => console.log('Confirm change') }
+      parameters={parameters}
     />
     return modal
   }
 
-  _closeChangeStopModal = () => {
+  _closeChangeStopModal(){
     this.setState({
       changeStopModal: null
     })
