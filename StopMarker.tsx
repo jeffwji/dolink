@@ -5,9 +5,6 @@ import StopMarkerPin from './StopMarkerPin'
 import PropTypes from 'prop-types';
 
 import  {googleMapService} from './Global'
-import {
-  Image
-} from 'react-native'
 
 class StopMarker extends React.Component {
   constructor(props) {

@@ -1,5 +1,5 @@
 import React from 'react'
-import { Button, Text, View, StyleSheet, TouchableOpacity } from "react-native";
+import { Button, Text, View, StyleSheet, TouchableOpacity, Dimensions } from "react-native";
 import MapView,  {PROVIDER_GOOGLE, Marker } from 'react-native-maps'
 
 
@@ -25,7 +25,7 @@ class MapWindow extends React.Component {
   render() {
     return(
       <View style={styles.content}>
-        <AutoCompleteSearchInput notifyLocationChange={this.notifyLocationChange} />
+        <AutoCompleteSearchInput notifyLocationChange={this.notifyLocationChange} containerStyle={{width: 300}}/>
         <MapView
           ref = {map=> this.map = map }
           style={styles.mapView}
@@ -39,13 +39,13 @@ class MapWindow extends React.Component {
   }
   
   notifyLocationChange = (details) => {
-    this.props.callback(details.result)
+    this.props.callback(details)
     
     this.setState({ 
       currentLocationCoordinates: {
         ...this.state.currentLocationCoordinates, 
-        latitude: details.result.geometry.location.lat,
-        longitude: details.result.geometry.location.lng
+        latitude: details.geometry.location.lat,
+        longitude: details.geometry.location.lng
       }
     })
 
@@ -121,7 +121,7 @@ export default class ChangeStopModal extends React.Component {
           this._onClose(false)
         }}
       >
-        <View style={styles.conainer}>
+        <View style={styles.container}>
           {this._renderContent()}
           <View style={{flexDirection: 'row', backgroundColor: '#E1E9FD'}}>
             <Button transparent 
@@ -153,6 +153,12 @@ export default class ChangeStopModal extends React.Component {
         if(this.stopDetail !== null){
           const {order} = this.props.parameters
           this.props.mapView.updateStop(this.stopDetail, order)
+          this.props.mapView._updateCurrentLocation({
+            latitude: this.stopDetail.geometry.location.lat,
+            longitude: this.stopDetail.geometry.location.lng,
+            latitudeDelta: this.props.mapView.currentLocationCoordinates.latitudeDelta,
+            longitudeDelta: this.props.mapView.currentLocationCoordinates.longitudeDelta
+          }, true)
         }
       }
     }
@@ -237,7 +243,7 @@ export default class ChangeStopModal extends React.Component {
 
 
 const styles = StyleSheet.create({
-  conainer: {
+  container: {
     backgroundColor: 'white',
     padding: 1,
     justifyContent: 'center',

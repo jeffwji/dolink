@@ -9,7 +9,6 @@ import {
   Button, 
   Left,
   Right,
-  Body, 
   Icon, 
   Text,
   Footer
@@ -21,14 +20,6 @@ import {
   StyleSheet,
   Alert
 } from 'react-native'
-
-import 
-  GLOBAL, 
-  {
-    BASE_URL,
-    API, 
-    query
-  } from './Global'
 
 export default class EditPlan extends React.Component {
   constructor(props) {

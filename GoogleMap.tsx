@@ -15,7 +15,8 @@ import {
   Alert
 } from 'react-native'
 
-import MapSearchInput from './MapSearchInput';
+//import MapSearchInput from './MapSearchInput';
+import MapSearchInput from './AutoCompleteSearchInput'
 import polyline from '@mapbox/polyline'
 import MapController from './MapController'
 import NearBySearch from './NearBySearch'
@@ -117,15 +118,13 @@ export default class GoogleMap extends React.Component<State> {
   _updateCurrentLocation(region, updateMap) {
     this.currentLocationCoordinates = region
     if(updateMap)
-      this.update()
+      this.forceUpdate()
   }
 
   _renderMap() {
     if(this.currentLocationCoordinates!=null) {
       return(
         <View style={styles.overallViewContainer}>
-          <View style={styles.earchInput}>
-            <Item>
               <MapSearchInput 
                 notifyLocationChange={(details) => {
                   this._setStopCandidate(details)
@@ -143,13 +142,11 @@ export default class GoogleMap extends React.Component<State> {
                   { description: 'Home', geometry: { location: { lat: 43.8906719, lng: -79.2964162 } }, place_id: 'ChIJ1bQTc_zV1IkR_pQs6RrmKzo', isPredefinedPlace: true, name: 'Stonebridge Public School, Stonebridge Drive, Markham, ON, Canada'}
                 ]}
               />
-            </Item>
-          </View>
 
           <MapView style={styles.mapView}
             ref = {map=> this.map = map }
             provider={ PROVIDER_GOOGLE }
-            // region={this.currentLocationCoordinates}
+            region={this.currentLocationCoordinates}
             /*onRegionChange={region => {
               console.log('onRegionChange', region)
             }}*/

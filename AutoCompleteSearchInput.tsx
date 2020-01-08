@@ -4,7 +4,7 @@ import {googleMapService} from './Global'
 import {Text, TouchableOpacity, StyleSheet} from "react-native";
 
 import Autocomplete from "react-native-autocomplete-input"
-
+import PropTypes from 'prop-types';
 
 /**
  * https://github.com/mrlaessig/react-native-autocomplete-input#readme
@@ -43,14 +43,14 @@ export default class AutoCpmoleteSearchInput extends React.Component {
 							})
 
 							googleMapService('place/details', `place_id=${item.place_id}`)
-								.then(details => this.props.notifyLocationChange(details))
+								.then(details => this.props.notifyLocationChange(details.result))
 						}}
 					>
 						<Text>{item.description || item.formatted_address || item.name}</Text>
 					</TouchableOpacity>
 				)}
 				renderSeparator={(sectionId, rowId) => <View key={rowId} style={styles.separator} />}
-				containerStyle={googleSearchInput.container}
+				containerStyle={[googleSearchInput.container, this.props.containerStyle]}
 				inputContainerStyle={googleSearchInput.inputContainerStyle}
 				listContainerStyle={googleSearchInput.listContainerStyle}
 				listStyle={googleSearchInput.listStyle}
@@ -59,10 +59,13 @@ export default class AutoCpmoleteSearchInput extends React.Component {
 	}
 }
 
+AutoCpmoleteSearchInput.propTypes = {
+	notifyLocationChange: PropTypes.func.isRequired,
+	containerStyle: PropTypes.any
+}
 
-const googleSearchInput = StyleSheet.create({
+const googleSearchInput:Sty = StyleSheet.create({
 	container: {
-		width: 300
 	},
 	inputContainerStyle: {
 	  backgroundColor: 'rgba(0,0,0,0)',
