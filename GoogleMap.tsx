@@ -44,10 +44,10 @@ export default class GoogleMap extends React.Component<State> {
   map = null
   find_food_entertainment = false
 
-  defaultRouteColor = 'rgba(255, 20, 147, 0.5)'  // 'hotpink'
+  defaultRouteColor = 'rgba(255, 20, 147, 0.4)'  // 'hotpink'
   selectedRouteColor = 'blue'
-  invalidRouteColor = 'rgba(105,105,105,0.5)' //'gray'
-  privacyRouteColor = 'rgba(128,0,12, 0.5)'  //'purple'
+  invalidRouteColor = 'rgba(105,105,105,0.4)' //'gray'
+  privacyRouteColor = 'rgba(128,0,12, 0.4)'  //'purple'
 
   editingPlaceId = null
   selectedRoute = null
@@ -306,31 +306,47 @@ export default class GoogleMap extends React.Component<State> {
       return coordinate.lat + "," + coordinate.lng
   }
 
+  _generateFlightRoute(origin, dest) {
+    return {
+      route:[{
+        latitude:origin.stop.stopDetail.geometry.location.lat,
+        longitude:origin.stop.stopDetail.geometry.location.lng
+      },{
+        latitude:dest.stop.stopDetail.geometry.location.lat,
+        longitude:dest.stop.stopDetail.geometry.location.lng
+      }],
+      legs:[
+        {
+          distance: {text:null, value: null},
+          duration: {text:null, value: null}
+        }
+      ],
+      destination: dest.index,
+      origin: origin.index,
+      routeable: false
+    }
+  }
+
   async _getDirection(origin, dest) {
     if(origin.stop.stopDetail.place_id != dest.stop.stopDetail.place_id){
       const mode = dest.stop.transit_mode?dest.stop.transit_mode:'driving'
-      return googleMapService("directions", `origin=${this._coords2string(origin.stop.stopDetail.geometry.location)}&destination=${this._coords2string(dest.stop.stopDetail.geometry.location)}&mode=${mode}`)
-        .then(resp => {
-          if (resp.routes.length) {
-            this.directions.push({route:resp.routes[0], destination: dest.index, origin: origin.index, routeable: true})
-          } else {
-            this.directions.push({
-              route:[{
-                latitude:origin.stop.stopDetail.geometry.location.lat,
-                longitude:origin.stop.stopDetail.geometry.location.lng
-              },{
-                latitude:dest.stop.stopDetail.geometry.location.lat,
-                longitude:dest.stop.stopDetail.geometry.location.lng
-              }],
-              destination: dest.index,
-              origin: origin.index,
-              routeable: false
+      switch(mode){
+        case 'flight':
+            this.directions.push(this._generateFlightRoute(origin, dest))
+            return
+        default:
+          return googleMapService("directions", `origin=${this._coords2string(origin.stop.stopDetail.geometry.location)}&destination=${this._coords2string(dest.stop.stopDetail.geometry.location)}&mode=${mode}`)
+            .then(resp => {
+              if (resp.routes.length > 0) {
+                this.directions.push({route:resp.routes[0], destination: dest.index, origin: origin.index, routeable: true})
+              } else {
+                this.directions.push(this._generateFlightRoute(origin, dest))
+              }
             })
-          }
-        })
-        .catch(e => {
-          console.warn(e)
-        })
+            .catch(e => {
+              console.warn(e)
+            })
+       }
     }
   }
 
@@ -374,6 +390,7 @@ export default class GoogleMap extends React.Component<State> {
               this.selectedRoute = index
               this.setShowEditorMode("Route")
             }}
+            geodesic={false}
           />
         }
       } else {
@@ -389,6 +406,7 @@ export default class GoogleMap extends React.Component<State> {
               this.selectedRoute = index
               this.setShowEditorMode("Route")
             }}
+            geodesic={true}
           />
         }
       }

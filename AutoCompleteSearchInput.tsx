@@ -1,7 +1,7 @@
 import React from 'react'
 import {googleMapService} from './Global'
 
-import {Text, TouchableOpacity, StyleSheet} from "react-native";
+import {Text, View, TouchableOpacity, StyleSheet, Keyboard} from "react-native";
 
 import Autocomplete from "react-native-autocomplete-input"
 import PropTypes from 'prop-types';
@@ -23,19 +23,29 @@ export default class AutoCpmoleteSearchInput extends React.Component {
     render() {
 		return(
 			<Autocomplete
+				clearButtonMode={'always'}
 				data={this.state.items}
 				defaultValue={this.state.defaultValue}
 				onChangeText={ text => {
-					googleMapService('place/autocomplete', `input=${text}`)
-						.then(json => this.setState({
-							items: json.predictions
-						}))
+					if(text != "") {
+						googleMapService('place/autocomplete', `input=${text}`)
+							.then(json => this.setState({
+								items: json.predictions
+							}))
+					} else {
+						this.setState({
+							items: []
+						})
+					}
 				}}
-				keyExtractor={item => {return item.place_id}}
+				keyExtractor={item => {
+					return item.place_id
+				}}
 				renderItem={({ item, i }) => (
 					<TouchableOpacity
 						key={i}
 						onPress={() => {
+							Keyboard.dismiss()
 							const value = item.description || item.formatted_address || item.name
 							this.setState({
 								defaultValue: value,
