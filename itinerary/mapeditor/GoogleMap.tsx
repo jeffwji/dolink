@@ -37,6 +37,8 @@ export default class GoogleMap extends React.Component<State> {
       showEditor: null,
       showMarkerDetail: 1,
     }
+
+    this._updateMarker()
   }
 
   defaultRadius = 10000
@@ -54,9 +56,7 @@ export default class GoogleMap extends React.Component<State> {
   editView = null
 
   currentLocationCoordinates = null
-  directions = []
   routes = []
-  // stops = []
   stopMarkers = []
   stopCandidate = null
   mapController = <MapController mapView={this} />
@@ -72,6 +72,10 @@ export default class GoogleMap extends React.Component<State> {
   stops = this.props.navigation.state.params.stops
   updateStops = this.props.navigation.state.params.updateStops
   setStops = this.props.navigation.state.params.setStops
+
+  directions = this.props.navigation.state.params.directions
+  updateDirections = this.props.navigation.state.params.updateDirections
+  setDirections = this.props.navigation.state.params.setDirections
 
   getDefaultRadius() {
     return this.defaultRadius
@@ -283,8 +287,9 @@ export default class GoogleMap extends React.Component<State> {
     )
   }
 
-  async _getDirections() {
-    this.directions= []
+  async reflashDirections() {
+    this.setDirections([])
+    //this.directions= []
 
     if(this.stops().length > 1){
       const temp_stops = this.stops().map((stop, index) => {
@@ -296,7 +301,7 @@ export default class GoogleMap extends React.Component<State> {
       let origin = temp_stops.shift()
       do{
         const dest = temp_stops.shift()
-        const value = await this._getDirection(origin, dest)
+        await this._getDirection(origin, dest)
         origin = dest
       }while(temp_stops.length > 0)
       this.update()
@@ -336,15 +341,15 @@ export default class GoogleMap extends React.Component<State> {
       const mode = dest.stop.transit_mode?dest.stop.transit_mode:'driving'
       switch(mode){
         case 'flight':
-            this.directions.push(this._generateFlightRoute(origin, dest))
+            this.updateDirections(directions => directions.push(this._generateFlightRoute(origin, dest)))
             return
         default:
           return googleMapService("directions", `origin=${this._coords2string(origin.stop.stopDetail.geometry.location)}&destination=${this._coords2string(dest.stop.stopDetail.geometry.location)}&mode=${mode}`)
             .then(resp => {
               if (resp.routes.length > 0) {
-                this.directions.push({route:resp.routes[0], destination: dest.index, origin: origin.index, routeable: true})
+                this.updateDirections(directions => directions.push({route:resp.routes[0], destination: dest.index, origin: origin.index, routeable: true}))
               } else {
-                this.directions.push(this._generateFlightRoute(origin, dest))
+                this.updateDirections(directions => directions.push(this._generateFlightRoute(origin, dest)))
               }
             })
             .catch(e => {
@@ -381,7 +386,7 @@ export default class GoogleMap extends React.Component<State> {
   }
 
   _getRoutes() {
-    this.routes = this.directions.map((direction, index) => {
+    this.routes = this.directions().map((direction, index) => {
       if(direction.routeable) {
         return {
           polyline: <Polyline
@@ -419,7 +424,7 @@ export default class GoogleMap extends React.Component<State> {
   }
 
   _renderRoutes() {
-    if(this.directions.length) {
+    if(this.directions().length) {
       this._getRoutes()
       return this.routes.map(r => r.polyline)
     }
@@ -470,14 +475,14 @@ export default class GoogleMap extends React.Component<State> {
   reflashStops(stops){
     this.setStops(stops)
     this._updateMarker()
-    this._getDirections()
+    this.reflashDirections()
   }
 
   updateStop(stopDetail, order){
     this.updateStops( stops => stops[order].stopDetail = stopDetail )
     //this.stops[order].stopDetail = stopDetail
     this._updateMarker()
-    this._getDirections()
+    this.reflashDirections()
   }
 
   _onStopChange(stopEssential, orders) {
@@ -490,7 +495,7 @@ export default class GoogleMap extends React.Component<State> {
           })
           this._setCurrentEditPlaceId(detail.result.place_id)
           this._updateMarker()
-          this._getDirections()
+          this.reflashDirections()
         })
     }
     else{
@@ -525,7 +530,7 @@ export default class GoogleMap extends React.Component<State> {
     this.updateStops( stops => stops.push({stopDetail:stopDetail, duration:this._getRecommandDuration(stopDetail.place_id)}) )
     //this.stops.push({stopDetail:stopDetail, duration:this._getRecommandDuration(stopDetail.place_id)})
     this._updateMarker()
-    this._getDirections()
+    this.reflashDirections()
   }
 
   _insertStop(stop) {
@@ -561,7 +566,7 @@ export default class GoogleMap extends React.Component<State> {
     const removedStop = this.stops().splice(order, 1)
     if(removedStop) {
       this._updateMarker()
-      this._getDirections()
+      this.reflashDirections()
 
       // if coordinate doesn't exist any more, close edit modal.
       const marker = this._getMarkerByPlaceId(removedStop[0].stopDetail.place_id)

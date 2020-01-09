@@ -43,6 +43,20 @@ export default class EditPlan extends React.Component {
   updateStops(update: (stops) => any) {
     update(this.stops)
   }
+  
+  directions = []
+
+  getDirections() {
+    return this.directions
+  }
+
+  setDirections(directions){
+    this.directions = directions
+  }
+
+  updateDirections(update: (directions) => any) {
+    update(this.directions)
+  }
 
   render() {
     const {navigate, goBack} = this.props.navigation
@@ -105,7 +119,10 @@ export default class EditPlan extends React.Component {
                 navigate('PlanMap', {
                   stops: () => this.getStops(),
                   setStops: (stops) => this.setStops(stops),
-                  updateStops: (update) => this.updateStops(update)
+                  updateStops: (update) => this.updateStops(update),
+                  directions: () => this.getDirections(),
+                  setDirections: (directions) => this.setDirections(directions),
+                  updateDirections: (update) => this.updateDirections(update)
                 })
               }}
             >
