@@ -22,7 +22,7 @@ import {
   Text
 } from 'native-base'
 
-import GLOBAL, {BASE_URL, API, query} from './Global'
+import GLOBAL, {BASE_URL, API, query} from './util/Global'
 
 export default class Login extends React.Component {
   constructor(props) {

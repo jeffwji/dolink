@@ -19,10 +19,7 @@ import Person from './Person'
 import Find from './Find'
 import Chat from './Chat'
 
-import 
-  GLOBAL,
-  {BASE_URL, API, query, askPermission}
-  from './Global'
+import GLOBAL,{BASE_URL, API, query, askPermission} from './util/Global'
 
 export default class Main extends React.Component {
   constructor(props) {

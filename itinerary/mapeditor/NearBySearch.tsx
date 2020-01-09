@@ -1,7 +1,7 @@
 import React from 'react'
 
-import {googleMapService} from './Global'
-import {getRadius} from './Location'
+import {googleMapService} from '../../util/Global'
+import {getRadius} from '../../util/Location'
 import FixedMarker from './FixedMarker'
 import {View, Text } from 'react-native';
 

@@ -43,20 +43,20 @@ export default class MapController extends React.Component {
   _getShowMarkerDetailIcon() {
     switch(this.props.mapView.state.showMarkerDetail) {
       case 0:
-        return require("./assets/showMarkerDetail_square_0.png")
+        return require("../../assets/showMarkerDetail_square_0.png")
       case 1:
-        return require("./assets/showMarkerDetail_square_1.png")
+        return require("../../assets/showMarkerDetail_square_1.png")
       case 2:
-        return require("./assets/showMarkerDetail_square_2.png")
+        return require("../../assets/showMarkerDetail_square_2.png")
     }
   }
 
   _getFoodEntertainmentIcon() {
     switch(this.props.mapView.find_food_entertainment){
       case false:
-          return require("./assets/bar_disabled.png")
+          return require("../../assets/bar_disabled.png")
       case true:
-          return require("./assets/bar_enabled.png")
+          return require("../../assets/bar_enabled.png")
     }
   }
 }

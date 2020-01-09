@@ -16,9 +16,9 @@ import {
   Alert
 } from 'react-native'
 
-import {googleImageService, googleMapService} from './Global'
-import DaytimePicker from './DaytimePicker'
-import ChangeStopModal from './ChangeStopModal'
+import {googleImageService, googleMapService} from '../../../util/Global'
+import DaytimePicker from '../../../util/DaytimePicker'
+import ChangeStopModal from './stopeditor/ChangeStopModal'
 
 
 export default class MarkerEditView extends React.Component {
@@ -154,7 +154,7 @@ export default class MarkerEditView extends React.Component {
     else {
       return(
         <Image
-          source={require('./assets/LandMarker_128-256.png')}
+          source={require('../../../assets/LandMarker_128-256.png')}
           style={styles.scrollableModalImage}
         />
       )

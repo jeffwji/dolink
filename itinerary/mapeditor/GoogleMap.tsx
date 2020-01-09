@@ -1,7 +1,7 @@
 import React from 'react'
 import MapView, {PROVIDER_GOOGLE, Polyline } from 'react-native-maps'
 import StopMarker from './StopMarker'
-import EditView from './EditView'
+import EditView from './editpanel/EditView'
 
 import {
   Container,
@@ -21,8 +21,8 @@ import polyline from '@mapbox/polyline'
 import MapController from './MapController'
 import NearBySearch from './NearBySearch'
 
-import {askPermission, googleMapService} from './Global'
-import {getRegion} from './Location'
+import {askPermission, googleMapService} from '../../util/Global'
+import {getRegion} from '../../util/Location'
 
 type State = {
   showEditor: string;

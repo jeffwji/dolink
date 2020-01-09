@@ -27,7 +27,7 @@ import OptionsMenu from "react-native-options-menu"
 import RadioGroup from 'react-native-radio-buttons-group'
 import DatePicker from 'react-native-datepicker'
 
-import GLOBAL, {askPermission, uploadImage, query} from './Global'
+import GLOBAL, {askPermission, uploadImage, query} from './util/Global'
 import Login from './Login'
 
 export default class SignUp extends React.Component {

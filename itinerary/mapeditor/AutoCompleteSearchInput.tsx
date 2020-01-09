@@ -1,5 +1,5 @@
 import React from 'react'
-import {googleMapService} from './Global'
+import {googleMapService} from '../../util/Global'
 
 import {Text, View, TouchableOpacity, StyleSheet, Keyboard} from "react-native";
 

@@ -6,7 +6,7 @@ import
     BASE_URL,
     API, 
     query
-  } from './Global'
+  } from './util/Global'
 
 import {
   Alert,              // 对话框

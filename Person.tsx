@@ -27,7 +27,7 @@ import
     BASE_URL,
     API, 
     query
-  } from './Global'
+  } from './util/Global'
 
 export default class Person extends React.Component {
   constructor(props) {

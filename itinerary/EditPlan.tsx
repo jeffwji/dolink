@@ -11,7 +11,6 @@ import {
   Right,
   Icon, 
   Text,
-  Footer
 } from 'native-base'
 
 import {

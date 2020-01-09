@@ -1,19 +1,25 @@
 import React from 'react'
 
 import {createStackNavigator} from 'react-navigation-stack'
-import {SceneInterpolatorProps} from 'react-navigation-stack/lib/typescript/types';
-import {createAppContainer, NavigationScreenComponent} from 'react-navigation'
-import {Animated, Easing} from 'react-native';
+import {createAppContainer} from 'react-navigation'
 
 import EditPlan from './EditPlan'
-import PlanMap from './GoogleMap'
+import PlanMap from './mapeditor/GoogleMap'
+
+import {TouchableHighlight, Text} from 'react-native'
+
+const Left = ({ onPress }) => (
+  <TouchableHighlight onPress={onPress}>
+    <Text>Back</Text>
+  </TouchableHighlight>
+);
 
 const EditPlanNavigator = createStackNavigator(
   {
     EditPlan: {
       screen: EditPlan,
       navigationOptions: (navigation) => ({
-        title: "New",
+        title: "Plan",
         tabBarLabel: "Add new paln",
         header: null
       })
@@ -21,13 +27,19 @@ const EditPlanNavigator = createStackNavigator(
     PlanMap: {
       screen: PlanMap,
       navigationOptions: (navigation) => ({
-        title: "PlanMap"
+        title: "Map"
       })
+      /*navigationOptions: {
+        header: ({ goBack }) => ({
+          left: <Left onPress={goBack} />,
+        }),
+      }*/
     },
   },
   {
-    initialRouteName: 'EditPlan',
+    initialRouteName: 'EditPlan'
   }
 )
+
 
 export default createAppContainer(EditPlanNavigator)

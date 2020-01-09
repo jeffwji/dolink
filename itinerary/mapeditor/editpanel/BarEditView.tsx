@@ -14,7 +14,7 @@ import {
   StyleSheet
 } from 'react-native'
 
-import {googleImageService, googleMapService} from './Global'
+import {googleImageService, googleMapService} from '../../../util/Global'
 
 export default class BarEditView extends React.Component {
   constructor(props) {
@@ -63,7 +63,7 @@ export default class BarEditView extends React.Component {
     else {
       return(
         <Image
-          source={require('./assets/LandMarker_128-256.png')}
+          source={require('../../../assets/LandMarker_128-256.png')}
           style={styles.scrollableModalImage}
         />
       )
