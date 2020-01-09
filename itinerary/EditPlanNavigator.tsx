@@ -29,11 +29,6 @@ const EditPlanNavigator = createStackNavigator(
       navigationOptions: (navigation) => ({
         title: "Map"
       })
-      /*navigationOptions: {
-        header: ({ goBack }) => ({
-          left: <Left onPress={goBack} />,
-        }),
-      }*/
     },
   },
   {

@@ -49,7 +49,7 @@ export default class ChangeStopModal extends React.Component {
     if(update) {
       if(this.props.mode === 'CHANGE_ORDER'){
         if(this.stops !== null)
-          this.props.mapView.updateStops(this.stops)
+          this.props.mapView.reflashStops(this.stops)
       } else if(this.props.mode === 'CHANGE_LOCATION') {
         if(this.stopDetail !== null){
           const {order} = this.props.parameters
@@ -79,13 +79,13 @@ export default class ChangeStopModal extends React.Component {
     if(this.props.mode === 'CHANGE_ORDER'){
       return(
         <ChangeStopOrder 
-          stops={this.props.mapView.stops} 
+          stops={this.props.mapView.stops()} 
           callback={stops => this.updateStopOrder(stops)}
         />
       )
     } else if(this.props.mode === 'CHANGE_LOCATION') {
       const {order} = this.props.parameters
-      const latlng = this.props.mapView.stops[order].stopDetail.geometry.location
+      const latlng = this.props.mapView.stops()[order].stopDetail.geometry.location
       const currentLocationCoordinates = {
         latitude: latlng.lat,
         longitude: latlng.lng,
@@ -95,7 +95,7 @@ export default class ChangeStopModal extends React.Component {
 
       return(
         <MapWindow
-          stopDetail = {this.props.mapView.stops[order]}
+          stopDetail = {this.props.mapView.stops()[order]}
           initCoordinates={currentLocationCoordinates}
           callback={stops => this.updateStopDetail(stops)}
         />

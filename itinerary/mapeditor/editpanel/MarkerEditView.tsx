@@ -60,15 +60,16 @@ export default class MarkerEditView extends React.Component {
       >
         <Text>Stop {order+1} - Stay for </Text>
         <DaytimePicker
-          daytime = {this.props.mapView.stops[order].duration}
+          daytime = {this.props.mapView.stops()[order].duration}
           updateNotify={(daytime) => {
-            this.props.mapView.stops[order].duration = daytime
+            this.props.mapView.updateStops(stops => stops[order].duration = daytime)
+            //this.props.mapView.stops[order].duration = daytime
             this.props.mapView.update() 
           }}
         />
         <Button transparent 
           onPress={() => {
-            if(this.props.mapView.stops.length > 1)
+            if(this.props.mapView.stops().length > 1)
             {
               Alert.alert(
                 'Change stop',

@@ -56,7 +56,7 @@ export default class GoogleMap extends React.Component<State> {
   currentLocationCoordinates = null
   directions = []
   routes = []
-  stops = []
+  // stops = []
   stopMarkers = []
   stopCandidate = null
   mapController = <MapController mapView={this} />
@@ -68,6 +68,10 @@ export default class GoogleMap extends React.Component<State> {
       this._getCurrentPosition()
     }
   }
+
+  stops = this.props.navigation.state.params.stops
+  updateStops = this.props.navigation.state.params.updateStops
+  setStops = this.props.navigation.state.params.setStops
 
   getDefaultRadius() {
     return this.defaultRadius
@@ -282,8 +286,8 @@ export default class GoogleMap extends React.Component<State> {
   async _getDirections() {
     this.directions= []
 
-    if(this.stops.length > 1){
-      const temp_stops = this.stops.map((stop, index) => {
+    if(this.stops().length > 1){
+      const temp_stops = this.stops().map((stop, index) => {
         return {
           stop:stop,
           index:index
@@ -351,11 +355,12 @@ export default class GoogleMap extends React.Component<State> {
   }
 
   _setTransitMode(stopIndex, mode) {
-    this.stops[stopIndex].transit_mode=mode
+    this.updateStops( stops => stops[stopIndex].transit_mode=mode )
+    //this.stops[stopIndex].transit_mode=mode
   }
 
   _getTransitMode(stopIndex) {
-    return this.stops[stopIndex].transit_mode?this.stops[stopIndex].transit_mode:'driving'
+    return this.stops()[stopIndex].transit_mode?this.stops()[stopIndex].transit_mode:'driving'
   }
 
   _route2coords(route){
@@ -423,14 +428,14 @@ export default class GoogleMap extends React.Component<State> {
   _updateMarker() {
     this.stopMarkers = []
     
-    this.stops.map(({stopDetail, duration}, index) => {
+    this.stops().map(({stopDetail, duration}, index) => {
       const i = this.stopMarkers.findIndex(marker => {
         const s = marker.props.stopDetail
         return (s.place_id == stopDetail.place_id)
       })
 
       if (i < 0){
-        const stopMarker = this._newMarker(stopDetail, index, '#f44336', [{order:index, duration: () => this.stops[index].duration }]) //duration}])
+        const stopMarker = this._newMarker(stopDetail, index, '#f44336', [{order:index, duration: () => this.stops()[index].duration }]) //duration}])
         this.stopMarkers.push(stopMarker)
       }
       else {
@@ -441,7 +446,7 @@ export default class GoogleMap extends React.Component<State> {
           this.stopMarkers.push(marker)
         }
         else {
-          const orders = marker.props.orders.concat({order:index,  duration: () => this.stops[index].duration })
+          const orders = marker.props.orders.concat({order:index,  duration: () => this.stops()[index].duration })
           const stopMarker = this._newMarker(stopDetail, marker.key, '#f44336', orders)
           this.stopMarkers.push(stopMarker)
         }
@@ -462,14 +467,15 @@ export default class GoogleMap extends React.Component<State> {
     })
   }
 
-  updateStops(stops){
-    this.stops = stops
+  reflashStops(stops){
+    this.setStops(stops)
     this._updateMarker()
     this._getDirections()
   }
 
   updateStop(stopDetail, order){
-    this.stops[order].stopDetail = stopDetail
+    this.updateStops( stops => stops[order].stopDetail = stopDetail )
+    //this.stops[order].stopDetail = stopDetail
     this._updateMarker()
     this._getDirections()
   }
@@ -479,7 +485,8 @@ export default class GoogleMap extends React.Component<State> {
       this._getStopDetailInformation(stopEssential)
         .then(detail => {
           orders.map(({order}) => {
-            this.stops[order].stopDetail = detail.result
+            this.updateStops( stops => stops[order].stopDetail = detail.result )
+            // this.stops[order].stopDetail = detail.result
           })
           this._setCurrentEditPlaceId(detail.result.place_id)
           this._updateMarker()
@@ -515,9 +522,10 @@ export default class GoogleMap extends React.Component<State> {
   }
 
   _addStop = (stopDetail) => {
-      this.stops.push({stopDetail:stopDetail, duration:this._getRecommandDuration(stopDetail.place_id)})
-      this._updateMarker()
-      this._getDirections()
+    this.updateStops( stops => stops.push({stopDetail:stopDetail, duration:this._getRecommandDuration(stopDetail.place_id)}) )
+    //this.stops.push({stopDetail:stopDetail, duration:this._getRecommandDuration(stopDetail.place_id)})
+    this._updateMarker()
+    this._getDirections()
   }
 
   _insertStop(stop) {
@@ -529,7 +537,7 @@ export default class GoogleMap extends React.Component<State> {
   }
 
   _listStopWithName() {
-    const list =  this.stops.map(({stopDetail}, index) => {
+    const list =  this.stops().map(({stopDetail}, index) => {
       return {
         text: "Stop " + index + " - " + stopDetail.name,
         onPress: (e => {
@@ -550,7 +558,7 @@ export default class GoogleMap extends React.Component<State> {
   }
 
   _removeStop(order) {
-    const removedStop = this.stops.splice(order, 1)
+    const removedStop = this.stops().splice(order, 1)
     if(removedStop) {
       this._updateMarker()
       this._getDirections()

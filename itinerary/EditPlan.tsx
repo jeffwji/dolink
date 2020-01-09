@@ -30,7 +30,18 @@ export default class EditPlan extends React.Component {
     }
   }
 
-  componentDidMount () {
+  stops=[]
+
+  getStops() {
+    return this.stops
+  }
+
+  setStops(stops){
+    this.stops = stops
+  }
+
+  updateStops(update: (stops) => any) {
+    update(this.stops)
   }
 
   render() {
@@ -91,7 +102,11 @@ export default class EditPlan extends React.Component {
               style={styles.addButton} 
               active
               onPress={() => {
-                navigate('PlanMap')
+                navigate('PlanMap', {
+                  stops: () => this.getStops(),
+                  setStops: (stops) => this.setStops(stops),
+                  updateStops: (update) => this.updateStops(update)
+                })
               }}
             >
             <Icon active name="add" style={{color:'darkgrey'}}/>
