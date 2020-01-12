@@ -1,6 +1,6 @@
 import React from 'react'
-import MapView, {PROVIDER_GOOGLE, Polyline } from 'react-native-maps'
-import StopMarker from './StopMarker'
+import MapView, {PROVIDER_GOOGLE, Polyline, Marker } from 'react-native-maps'
+import StopMarker from './markers/StopMarker'
 import EditView from './editpanel/EditView'
 
 import {
@@ -12,7 +12,8 @@ import {
   View,
   Dimensions,
   StyleSheet,
-  Alert
+  Alert,
+  Image
 } from 'react-native'
 
 //import MapSearchInput from './MapSearchInput';
@@ -23,6 +24,7 @@ import NearBySearch from './NearBySearch'
 
 import {askPermission, googleMapService} from '../../util/Global'
 import {getRegion} from '../../util/Location'
+import StartEndMarker from './markers/StartEndMarker'
 
 type State = {
   showEditor: string;
@@ -55,8 +57,6 @@ export default class GoogleMap extends React.Component<State> {
   selectedRoute = null
   editView = null
 
-  currentLocationCoordinate = null
-
   initialLocationCoordinates = null
   routes = []
   stopMarkers = []
@@ -70,6 +70,12 @@ export default class GoogleMap extends React.Component<State> {
       this._getCurrentPosition()
     }
   }
+
+  startLocation = this.props.navigation.state.params.startLocation
+  setStartLocation = this.props.navigation.state.params.setStartLocation
+
+  endLocation = this.props.navigation.state.params.endLocation
+  setEndLocation = this.props.navigation.state.params.setEndLocation
 
   stops = this.props.navigation.state.params.stops
   updateStops = this.props.navigation.state.params.updateStops
@@ -104,9 +110,9 @@ export default class GoogleMap extends React.Component<State> {
     return askPermission('LOCATION').then(permit => {
       if(permit) {
         this._getLocation(
-          data => {
-            this._updateCurrentLocation({latitude:data.coords.latitude, longitude: data.coords.longitude})
-            const region = getRegion(data.coords.latitude, data.coords.longitude, this.getDefaultRadius())
+          latlng => {
+            this._setStartLocationDetail({latitude:latlng.coords.latitude, longitude: latlng.coords.longitude})
+            const region = getRegion(latlng.coords.latitude, latlng.coords.longitude, this.getDefaultRadius())
             this._updateInitialLocation(region, true)
           },
           error => {
@@ -126,8 +132,17 @@ export default class GoogleMap extends React.Component<State> {
     )
   }
 
-  _updateCurrentLocation(location) {
-    this.currentLocationCoordinate = location
+  _setStartLocationDetail(coordinate) {
+    if(this.startLocation().type === 'CURRENT_LOCATION')
+      googleMapService("geocode", `latlng=${this._coords2string(coordinate)}`)
+        .then(detail => {
+          this.setStartLocation({
+            ...this.startLocation(),
+            stopDetail: detail.results[0],
+            describe: detail.results[0].formatted_address
+          })
+          this.forceUpdate()
+        })
   }
 
   _updateInitialLocation(region, updateMap) {
@@ -140,23 +155,23 @@ export default class GoogleMap extends React.Component<State> {
     if(this.initialLocationCoordinates!=null) {
       return(
         <View style={styles.overallViewContainer}>
-              <MapSearchInput 
-                notifyLocationChange={(details) => {
-                  this._setStopCandidate(details)
-                    .then(() =>
-                      this._updateInitialLocation({
-                        latitude: details.geometry.location.lat,
-                        longitude: details.geometry.location.lng,
-                        latitudeDelta: this.initialLocationCoordinates.latitudeDelta,
-                        longitudeDelta: this.initialLocationCoordinates.longitudeDelta
-                      }, true)
-                    )
-                    .catch(error => console.log(error))
-                }}
-                defaultLocations={[
-                  { description: 'Home', geometry: { location: { lat: 43.8906719, lng: -79.2964162 } }, place_id: 'ChIJ1bQTc_zV1IkR_pQs6RrmKzo', isPredefinedPlace: true, name: 'Stonebridge Public School, Stonebridge Drive, Markham, ON, Canada'}
-                ]}
-              />
+          <MapSearchInput 
+            notifyLocationChange={(details) => {
+              this._setStopCandidate(details)
+                .then(() =>
+                  this._updateInitialLocation({
+                    latitude: details.geometry.location.lat,
+                    longitude: details.geometry.location.lng,
+                    latitudeDelta: this.initialLocationCoordinates.latitudeDelta,
+                    longitudeDelta: this.initialLocationCoordinates.longitudeDelta
+                  }, true)
+                )
+                .catch(error => console.log(error))
+            }}
+            defaultLocations={[
+              { description: 'Home', geometry: { location: { lat: 43.8906719, lng: -79.2964162 } }, place_id: 'ChIJ1bQTc_zV1IkR_pQs6RrmKzo', isPredefinedPlace: true, name: 'Stonebridge Public School, Stonebridge Drive, Markham, ON, Canada'}
+            ]}
+          />
 
           <MapView style={styles.mapView}
             ref = {map=> this.map = map }
@@ -231,9 +246,10 @@ export default class GoogleMap extends React.Component<State> {
             }}*/
           >
             {this._renderRoutes()}
-            {this._renderInterestings()}
+            {this._renderStartMarker()}
             {this._renderMarkers()}
-            {this._renderCurrentMarker()}
+            {this._renderStopCandidateMarker()}
+            {this._renderInterestings()}
           </MapView>
 
           {this.mapController}
@@ -269,14 +285,7 @@ export default class GoogleMap extends React.Component<State> {
     }
   }
 
-  _renderCurrentMarker() {
-    if(this.stopCandidate != null)
-      return(
-        this._newMarker(this.stopCandidate)
-      )
-  }
-
-  _newMarker(detail, key=0, color='#009688', orders=[]){
+  _newMarker(detail, key="0", color='#009688', orders=[]){
     return <StopMarker
       key = {key}
       stopDetail={detail}
@@ -285,6 +294,40 @@ export default class GoogleMap extends React.Component<State> {
       onStopLocationChange = {(stopDetail, orders) => this._onStopChange(stopDetail, orders)}
       showDetail = {() => {return this.state.showMarkerDetail}}
     />
+  }
+
+  _renderStartMarker(){
+    const startLocation = this.startLocation() //.detail
+    if(startLocation.stopDetail != null){
+      return(
+        <StartEndMarker 
+          type='Start' 
+          location={startLocation}
+          showDetail = {(marker:StartEndMarker) => {
+            this.setShowEditorMode('StartMarker', {marker:marker})
+            //console.log(marker.props.detail)
+          }}/>
+      )
+      /*const coord = {latitude: detail.geometry.location.lat, longitude: detail.geometry.location.lng }
+      return(
+        <Marker
+          coordinate={coord}
+          title = {this.startLocation().describe}
+        >
+          <Image
+            source={require('../../assets/flag_red_64.png')}
+            style={{ width: 32, height: 32 }}
+          />
+        </Marker>
+      )*/
+    }
+  }
+
+  _renderStopCandidateMarker() {
+    if(this.stopCandidate != null)
+      return(
+        this._newMarker(this.stopCandidate)
+      )
   }
 
   _renderMarkers() {

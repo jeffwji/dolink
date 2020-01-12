@@ -6,21 +6,31 @@ import ChangeStopModalAbstract from './ChangeStopModalAbstract'
 /**
  * 
  */
-export default class ChangeStopModal extends ChangeStopModalAbstract {
+export default class ChangeStartEndModal extends ChangeStopModalAbstract {
+  stopDetail = null
+
   _getStopDetail() {
-    const {order} = this.props.parameters
-    return this.props.mapView.stops()[order]
+    return this.props.location
   }
 
   _onClose(update) {
     if(update) {
-      if(this.props.mode === 'CHANGE_ORDER'){
-        if(this.stops !== null)
-          this.props.mapView.reflashStops(this.stops)
-      } else if(this.props.mode === 'CHANGE_LOCATION') {
-        if(this.stopDetail !== null){
-          const {order} = this.props.parameters
+      if(this.stopDetail !== null){
+          /*const {order} = this.props.parameters
           this.props.mapView.updateStop(this.stopDetail, order)
+          this.props.mapView._updateInitialLocation({
+            latitude: this.stopDetail.geometry.location.lat,
+            longitude: this.stopDetail.geometry.location.lng,
+            latitudeDelta: this.props.mapView.initialLocationCoordinates.latitudeDelta,
+            longitudeDelta: this.props.mapView.initialLocationCoordinates.longitudeDelta
+          }, true)*/
+          this.props.mapView.setStartLocation({
+            ...this.props.mapView.startLocation(),
+            stopDetail: this.stopDetail,
+            describe: this.stopDetail.formatted_address,
+            type: 'MANUAL_INPUT'
+          })
+          
           this.props.mapView._updateInitialLocation({
             latitude: this.stopDetail.geometry.location.lat,
             longitude: this.stopDetail.geometry.location.lng,
@@ -28,14 +38,13 @@ export default class ChangeStopModal extends ChangeStopModalAbstract {
             longitudeDelta: this.props.mapView.initialLocationCoordinates.longitudeDelta
           }, true)
         }
-      }
     }
 
     this.props.close()
   }
 
   updateStopOrder(stops) {
-    this.stops = stops
+    console.log('')
   }
 
   updateStopDetail(stopDetail) {

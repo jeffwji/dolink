@@ -4,12 +4,14 @@ import {
   View,
   StyleSheet,
   Dimensions,
-  Platform
+  Platform,
+  Text
 } from 'react-native'
 
 import RouteEditView from './RouteEditView'
 import MarkerEditView from './MarkerEditView'
 import BarEditView from './BarEditView'
+import StartEndEditView from './StartEndEditView'
 
 
 export default class EditView extends React.Component {
@@ -47,6 +49,9 @@ export default class EditView extends React.Component {
         return(
           this._renderMarkerEdit()
         )
+      case 'StartMarker':
+        //const detail = this.props.parameters.marker.props.stopDetail
+        return(<StartEndEditView mapView={this.props.mapView} parameters={this.props.parameters}/>)
       case 'Route':
         return(<RouteEditView mapView={this.props.mapView} parameters={this.props.parameters}/>)
       case 'Bar':
@@ -63,16 +68,18 @@ export default class EditView extends React.Component {
   _handleResponderMove =(evt) => {
     if(this.HEIGHT-evt.nativeEvent.pageY > 50) {
       this.defaultMapViewHight = Platform.OS === "android"?evt.nativeEvent.pageY-40:evt.nativeEvent.pageY
-      this.setState({
+      /*this.setState({
         reload: !this.state.reload
-      })
+      })*/
+      this.forceUpdate()
     }
     else {
       this.props.mapView._closeStopEditModal()
       this.defaultMapViewHight = Dimensions.get('window').height/1.5
-      this.setState({
+      /*this.setState({
         reload: !this.state.reload
-      })
+      })*/
+      this.forceUpdate()
     }
   }
   

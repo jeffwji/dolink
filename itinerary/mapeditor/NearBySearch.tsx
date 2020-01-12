@@ -2,7 +2,7 @@ import React from 'react'
 
 import {googleMapService} from '../../util/Global'
 import {getRadius} from '../../util/Location'
-import FixedMarker from './FixedMarker'
+import FixedMarker from './markers/FixedMarker'
 import {View, Text } from 'react-native';
 
 type State = {

@@ -75,12 +75,16 @@ export default class MarkerEditView extends React.Component {
                 'Change stop',
                 'You want change stop order or location?',
                 [
-                  { text: 'Change order', onPress: () => this.setState({changeStopModal: this._createChangeStopModal('CHANGE_ORDER')}) },
-                  { text: 'Change location', onPress: () => {
+                  {
+                    text: 'Change order', onPress: () => this.setState({changeStopModal: this._createChangeStopModal('CHANGE_ORDER')}) 
+                  },
+                  {
+                    text: 'Change location', onPress: () => {
                       this.setState({changeStopModal: this._createChangeStopModal('CHANGE_LOCATION', {order: order})})
                     }
                   },
-                  { text: 'Cancel', onPress: () => console.log('Cancel Pressed'), style: 'cancel',
+                  {
+                    text: 'Cancel', onPress: () => console.log('Cancel Pressed'), style: 'cancel',
                   },
                 ],
                 {cancelable: false},

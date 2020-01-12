@@ -54,8 +54,8 @@ class StopMarkerPin extends React.Component {
       case 2:
         return(
           <View style={styles.container}>
-            {(orders.length>0) && <Image source={require("../../assets/LandMarker_selected_64.png")} style={{width: 32, height: 32}} />}
-            {(orders.length==0) && <Image source={require("../../assets/LandMarker_unselected_64.png")} style={{width: 32, height: 32}} />}
+            {(orders.length>0) && <Image source={require("../../../assets/LandMarker_selected_64.png")} style={{width: 32, height: 32}} />}
+            {(orders.length==0) && <Image source={require("../../../assets/LandMarker_unselected_64.png")} style={{width: 32, height: 32}} />}
           </View>
         )
     }
