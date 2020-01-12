@@ -14,7 +14,7 @@ export default class MapWindow extends React.Component {
     super(props)
     
     this.state = {
-      currentLocationCoordinates: this.props.initCoordinates
+      initialLocationCoordinates: this.props.initCoordinates
     }
   }
 
@@ -26,9 +26,9 @@ export default class MapWindow extends React.Component {
           ref = {map=> this.map = map }
           style={styles.mapView}
           provider={ PROVIDER_GOOGLE }
-          initialRegion={this.state.currentLocationCoordinates}
+          initialRegion={this.state.initialLocationCoordinates}
         >
-          <Marker coordinate={this.state.currentLocationCoordinates}/>
+          <Marker coordinate={this.state.initialLocationCoordinates}/>
         </MapView>
       </View>
     )
@@ -38,14 +38,14 @@ export default class MapWindow extends React.Component {
     this.props.callback(details)
     
     this.setState({ 
-      currentLocationCoordinates: {
-        ...this.state.currentLocationCoordinates, 
+      initialLocationCoordinates: {
+        ...this.state.initialLocationCoordinates, 
         latitude: details.geometry.location.lat,
         longitude: details.geometry.location.lng
       }
     })
 
-    this.map.animateToRegion(this.state.currentLocationCoordinates)
+    this.map.animateToRegion(this.state.initialLocationCoordinates)
   }
 }
 

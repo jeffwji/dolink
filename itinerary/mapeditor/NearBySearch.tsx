@@ -75,7 +75,7 @@ export default class NearBySearch extends React.Component<State> {
       this._updateInterestings(
         'food_entertainment', 
         'bar',
-        this.props.mapView.currentLocationCoordinates,
+        this.props.mapView.initialLocationCoordinates,
         (result, index) => this._newFoodEntertainmentMarker(result, index)
       )
     }

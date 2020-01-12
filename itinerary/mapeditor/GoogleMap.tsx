@@ -55,7 +55,9 @@ export default class GoogleMap extends React.Component<State> {
   selectedRoute = null
   editView = null
 
-  currentLocationCoordinates = null
+  currentLocationCoordinate = null
+
+  initialLocationCoordinates = null
   routes = []
   stopMarkers = []
   stopCandidate = null
@@ -64,7 +66,7 @@ export default class GoogleMap extends React.Component<State> {
   nearBySearch = new NearBySearch({mapView: this})
 
   componentDidMount () {
-    if(this.currentLocationCoordinates==null ) {
+    if(this.initialLocationCoordinates==null ) {
       this._getCurrentPosition()
     }
   }
@@ -103,8 +105,9 @@ export default class GoogleMap extends React.Component<State> {
       if(permit) {
         this._getLocation(
           data => {
+            this._updateCurrentLocation({latitude:data.coords.latitude, longitude: data.coords.longitude})
             const region = getRegion(data.coords.latitude, data.coords.longitude, this.getDefaultRadius())
-            this._updateCurrentLocation(region, true)
+            this._updateInitialLocation(region, true)
           },
           error => {
             console.log(error)
@@ -123,25 +126,29 @@ export default class GoogleMap extends React.Component<State> {
     )
   }
 
-  _updateCurrentLocation(region, updateMap) {
-    this.currentLocationCoordinates = region
+  _updateCurrentLocation(location) {
+    this.currentLocationCoordinate = location
+  }
+
+  _updateInitialLocation(region, updateMap) {
+    this.initialLocationCoordinates = region
     if(updateMap)
       this.forceUpdate()
   }
 
   _renderMap() {
-    if(this.currentLocationCoordinates!=null) {
+    if(this.initialLocationCoordinates!=null) {
       return(
         <View style={styles.overallViewContainer}>
               <MapSearchInput 
                 notifyLocationChange={(details) => {
                   this._setStopCandidate(details)
                     .then(() =>
-                      this._updateCurrentLocation({
+                      this._updateInitialLocation({
                         latitude: details.geometry.location.lat,
                         longitude: details.geometry.location.lng,
-                        latitudeDelta: this.currentLocationCoordinates.latitudeDelta,
-                        longitudeDelta: this.currentLocationCoordinates.longitudeDelta
+                        latitudeDelta: this.initialLocationCoordinates.latitudeDelta,
+                        longitudeDelta: this.initialLocationCoordinates.longitudeDelta
                       }, true)
                     )
                     .catch(error => console.log(error))
@@ -154,13 +161,13 @@ export default class GoogleMap extends React.Component<State> {
           <MapView style={styles.mapView}
             ref = {map=> this.map = map }
             provider={ PROVIDER_GOOGLE }
-            region={this.currentLocationCoordinates}
+            region={this.initialLocationCoordinates}
             /*onRegionChange={region => {
               console.log('onRegionChange', region)
             }}*/
-            initialRegion={this.currentLocationCoordinates}
+            initialRegion={this.initialLocationCoordinates}
             onRegionChangeComplete={region => {
-              this._updateCurrentLocation(region, false)
+              this._updateInitialLocation(region, false)
             }}
             showsUserLocation={true}
             zoomEnabled={true} 
@@ -170,8 +177,8 @@ export default class GoogleMap extends React.Component<State> {
               this.map.animateToRegion({
                 latitude: e.nativeEvent.coordinate.latitude,
                 longitude: e.nativeEvent.coordinate.longitude,
-                latitudeDelta: this.currentLocationCoordinates.latitudeDelta,
-                longitudeDelta: this.currentLocationCoordinates.longitudeDelta
+                latitudeDelta: this.initialLocationCoordinates.latitudeDelta,
+                longitudeDelta: this.initialLocationCoordinates.longitudeDelta
               })
             }}
             onPoiClick = { e => {
@@ -192,8 +199,8 @@ export default class GoogleMap extends React.Component<State> {
                   this.map.animateToRegion({
                     latitude: poi.coordinate.latitude,
                     longitude: poi.coordinate.longitude,
-                    latitudeDelta: this.currentLocationCoordinates.latitudeDelta,
-                    longitudeDelta: this.currentLocationCoordinates.longitudeDelta
+                    latitudeDelta: this.initialLocationCoordinates.latitudeDelta,
+                    longitudeDelta: this.initialLocationCoordinates.longitudeDelta
                   })
                   this.update()
                 })

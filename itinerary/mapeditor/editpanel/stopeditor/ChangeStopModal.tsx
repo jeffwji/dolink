@@ -54,11 +54,11 @@ export default class ChangeStopModal extends React.Component {
         if(this.stopDetail !== null){
           const {order} = this.props.parameters
           this.props.mapView.updateStop(this.stopDetail, order)
-          this.props.mapView._updateCurrentLocation({
+          this.props.mapView._updateInitialLocation({
             latitude: this.stopDetail.geometry.location.lat,
             longitude: this.stopDetail.geometry.location.lng,
-            latitudeDelta: this.props.mapView.currentLocationCoordinates.latitudeDelta,
-            longitudeDelta: this.props.mapView.currentLocationCoordinates.longitudeDelta
+            latitudeDelta: this.props.mapView.initialLocationCoordinates.latitudeDelta,
+            longitudeDelta: this.props.mapView.initialLocationCoordinates.longitudeDelta
           }, true)
         }
       }
@@ -86,17 +86,17 @@ export default class ChangeStopModal extends React.Component {
     } else if(this.props.mode === 'CHANGE_LOCATION') {
       const {order} = this.props.parameters
       const latlng = this.props.mapView.stops()[order].stopDetail.geometry.location
-      const currentLocationCoordinates = {
+      const initialLocationCoordinates = {
         latitude: latlng.lat,
         longitude: latlng.lng,
-        latitudeDelta: this.props.mapView.currentLocationCoordinates.latitudeDelta,
-        longitudeDelta: this.props.mapView.currentLocationCoordinates.longitudeDelta
+        latitudeDelta: this.props.mapView.initialLocationCoordinates.latitudeDelta,
+        longitudeDelta: this.props.mapView.initialLocationCoordinates.longitudeDelta
       }
 
       return(
         <MapWindow
           stopDetail = {this.props.mapView.stops()[order]}
-          initCoordinates={currentLocationCoordinates}
+          initCoordinates={initialLocationCoordinates}
           callback={stops => this.updateStopDetail(stops)}
         />
       )
