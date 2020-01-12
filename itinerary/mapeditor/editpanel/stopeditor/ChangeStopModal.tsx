@@ -45,6 +45,40 @@ export default class ChangeStopModal extends React.Component {
     )
   }
 
+  _renderContent(){
+    if(this.props.mode === 'CHANGE_ORDER'){
+      return(
+        <ChangeStopOrder 
+          stops={this.props.mapView.stops()} 
+          callback={stops => this.updateStopOrder(stops)}
+        />
+      )
+    } else if(this.props.mode === 'CHANGE_LOCATION') {
+      const stop = this._getStopDetail()
+      const latlng = stop.stopDetail.geometry.location
+      
+      const initialLocationCoordinates = {
+        latitude: latlng.lat,
+        longitude: latlng.lng,
+        latitudeDelta: this.props.mapView.initialLocationCoordinates.latitudeDelta,
+        longitudeDelta: this.props.mapView.initialLocationCoordinates.longitudeDelta
+      }
+
+      return(
+        <MapWindow
+          stopDetail = {stop}
+          initCoordinates={initialLocationCoordinates}
+          callback={stop => this.updateStopDetail(stop)}
+        />
+      )
+    }
+  }
+
+  _getStopDetail() {
+    const {order} = this.props.parameters
+    return this.props.mapView.stops()[order]
+  }
+
   _onClose(update) {
     if(update) {
       if(this.props.mode === 'CHANGE_ORDER'){
@@ -73,34 +107,6 @@ export default class ChangeStopModal extends React.Component {
 
   updateStopDetail(stopDetail) {
     this.stopDetail = stopDetail
-  }
-
-  _renderContent(){
-    if(this.props.mode === 'CHANGE_ORDER'){
-      return(
-        <ChangeStopOrder 
-          stops={this.props.mapView.stops()} 
-          callback={stops => this.updateStopOrder(stops)}
-        />
-      )
-    } else if(this.props.mode === 'CHANGE_LOCATION') {
-      const {order} = this.props.parameters
-      const latlng = this.props.mapView.stops()[order].stopDetail.geometry.location
-      const initialLocationCoordinates = {
-        latitude: latlng.lat,
-        longitude: latlng.lng,
-        latitudeDelta: this.props.mapView.initialLocationCoordinates.latitudeDelta,
-        longitudeDelta: this.props.mapView.initialLocationCoordinates.longitudeDelta
-      }
-
-      return(
-        <MapWindow
-          stopDetail = {this.props.mapView.stops()[order]}
-          initCoordinates={initialLocationCoordinates}
-          callback={stops => this.updateStopDetail(stops)}
-        />
-      )
-    }
   }
 }
 
