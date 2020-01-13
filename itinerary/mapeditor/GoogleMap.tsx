@@ -4,16 +4,14 @@ import StopMarker from './markers/StopMarker'
 import EditView from './editpanel/EditView'
 
 import {
-  Container,
-  Item
+  Container
 } from 'native-base'
 
 import {
   View,
   Dimensions,
   StyleSheet,
-  Alert,
-  Image
+  Alert
 } from 'react-native'
 
 import AutoCompleteSearchInput from './AutoCompleteSearchInput'
@@ -332,14 +330,15 @@ export default class GoogleMap extends React.Component<State> {
   async reflashDirections() {
     this.setDirections([])
 
-    if(this.stops().length > 1){
+    if(this.stops().length > 0){
       const temp_stops = this.stops().map((stop, index) => {
         return {
           stop:stop,
           index:index
         }
       })
-      let origin = temp_stops.shift()
+
+      let origin = { stop:this.startLocation() }  //temp_stops.shift()
       do{
         const dest = temp_stops.shift()
         await this._getDirection(origin, dest)

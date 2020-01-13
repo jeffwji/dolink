@@ -16,21 +16,14 @@ export default class ChangeStartEndModal extends ChangeStopModalAbstract {
   _onClose(update) {
     if(update) {
       if(this.stopDetail !== null){
-          /*const {order} = this.props.parameters
-          this.props.mapView.updateStop(this.stopDetail, order)
-          this.props.mapView._updateInitialLocation({
-            latitude: this.stopDetail.geometry.location.lat,
-            longitude: this.stopDetail.geometry.location.lng,
-            latitudeDelta: this.props.mapView.initialLocationCoordinates.latitudeDelta,
-            longitudeDelta: this.props.mapView.initialLocationCoordinates.longitudeDelta
-          }, true)*/
           this.props.mapView.setStartLocation({
             ...this.props.mapView.startLocation(),
             stopDetail: this.stopDetail,
             describe: this.stopDetail.formatted_address,
             type: 'MANUAL_INPUT'
           })
-          
+
+          this.props.mapView.reflashDirections()
           this.props.mapView._updateInitialLocation({
             latitude: this.stopDetail.geometry.location.lat,
             longitude: this.stopDetail.geometry.location.lng,
