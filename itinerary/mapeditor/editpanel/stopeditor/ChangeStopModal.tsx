@@ -7,6 +7,9 @@ import ChangeStopModalAbstract from './ChangeStopModalAbstract'
  * 
  */
 export default class ChangeStopModal extends ChangeStopModalAbstract {
+  stops = null
+  stop = null
+
   _getStopDetail() {
     const {order} = this.props.parameters
     return this.props.mapView.stops()[order]
@@ -18,12 +21,12 @@ export default class ChangeStopModal extends ChangeStopModalAbstract {
         if(this.stops !== null)
           this.props.mapView.reflashStops(this.stops)
       } else if(this.props.mode === 'CHANGE_LOCATION') {
-        if(this.stopDetail !== null){
+        if(this.stop !== null){
           const {order} = this.props.parameters
-          this.props.mapView.updateStop(this.stopDetail, order)
+          this.props.mapView.updateStop(this.stop.stopDetail, order)
           this.props.mapView._updateInitialLocation({
-            latitude: this.stopDetail.geometry.location.lat,
-            longitude: this.stopDetail.geometry.location.lng,
+            latitude: this.stop.stopDetail.geometry.location.lat,
+            longitude: this.stop.stopDetail.geometry.location.lng,
             latitudeDelta: this.props.mapView.initialLocationCoordinates.latitudeDelta,
             longitudeDelta: this.props.mapView.initialLocationCoordinates.longitudeDelta
           }, true)
@@ -38,8 +41,8 @@ export default class ChangeStopModal extends ChangeStopModalAbstract {
     this.stops = stops
   }
 
-  updateStopDetail(stopDetail) {
-    this.stopDetail = stopDetail
+  updateStopDetail(stop) {
+    this.stop = stop
   }
 }
 

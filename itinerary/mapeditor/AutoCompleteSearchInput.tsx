@@ -82,7 +82,10 @@ export default class AutoComoleteSearchInput extends React.Component {
 												googleMapService("geocode", `latlng=${coordinate2string(latlng.coords)}`)
 													.then(details => {
 														if(details.results.length > 0)
-															this.props.notifyLocationChange(details.results[0])
+															this.props.notifyLocationChange({
+																stopDetail: details.results[0],
+																type: 'CURRENT_LOCATION'
+															})
 													})
 											},
 											error => {
@@ -96,7 +99,10 @@ export default class AutoComoleteSearchInput extends React.Component {
 								break;
 							default:
 								googleMapService('place/details', `place_id=${item.place_id}`)
-									.then(details => this.props.notifyLocationChange(details.result))
+									.then(details => this.props.notifyLocationChange({
+										stopDetail: details.result,
+										type: 'MANUAL_INPUT'
+									}))
 								break;
 						}
 					}}

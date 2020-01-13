@@ -1,5 +1,4 @@
-import React from 'react'
-import { Button, Text, View, StyleSheet, TouchableOpacity} from "react-native";
+import { StyleSheet} from "react-native";
 
 import ChangeStopModalAbstract from './ChangeStopModalAbstract'
 
@@ -7,7 +6,7 @@ import ChangeStopModalAbstract from './ChangeStopModalAbstract'
  * 
  */
 export default class ChangeStartEndModal extends ChangeStopModalAbstract {
-  stopDetail = null
+  stop = null
 
   _getStopDetail() {
     return this.props.location
@@ -15,22 +14,31 @@ export default class ChangeStartEndModal extends ChangeStopModalAbstract {
 
   _onClose(update) {
     if(update) {
-      if(this.stopDetail !== null){
+      if(this.stop !== null){
+        if(this._getStopDetail().id === 'Start'){
           this.props.mapView.setStartLocation({
             ...this.props.mapView.startLocation(),
-            stopDetail: this.stopDetail,
-            describe: this.stopDetail.formatted_address,
-            type: 'MANUAL_INPUT'
+            stopDetail: this.stop.stopDetail,
+            describe: this.stop.stopDetail.formatted_address,
+            type: this.stop.type
           })
-
-          this.props.mapView.reflashDirections()
-          this.props.mapView._updateInitialLocation({
-            latitude: this.stopDetail.geometry.location.lat,
-            longitude: this.stopDetail.geometry.location.lng,
-            latitudeDelta: this.props.mapView.initialLocationCoordinates.latitudeDelta,
-            longitudeDelta: this.props.mapView.initialLocationCoordinates.longitudeDelta
-          }, true)
+        } else if(this._getStopDetail().id === 'End'){
+          this.props.mapView.setEndLocation({
+            ...this.props.mapView.endLocation(),
+            stopDetail: this.stop.stopDetail,
+            describe: this.stop.stopDetail.formatted_address,
+            type: this.stop.type
+          })
         }
+        
+        this.props.mapView.reflashDirections()
+        this.props.mapView._updateInitialLocation({
+          latitude: this.stop.stopDetail.geometry.location.lat,
+          longitude: this.stop.stopDetail.geometry.location.lng,
+          latitudeDelta: this.props.mapView.initialLocationCoordinates.latitudeDelta,
+          longitudeDelta: this.props.mapView.initialLocationCoordinates.longitudeDelta
+        }, true)
+      }
     }
 
     this.props.close()
@@ -40,8 +48,8 @@ export default class ChangeStartEndModal extends ChangeStopModalAbstract {
     console.log('')
   }
 
-  updateStopDetail(stopDetail) {
-    this.stopDetail = stopDetail
+  updateStopDetail(stop) {
+    this.stop = stop
   }
 }
 

@@ -21,7 +21,7 @@ class StartEndMarkerPin extends React.Component{
                     style={{ width: 32, height: 32 }}
                 />
             )
-        } else {
+        } else if (this.props.type === 'End'){
             return(
                 <Image
                     source={require('../../../assets/flag_blue_64.png')}
@@ -29,6 +29,7 @@ class StartEndMarkerPin extends React.Component{
                 />
             )
         }
+        else return(null)
     }
 }
 

@@ -33,6 +33,7 @@ export default class EditPlan extends React.Component {
 
   //////////////////////////////////////////
   startLocation = {
+    id: 'Start',
     describe: 'Current location',
     stopDetail: null,
     type: 'CURRENT_LOCATION',
@@ -45,14 +46,15 @@ export default class EditPlan extends React.Component {
   }
 
   endLocation = {
-    describe: 'Current location',
+    id: 'End',
+    describe: 'Same to start location',
     stopDetail: null,
-    type: 'CURRENT_LOCATION',
+    type: 'CURRENT_LOCATION', // 'SAME_TO_START',
     privacy: true
   }
   getEndLocation = () => {return this.endLocation}
   setEndLocation = (location) => {
-    this.startLocation = location
+    this.endLocation = location
     this.forceUpdate()
   }
 

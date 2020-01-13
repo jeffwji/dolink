@@ -19,8 +19,8 @@ export interface ChangeStopInterface {
  * 
  */
 export default abstract class ChangeStopModalAbstract extends React.Component implements ChangeStopInterface{
-  stops = null
-  stopDetail = null
+  //stops = null
+  //stopDetail = null
 
   abstract updateStopOrder(stops)
   abstract _getStopDetail()

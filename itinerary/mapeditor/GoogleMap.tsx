@@ -126,7 +126,7 @@ export default class GoogleMap extends React.Component<State> {
       if(permit) {
         getLocation(
           latlng => {
-            this._setStartLocationDetail({latitude:latlng.coords.latitude, longitude: latlng.coords.longitude})
+            this._setStartEndLocationDetail({latitude:latlng.coords.latitude, longitude: latlng.coords.longitude})
             const region = getRegion(latlng.coords.latitude, latlng.coords.longitude, this.getDefaultRadius())
             this._updateInitialLocation(region, true)
           },
@@ -139,16 +139,26 @@ export default class GoogleMap extends React.Component<State> {
     })
   }
 
-  _setStartLocationDetail(coordinate) {
-    if(this.startLocation().type === 'CURRENT_LOCATION')
+  _setStartEndLocationDetail(coordinate) {
+    if(this.startLocation().type === 'CURRENT_LOCATION' || this.endLocation().type === 'CURRENT_LOCATION')
       googleMapService("geocode", `latlng=${coordinate2string(coordinate)}`)
         .then(detail => {
-          this.setStartLocation({
-            ...this.startLocation(),
-            stopDetail: detail.results[0],
-            describe: detail.results[0].formatted_address
-          })
-          this.forceUpdate()
+          if(this.startLocation().type === 'CURRENT_LOCATION') {
+            this.setStartLocation({
+              ...this.startLocation(),
+              stopDetail: detail.results[0],
+              describe: detail.results[0].formatted_address
+            })
+          }
+
+          if(this.endLocation().type === 'CURRENT_LOCATION') {
+            this.setEndLocation({
+              ...this.endLocation(),
+              stopDetail: detail.results[0],
+              describe: detail.results[0].formatted_address
+            })
+            this.forceUpdate()
+          }
         })
   }
 
@@ -238,6 +248,7 @@ export default class GoogleMap extends React.Component<State> {
           >
             {this._renderRoutes()}
             {this._renderStartMarker()}
+            {this._renderEndMarker()}
             {this._renderMarkers()}
             {this._renderStopCandidateMarker()}
             {this._renderInterestings()}
@@ -288,29 +299,39 @@ export default class GoogleMap extends React.Component<State> {
   }
 
   _renderStartMarker(){
-    const startLocation = this.startLocation() //.detail
+    const startLocation = this.startLocation()
     if(startLocation.stopDetail != null){
       return(
         <StartEndMarker 
           type='Start' 
           location={startLocation}
           showDetail = {(marker:StartEndMarker) => {
-            this.setShowEditorMode('StartMarker', {marker:marker})
-            //console.log(marker.props.detail)
+            this.setShowEditorMode('StartEndMarker', {marker:marker})
           }}/>
       )
-      /*const coord = {latitude: detail.geometry.location.lat, longitude: detail.geometry.location.lng }
+    }
+  }
+  
+  _renderEndMarker(){
+    const endLocation = this.endLocation()
+    if(endLocation.type === 'SAME_TO_START' || ((endLocation.type === this.startLocation().type) && (endLocation.type === 'CURRENT_LOCATION'))) {
+      this.setEndLocation({
+        ...this.props.mapView.endLocation(),
+        stopDetail: this.startLocation().stopDetail,
+        describe: this.startLocation().describe
+      })
+      return(null)
+    }
+
+    if(endLocation.stopDetail != null){
       return(
-        <Marker
-          coordinate={coord}
-          title = {this.startLocation().describe}
-        >
-          <Image
-            source={require('../../assets/flag_red_64.png')}
-            style={{ width: 32, height: 32 }}
-          />
-        </Marker>
-      )*/
+        <StartEndMarker 
+          type='End'
+          location={endLocation}
+          showDetail = {(marker:StartEndMarker) => {
+            this.setShowEditorMode('StartEndMarker', {marker:marker})
+          }}/>
+      )
     }
   }
 

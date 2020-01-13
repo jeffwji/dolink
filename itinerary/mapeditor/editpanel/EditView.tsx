@@ -49,7 +49,7 @@ export default class EditView extends React.Component {
         return(
           this._renderMarkerEdit()
         )
-      case 'StartMarker':
+      case 'StartEndMarker':
         //const detail = this.props.parameters.marker.props.stopDetail
         return(<StartEndEditView mapView={this.props.mapView} parameters={this.props.parameters}/>)
       case 'Route':

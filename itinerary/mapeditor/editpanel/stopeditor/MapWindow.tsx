@@ -34,14 +34,14 @@ export default class MapWindow extends React.Component {
     )
   }
   
-  notifyLocationChange = (details) => {
-    this.props.callback(details)
+  notifyLocationChange = (stop) => {
+    this.props.callback(stop)
     
     this.setState({ 
       initialLocationCoordinates: {
         ...this.state.initialLocationCoordinates, 
-        latitude: details.geometry.location.lat,
-        longitude: details.geometry.location.lng
+        latitude: stop.stopDetail.geometry.location.lat,
+        longitude: stop.stopDetail.geometry.location.lng
       }
     })
 
