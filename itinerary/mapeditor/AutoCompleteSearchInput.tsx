@@ -10,14 +10,14 @@ import PropTypes from 'prop-types';
  * https://github.com/mrlaessig/react-native-autocomplete-input#readme
  */
 
-export default class AutoCpmoleteSearchInput extends React.Component {
+export default class AutoComoleteSearchInput extends React.Component {
 	constructor(props) {
 		super(props)
+	}
 
-		this.state = {
-			items: [],
-			defaultValue: ''
-		}
+	state = {
+		items: [],
+		defaultValue: '',
 	}
 
     render() {
@@ -29,12 +29,15 @@ export default class AutoCpmoleteSearchInput extends React.Component {
 				onChangeText={ text => {
 					if(text != "") {
 						googleMapService('place/autocomplete', `input=${text}`)
-							.then(json => this.setState({
-								items: json.predictions
-							}))
+							.then(json => {
+								const addresses = this._getFixedOptions().concat(json.predictions)
+								this.setState({
+									items: addresses
+								})
+							})
 					} else {
 						this.setState({
-							items: []
+							items: this._getFixedOptions()
 						})
 					}
 				}}
@@ -60,21 +63,25 @@ export default class AutoCpmoleteSearchInput extends React.Component {
 					</TouchableOpacity>
 				)}
 				renderSeparator={(sectionId, rowId) => <View key={rowId} style={styles.separator} />}
-				containerStyle={[googleSearchInput.container, this.props.containerStyle]}
-				inputContainerStyle={googleSearchInput.inputContainerStyle}
-				listContainerStyle={googleSearchInput.listContainerStyle}
-				listStyle={googleSearchInput.listStyle}
+				containerStyle={[styles.container, this.props.style]}
+				inputContainerStyle={styles.inputContainerStyle}
+				listContainerStyle={styles.listContainerStyle}
+				listStyle={styles.listStyle}
 			/>
 		)
 	}
+
+	_getFixedOptions():Array {
+		return []
+	}
 }
 
-AutoCpmoleteSearchInput.propTypes = {
+AutoComoleteSearchInput.propTypes = {
 	notifyLocationChange: PropTypes.func.isRequired,
-	containerStyle: PropTypes.any
+	styles: PropTypes.any
 }
 
-const googleSearchInput:Sty = StyleSheet.create({
+const styles = StyleSheet.create({
 	container: {
 	},
 	inputContainerStyle: {

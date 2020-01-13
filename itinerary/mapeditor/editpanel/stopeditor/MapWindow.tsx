@@ -21,7 +21,7 @@ export default class MapWindow extends React.Component {
   render() {
     return(
       <View style={styles.content}>
-        <AutoCompleteSearchInput notifyLocationChange={this.notifyLocationChange} containerStyle={{width: 300}}/>
+        <AutoCompleteSearchInput notifyLocationChange={this.notifyLocationChange} style={{width: 300}}/>
         <MapView
           ref = {map=> this.map = map }
           style={styles.mapView}

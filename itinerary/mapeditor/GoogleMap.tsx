@@ -16,8 +16,7 @@ import {
   Image
 } from 'react-native'
 
-//import MapSearchInput from './MapSearchInput';
-import MapSearchInput from './AutoCompleteSearchInput'
+import AutoCompleteSearchInput from './AutoCompleteSearchInput'
 import polyline from '@mapbox/polyline'
 import MapController from './MapController'
 import NearBySearch from './NearBySearch'
@@ -155,7 +154,7 @@ export default class GoogleMap extends React.Component<State> {
     if(this.initialLocationCoordinates!=null) {
       return(
         <View style={styles.overallViewContainer}>
-          <MapSearchInput 
+          <AutoCompleteSearchInput 
             notifyLocationChange={(details) => {
               this._setStopCandidate(details)
                 .then(() =>
