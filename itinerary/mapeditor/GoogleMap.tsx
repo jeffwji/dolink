@@ -42,9 +42,27 @@ export default class GoogleMap extends React.Component<State> {
     this._updateMarker()
   }
 
+  searchInput = <AutoCompleteSearchInput 
+      notifyLocationChange={(details) => {
+        this._setStopCandidate(details)
+          .then(() =>
+            this._updateInitialLocation({
+              latitude: details.geometry.location.lat,
+              longitude: details.geometry.location.lng,
+              latitudeDelta: this.initialLocationCoordinates.latitudeDelta,
+              longitudeDelta: this.initialLocationCoordinates.longitudeDelta
+            }, true)
+          )
+          .catch(error => console.log(error))
+      }}
+      defaultLocations={[
+        { description: 'Home', geometry: { location: { lat: 43.8906719, lng: -79.2964162 } }, place_id: 'ChIJ1bQTc_zV1IkR_pQs6RrmKzo', isPredefinedPlace: true, name: 'Stonebridge Public School, Stonebridge Drive, Markham, ON, Canada'}
+      ]}
+    />
+
   defaultRadius = 10000
 
-  map = null
+  gmap = null
   find_food_entertainment = false
 
   defaultRouteColor = 'rgba(255, 20, 147, 0.4)'  // 'hotpink'
@@ -146,26 +164,10 @@ export default class GoogleMap extends React.Component<State> {
     if(this.initialLocationCoordinates!=null) {
       return(
         <View style={styles.overallViewContainer}>
-          <AutoCompleteSearchInput 
-            notifyLocationChange={(details) => {
-              this._setStopCandidate(details)
-                .then(() =>
-                  this._updateInitialLocation({
-                    latitude: details.geometry.location.lat,
-                    longitude: details.geometry.location.lng,
-                    latitudeDelta: this.initialLocationCoordinates.latitudeDelta,
-                    longitudeDelta: this.initialLocationCoordinates.longitudeDelta
-                  }, true)
-                )
-                .catch(error => console.log(error))
-            }}
-            defaultLocations={[
-              { description: 'Home', geometry: { location: { lat: 43.8906719, lng: -79.2964162 } }, place_id: 'ChIJ1bQTc_zV1IkR_pQs6RrmKzo', isPredefinedPlace: true, name: 'Stonebridge Public School, Stonebridge Drive, Markham, ON, Canada'}
-            ]}
-          />
+          {this.searchInput}
 
           <MapView style={styles.mapView}
-            ref = {map=> this.map = map }
+            ref = {ref=> this.gmap = ref }
             provider={ PROVIDER_GOOGLE }
             region={this.initialLocationCoordinates}
             /*onRegionChange={region => {
@@ -180,7 +182,7 @@ export default class GoogleMap extends React.Component<State> {
             scrollEnabled={true}
             followUserLocation={true}
             onMarkerPress = {e => {
-              this.map.animateToRegion({
+              this.gmap.animateToRegion({
                 latitude: e.nativeEvent.coordinate.latitude,
                 longitude: e.nativeEvent.coordinate.longitude,
                 latitudeDelta: this.initialLocationCoordinates.latitudeDelta,
@@ -202,7 +204,7 @@ export default class GoogleMap extends React.Component<State> {
                   this.setShowEditorMode("Marker")
                 })
                 .then(() => {
-                  this.map.animateToRegion({
+                  this.gmap.animateToRegion({
                     latitude: poi.coordinate.latitude,
                     longitude: poi.coordinate.longitude,
                     latitudeDelta: this.initialLocationCoordinates.latitudeDelta,

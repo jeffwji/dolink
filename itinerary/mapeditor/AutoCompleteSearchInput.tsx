@@ -22,12 +22,12 @@ export default class AutoComoleteSearchInput extends React.Component {
 		hideResults: true
 	}
 
-	ref = null
+	input:Autocomplete
 
     render() {
 		const autocomplete = <Autocomplete
 			clearButtonMode={'always'}
-			ref = {ref => this.ref = ref}
+			ref = {ref => this.input = ref}
 			data={this.state.items}
 			defaultValue={this.state.defaultValue}
 			hideResults = {this.state.hideResults}
@@ -70,8 +70,7 @@ export default class AutoComoleteSearchInput extends React.Component {
 						const value = item.description || item.formatted_address || item.name
 						this.setState({
 							defaultValue: value,
-							items: [],
-							//hideResults: true
+							items: this._getFixedOptions(),
 						})
 						
 						switch(item.type) {
