@@ -77,4 +77,12 @@ module.exports = {
 
     return Permissions.askAsync(PERMISSIONS[setting])
   },
+
+  getLocation(resolve, handleError) {
+    navigator.geolocation.getCurrentPosition(
+      position => resolve(position), 
+      error => handleError(error),
+      { enableHighAccuracy: false, timeout: 200000, maximumAge: 1000 }
+    )
+  },
 }

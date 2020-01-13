@@ -43,9 +43,9 @@ export default class MarkerEditView extends React.Component {
             <ScrollView>
                 <View>
                 {this._renderMarkerStops(m)}
-                {this._renderChangeStopMode()}
                 </View>
             </ScrollView>
+            {this._renderChangeStopModal()}
           </View>
         )
       } else
@@ -137,7 +137,7 @@ export default class MarkerEditView extends React.Component {
     )
   }
 
-  _renderChangeStopMode() {
+  _renderChangeStopModal() {
     if (this.state.changeStopModal !== null){
       return this.state.changeStopModal
     } else

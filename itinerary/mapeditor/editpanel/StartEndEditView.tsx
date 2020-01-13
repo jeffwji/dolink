@@ -33,7 +33,7 @@ export default class StartEndEditView extends React.Component {
         return(
         <View>
             {this._renderMarkerInformation(detail)}
-            {this._renderChangeStopMode()}
+            {this._renderChangeStopModal()}
         </View>
         )
     }
@@ -124,7 +124,7 @@ export default class StartEndEditView extends React.Component {
     })
   }
 
-  _renderChangeStopMode() {
+  _renderChangeStopModal() {
     if (this.state.changeStopModal !== null){
       return this.state.changeStopModal
     } else

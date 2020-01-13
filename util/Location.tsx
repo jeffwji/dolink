@@ -15,5 +15,12 @@ module.exports = {
     getRadius(longitudeDelta) {
         const oneDegreeOfLatitudeInMeters = 111.32 * 1000
         return longitudeDelta * oneDegreeOfLatitudeInMeters
+    },
+    
+    coordinate2string(coordinate){
+        if(coordinate.latitude)
+            return coordinate.latitude + "," + coordinate.longitude
+        else
+            return coordinate.lat + "," + coordinate.lng
     }
 }

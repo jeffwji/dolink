@@ -21,8 +21,8 @@ import polyline from '@mapbox/polyline'
 import MapController from './MapController'
 import NearBySearch from './NearBySearch'
 
-import {askPermission, googleMapService} from '../../util/Global'
-import {getRegion} from '../../util/Location'
+import {askPermission, googleMapService, getLocation} from '../../util/Global'
+import {getRegion, coordinate2string} from '../../util/Location'
 import StartEndMarker from './markers/StartEndMarker'
 
 type State = {
@@ -108,7 +108,7 @@ export default class GoogleMap extends React.Component<State> {
   _getCurrentPosition() {
     return askPermission('LOCATION').then(permit => {
       if(permit) {
-        this._getLocation(
+        getLocation(
           latlng => {
             this._setStartLocationDetail({latitude:latlng.coords.latitude, longitude: latlng.coords.longitude})
             const region = getRegion(latlng.coords.latitude, latlng.coords.longitude, this.getDefaultRadius())
@@ -123,17 +123,9 @@ export default class GoogleMap extends React.Component<State> {
     })
   }
 
-  _getLocation(resolve, handleError) {
-    navigator.geolocation.getCurrentPosition(
-      position => resolve(position), 
-      error => handleError(error),
-      { enableHighAccuracy: false, timeout: 200000, maximumAge: 1000 }
-    )
-  }
-
   _setStartLocationDetail(coordinate) {
     if(this.startLocation().type === 'CURRENT_LOCATION')
-      googleMapService("geocode", `latlng=${this._coords2string(coordinate)}`)
+      googleMapService("geocode", `latlng=${coordinate2string(coordinate)}`)
         .then(detail => {
           this.setStartLocation({
             ...this.startLocation(),
@@ -227,7 +219,7 @@ export default class GoogleMap extends React.Component<State> {
             }}
             /*onLongPress={ e => {
               if(!e.nativeEvent.action || e.nativeEvent.action === 'press') {
-                googleMapService("geocode", `latlng=${this._coords2string(e.nativeEvent.coordinate)}`)
+                googleMapService("geocode", `latlng=${coordinate2string(e.nativeEvent.coordinate)}`)
                   .then(detail => {
                     let result = detail.results.find(result => result.types.find(type => type === 'point_of_interest'))
                     result = result?result:detail.results.find(result => result.types.find(type => type === 'route'))
@@ -355,13 +347,6 @@ export default class GoogleMap extends React.Component<State> {
     }
   }
 
-  _coords2string(coordinate){
-    if(coordinate.latitude)
-      return coordinate.latitude + "," + coordinate.longitude
-    else
-      return coordinate.lat + "," + coordinate.lng
-  }
-
   _generateFlightRoute(origin, dest) {
     return {
       route:[{
@@ -391,7 +376,7 @@ export default class GoogleMap extends React.Component<State> {
             this.updateDirections(directions => directions.push(this._generateFlightRoute(origin, dest)))
             return
         default:
-          return googleMapService("directions", `origin=${this._coords2string(origin.stop.stopDetail.geometry.location)}&destination=${this._coords2string(dest.stop.stopDetail.geometry.location)}&mode=${mode}`)
+          return googleMapService("directions", `origin=${coordinate2string(origin.stop.stopDetail.geometry.location)}&destination=${coordinate2string(dest.stop.stopDetail.geometry.location)}&mode=${mode}`)
             .then(resp => {
               if (resp.routes.length > 0) {
                 this.updateDirections(directions => directions.push({route:resp.routes[0], destination: dest.index, origin: origin.index, routeable: true}))
