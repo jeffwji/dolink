@@ -33,7 +33,6 @@ export default class Home extends React.Component {
     
     const didBlurSubscription = this.props.navigation.addListener(
       'didFocus', payload => {
-        console.log('Home: didFocus')
          this.componentDidMount()
       }
     )

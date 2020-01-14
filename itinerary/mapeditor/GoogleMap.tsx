@@ -157,7 +157,7 @@ export default class GoogleMap extends React.Component<State> {
               stopDetail: detail.results[0],
               describe: detail.results[0].formatted_address
             })
-            this.forceUpdate()
+            this.update()
           }
         })
   }
@@ -165,7 +165,7 @@ export default class GoogleMap extends React.Component<State> {
   _updateInitialLocation(region, updateMap) {
     this.initialLocationCoordinates = region
     if(updateMap)
-      this.forceUpdate()
+      this.update()
   }
 
   _renderMap() {
@@ -316,7 +316,7 @@ export default class GoogleMap extends React.Component<State> {
     const endLocation = this.endLocation()
     if(endLocation.type === 'SAME_TO_START' || ((endLocation.type === this.startLocation().type) && (endLocation.type === 'CURRENT_LOCATION'))) {
       this.setEndLocation({
-        ...this.props.mapView.endLocation(),
+        ...this.endLocation(),
         stopDetail: this.startLocation().stopDetail,
         describe: this.startLocation().describe
       })
@@ -359,12 +359,22 @@ export default class GoogleMap extends React.Component<State> {
         }
       })
 
+      let dest = null
       let origin = { stop:this.startLocation() }  //temp_stops.shift()
       do{
-        const dest = temp_stops.shift()
+        dest = temp_stops.shift()
         await this._getDirection(origin, dest)
         origin = dest
       }while(temp_stops.length > 0)
+
+      const end = this.endLocation()
+      if(end.type === 'SAME_TO_START' || ((end.type === this.startLocation().type) && (end.type === 'CURRENT_LOCATION'))) {
+        dest = { stop:this.startLocation() }  
+      } else {
+        dest = { stop:end }  
+      }
+      await this._getDirection(origin, dest)
+
       this.update()
     }
   }
@@ -401,7 +411,11 @@ export default class GoogleMap extends React.Component<State> {
           return googleMapService("directions", `origin=${coordinate2string(origin.stop.stopDetail.geometry.location)}&destination=${coordinate2string(dest.stop.stopDetail.geometry.location)}&mode=${mode}`)
             .then(resp => {
               if (resp.routes.length > 0) {
-                this.updateDirections(directions => directions.push({route:resp.routes[0], destination: dest.index, origin: origin.index, routeable: true}))
+                this.updateDirections(directions => directions.push({
+                  route:resp.routes[0], 
+                  destination: (dest.index?dest.index:dest.stop.id?dest.stop.id:dest.stop.stopDetail.place_id), 
+                  origin: (origin.index?origin.index:origin.stop.id?origin.stop.id:origin.stop.stopDetail.place_id), 
+                  routeable: true}))
               } else {
                 this.updateDirections(directions => directions.push(this._generateFlightRoute(origin, dest)))
               }
@@ -418,7 +432,10 @@ export default class GoogleMap extends React.Component<State> {
   }
 
   _getTransitMode(stopIndex) {
-    return this.stops()[stopIndex].transit_mode?this.stops()[stopIndex].transit_mode:'driving'
+    if(Number.isInteger(stopIndex))
+      return this.stops()[stopIndex].transit_mode?this.stops()[stopIndex].transit_mode:'driving'
+    else if(stopIndex === 'End')
+      return this.endLocation.transit_mode?this.endLocation.transit_mode:'driving'
   }
 
   _route2coords(route){
@@ -518,11 +535,9 @@ export default class GoogleMap extends React.Component<State> {
 
   update() {
     if (!this.editingPlaceId && this._isEditViewVisible())
-    this.setShowEditorMode(null)
+      this.setShowEditorMode(null)
 
-    this.setState({
-      updateMap: !this.state.updateMap
-    })
+    this.forceUpdate()
   }
 
   reflashStops(stops){

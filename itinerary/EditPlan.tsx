@@ -24,6 +24,12 @@ import {
 export default class EditPlan extends React.Component {
   constructor(props) {
     super(props)
+
+    const didBlurSubscription = this.props.navigation.addListener(
+      'didFocus', payload => {
+         this.forceUpdate()
+      }
+    )
   }
 
   state = {
@@ -42,7 +48,7 @@ export default class EditPlan extends React.Component {
   getStartLocation = () => {return this.startLocation}
   setStartLocation = (location) => {
     this.startLocation = location
-    this.forceUpdate()
+    //this.forceUpdate()
   }
 
   endLocation = {
@@ -55,7 +61,7 @@ export default class EditPlan extends React.Component {
   getEndLocation = () => {return this.endLocation}
   setEndLocation = (location) => {
     this.endLocation = location
-    this.forceUpdate()
+    //this.forceUpdate()
   }
 
   //////////////////////////////////////////
