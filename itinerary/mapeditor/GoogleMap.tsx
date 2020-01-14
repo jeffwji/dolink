@@ -413,8 +413,8 @@ export default class GoogleMap extends React.Component<State> {
               if (resp.routes.length > 0) {
                 this.updateDirections(directions => directions.push({
                   route:resp.routes[0], 
-                  destination: (dest.index?dest.index:dest.stop.id?dest.stop.id:dest.stop.stopDetail.place_id), 
-                  origin: (origin.index?origin.index:origin.stop.id?origin.stop.id:origin.stop.stopDetail.place_id), 
+                  destination: ((typeof dest.index !== 'undefined')?dest.index:dest.stop.id), 
+                  origin: ((typeof origin.index !== 'undefined')?origin.index:origin.stop.id), 
                   routeable: true}))
               } else {
                 this.updateDirections(directions => directions.push(this._generateFlightRoute(origin, dest)))
@@ -428,14 +428,21 @@ export default class GoogleMap extends React.Component<State> {
   }
 
   _setTransitMode(stopIndex, mode) {
-    this.updateStops( stops => stops[stopIndex].transit_mode=mode )
+    if(Number.isInteger(stopIndex))
+      this.updateStops( stops => stops[stopIndex].transit_mode=mode )
+    else if(stopIndex === 'End'){
+      this.setEndLocation({
+        ...this.endLocation(),
+        transit_mode: mode
+      })
+    }
   }
 
   _getTransitMode(stopIndex) {
     if(Number.isInteger(stopIndex))
       return this.stops()[stopIndex].transit_mode?this.stops()[stopIndex].transit_mode:'driving'
     else if(stopIndex === 'End')
-      return this.endLocation.transit_mode?this.endLocation.transit_mode:'driving'
+      return this.endLocation().transit_mode?this.endLocation().transit_mode:'driving'
   }
 
   _route2coords(route){
