@@ -66,7 +66,7 @@ export default class GoogleMap extends React.Component<State> {
   defaultRouteColor = 'rgba(255, 20, 147, 0.4)'  // 'hotpink'
   selectedRouteColor = 'blue'
   invalidRouteColor = 'rgba(105,105,105,0.4)' //'gray'
-  privacyRouteColor = 'rgba(128,0,12, 0.4)'  //'purple'
+  privacyRouteColor = 'rgba(153,51,255, 0.4)'  //'purple'
 
   editingPlaceId = null
   selectedRoute = null
@@ -313,12 +313,17 @@ export default class GoogleMap extends React.Component<State> {
   }
   
   _renderEndMarker(){
+    const startLocation = this.startLocation()
     const endLocation = this.endLocation()
-    if(endLocation.type === 'SAME_TO_START' || ((endLocation.type === this.startLocation().type) && (endLocation.type === 'CURRENT_LOCATION'))) {
+
+    if(endLocation.type === 'SAME_TO_START' 
+      || ((endLocation.type === startLocation.type) && (endLocation.type === 'CURRENT_LOCATION'))
+      || (endLocation.stopDetail.place_id === startLocation.stopDetail.place_id)
+    ) {
       this.setEndLocation({
         ...this.endLocation(),
-        stopDetail: this.startLocation().stopDetail,
-        describe: this.startLocation().describe
+        stopDetail: startLocation.stopDetail,
+        describe: startLocation.describe
       })
       return(null)
     }
@@ -351,7 +356,7 @@ export default class GoogleMap extends React.Component<State> {
   async reflashDirections() {
     this.setDirections([])
 
-    if(this.stops().length > 0){
+    //if(this.stops().length > 0){
       const temp_stops = this.stops().map((stop, index) => {
         return {
           stop:stop,
@@ -361,11 +366,14 @@ export default class GoogleMap extends React.Component<State> {
 
       let dest = null
       let origin = { stop:this.startLocation() }  //temp_stops.shift()
-      do{
-        dest = temp_stops.shift()
-        await this._getDirection(origin, dest)
-        origin = dest
-      }while(temp_stops.length > 0)
+
+      if(temp_stops.length > 0) {
+        do{
+          dest = temp_stops.shift()
+          await this._getDirection(origin, dest)
+          origin = dest
+        }while(temp_stops.length > 0)
+      }
 
       const end = this.endLocation()
       if(end.type === 'SAME_TO_START' || ((end.type === this.startLocation().type) && (end.type === 'CURRENT_LOCATION'))) {
@@ -376,7 +384,7 @@ export default class GoogleMap extends React.Component<State> {
       await this._getDirection(origin, dest)
 
       this.update()
-    }
+    //}
   }
 
   _generateFlightRoute(origin, dest) {
@@ -396,7 +404,8 @@ export default class GoogleMap extends React.Component<State> {
       ],
       destination: dest.index,
       origin: origin.index,
-      routeable: false
+      routeable: false,
+      privacy: (typeof origin.stop.privacy !== 'undefined' && origin.stop.privacy) || (typeof dest.stop.privacy !== 'undefined' && dest.stop.privacy)
     }
   }
 
@@ -411,11 +420,15 @@ export default class GoogleMap extends React.Component<State> {
           return googleMapService("directions", `origin=${coordinate2string(origin.stop.stopDetail.geometry.location)}&destination=${coordinate2string(dest.stop.stopDetail.geometry.location)}&mode=${mode}`)
             .then(resp => {
               if (resp.routes.length > 0) {
-                this.updateDirections(directions => directions.push({
-                  route:resp.routes[0], 
-                  destination: ((typeof dest.index !== 'undefined')?dest.index:dest.stop.id), 
-                  origin: ((typeof origin.index !== 'undefined')?origin.index:origin.stop.id), 
-                  routeable: true}))
+                this.updateDirections(directions => directions.push(
+                  {
+                    route:resp.routes[0], 
+                    destination: ((typeof dest.index !== 'undefined')?dest.index:dest.stop.id), 
+                    origin: ((typeof origin.index !== 'undefined')?origin.index:origin.stop.id), 
+                    routeable: true,
+                    privacy: (typeof origin.stop.privacy !== 'undefined' && origin.stop.privacy) || (typeof dest.stop.privacy !== 'undefined' && dest.stop.privacy)
+                  }
+                ))
               } else {
                 this.updateDirections(directions => directions.push(this._generateFlightRoute(origin, dest)))
               }
@@ -455,11 +468,17 @@ export default class GoogleMap extends React.Component<State> {
     })
   }
 
-  _getRouteColor(index) {
-    if (index === this.selectedRoute)
-      return this.selectedRouteColor
-    else
-      return this.defaultRouteColor
+  _getRouteColor(index, isValid=true, isPrivacy=false) {
+    if(isPrivacy) {
+      return this.privacyRouteColor
+    } else if(!isValid) {
+      return this.invalidRouteColor
+    } else {
+      if (index === this.selectedRoute)
+        return this.selectedRouteColor
+      else
+        return this.defaultRouteColor
+    }
   }
 
   _getRoutes() {
@@ -471,7 +490,7 @@ export default class GoogleMap extends React.Component<State> {
             direction={direction}
             coordinates={this._route2coords(direction.route)}
             strokeWidth={4}
-            strokeColor={this._getRouteColor(index)}
+            strokeColor={this._getRouteColor(index, direction.routeable, direction.privacy)}
             tappable={true}
             onPress={e => {
               this.selectedRoute = index
@@ -487,7 +506,7 @@ export default class GoogleMap extends React.Component<State> {
             direction={direction}
             coordinates={direction.route}
             strokeWidth={4}
-            strokeColor={this.invalidRouteColor}
+            strokeColor={ this._getRouteColor(index, direction.routeable, direction.privacy)}
             tappable={true}
             onPress={e => {
               this.selectedRoute = index

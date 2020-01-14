@@ -110,9 +110,9 @@ export default class AutoComoleteSearchInput extends React.Component {
 					<Text>{item.description || item.formatted_address || item.name}</Text>
 				</TouchableOpacity>
 			)}
-			onStartShouldSetResponderCapture = { e => {
+			/*onStartShouldSetResponderCapture = { e => {
 				console.log(e)
-			}}
+			}}*/
 			renderSeparator={(sectionId, rowId) => <View key={rowId} style={styles.separator} />}
 			containerStyle={[styles.container, this.props.style]}
 			inputContainerStyle={styles.inputContainerStyle}

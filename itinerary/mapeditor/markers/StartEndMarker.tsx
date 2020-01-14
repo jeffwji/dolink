@@ -52,9 +52,10 @@ export default class StartEndMarker extends React.Component {
         onPress={e => {
           this.props.showDetail(this)
         }}
+        /*
         onDragEnd={e => {
             console.log(e)
-            /*const param = e.nativeEvent.coordinate.latitude + "," + e.nativeEvent.coordinate.longitude
+            const param = e.nativeEvent.coordinate.latitude + "," + e.nativeEvent.coordinate.longitude
             googleMapService("geocode", `latlng=${param}`)
                 .then(detail => {
                 let result = detail.results.find(result => result.types.find(type => type === 'point_of_interest'))
@@ -66,9 +67,10 @@ export default class StartEndMarker extends React.Component {
                 })
                 .catch(e => {
                 console.warn(e)
-                });*/
+                });
         }}
-        draggable
+        //draggable
+        */
       >
         <StartEndMarkerPin type={this.props.type} />
       </Marker>
