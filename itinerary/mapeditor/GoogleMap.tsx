@@ -41,12 +41,12 @@ export default class GoogleMap extends React.Component<State> {
   }
 
   searchInput = <AutoCompleteSearchInput 
-      notifyLocationChange={(details) => {
-        this._setStopCandidate(details)
+      notifyLocationChange={(stop) => {
+        this._setStopCandidate(stop.stopDetail)
           .then(() =>
             this._updateInitialLocation({
-              latitude: details.geometry.location.lat,
-              longitude: details.geometry.location.lng,
+              latitude: stop.stopDetail.geometry.location.lat,
+              longitude: stop.stopDetail.geometry.location.lng,
               latitudeDelta: this.initialLocationCoordinates.latitudeDelta,
               longitudeDelta: this.initialLocationCoordinates.longitudeDelta
             }, true)
