@@ -402,8 +402,8 @@ export default class GoogleMap extends React.Component<State> {
           duration: {text:null, value: null}
         }
       ],
-      destination: dest.index,
-      origin: origin.index,
+      destination: (typeof dest.index==='undefined')?dest.stop.id:dest.index,
+      origin: (typeof origin.index==='undefined')?origin.stop.id:origin.index,
       routeable: false,
       privacy: (typeof origin.stop.privacy !== 'undefined' && origin.stop.privacy) || (typeof dest.stop.privacy !== 'undefined' && dest.stop.privacy)
     }

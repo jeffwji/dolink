@@ -10,7 +10,7 @@ import {
   Left,
   Right,
   Icon, 
-  Text,
+  ListItem
 } from 'native-base'
 
 import {
@@ -18,8 +18,34 @@ import {
   StatusBar,
   StyleSheet,
   Alert,
-  View
+  View,
+  Text,
 } from 'react-native'
+
+import PropTypes from 'prop-types'
+
+
+class EditFloatButton extends React.Component {
+  constructor(props) {
+    super(props)
+  }
+
+  render(){
+    return(
+      <Button style={[styles.addButton, this.props.style]} 
+        active
+        onPress={this.props.onPress}
+      >
+        <Icon active name="add" style={{color:'darkgrey'}}/>
+      </Button>
+    )
+  }
+}
+
+EditFloatButton.propTypes = {
+  style: PropTypes.object
+}
+
 
 export default class EditPlan extends React.Component {
   constructor(props) {
@@ -146,33 +172,106 @@ export default class EditPlan extends React.Component {
             <Input placeholder='Title' 
               onChangeText={ (text) => {
                 this.setState({title: text})
-              } }/>
-            <View style={{flexDirection: 'row'}}><Text>Start from: </Text><Text>{this.getStartLocation().describe}</Text></View>
-            <Button 
-              style={styles.addButton} 
-              active
-              onPress={() => {
-                navigate('PlanMap', {
-                  startLocation: () => this.getStartLocation(),
-                  setStartLocation: (location) => this.setStartLocation(location),
-                  endLocation: () => this.getEndLocation(),
-                  setEndLocation: (location) => this.setEndLocation(location),
-                  stops: () => this.getStops(),
-                  setStops: (stops) => this.setStops(stops),
-                  updateStops: (update) => this.updateStops(update),
-                  directions: () => this.getDirections(),
-                  setDirections: (directions) => this.setDirections(directions),
-                  updateDirections: (update) => this.updateDirections(update)
-                })
-              }}
-            >
-              <Icon active name="add" style={{color:'darkgrey'}}/>
-            </Button>
-            <View style={{flexDirection: 'row'}}><Text>End with: </Text><Text>{this.getEndLocation().describe}</Text></View>
+              } }
+            />
+            <ListItem>
+              <View style={{flex:1, flexDirection: 'column', marginTop: 3}}>
+                <View style={{flex:1, flexDirection: 'row'}}>
+                  <Text>Start: </Text>
+                  <Text>{(this.getStartLocation().type==='CURRENT_LOCATION')?'Current location':this.getStartLocation().describe}</Text>
+                </View>
+              </View>
+            </ListItem>
+
+            {this.showItinerary()}
+
+            <ListItem>
+              <View style={{flex:1, flexDirection: 'column', marginTop: 3}}>
+                {this._getEndRoute()}
+                <View style={{flex:1, flexDirection: 'row'}}>
+                  <Text>End: </Text>
+                  <Text>{(
+                    this.getEndLocation().type==='SAME_TO_START'
+                    || this.getEndLocation().type === 'CURRENT_LOCATION' && this.getStartLocation().type === 'CURRENT_LOCATION'
+                    || this.getEndLocation().stopDetail.place_id === this.getStartLocation().stopDetail.place_id
+                    )?'Same to start'
+                     :(this.getEndLocation().type==='CURRENT_LOCATION'?'Current location':this.getEndLocation().describe)
+                  }</Text>
+                </View>
+              </View>
+            </ListItem>
           </Form>
         </Content>
+
+        <EditFloatButton
+          onPress={() => {
+            navigate('PlanMap', {
+              startLocation: () => this.getStartLocation(),
+              setStartLocation: (location) => this.setStartLocation(location),
+              endLocation: () => this.getEndLocation(),
+              setEndLocation: (location) => this.setEndLocation(location),
+              stops: () => this.getStops(),
+              setStops: (stops) => this.setStops(stops),
+              updateStops: (update) => this.updateStops(update),
+              directions: () => this.getDirections(),
+              setDirections: (directions) => this.setDirections(directions),
+              updateDirections: (update) => this.updateDirections(update)
+            })
+          }}
+        />
       </Container>
     )
+  }
+
+  showItinerary() {
+    return this.getStops().map((stop, index) => {
+      const detail = stop.stopDetail
+      return(
+        <ListItem key={''+index}>
+          <View style={{flex:1, flexDirection: 'column'}}>
+            {this._getRoute(d => d.destination === index, stop)}
+            <View style={{flex:1, flexDirection: 'row'}}>
+                <Text>Stop {index+1}: </Text>
+                <Text style={styles.text}>{detail.description || detail.formatted_address || detail.name}</Text>
+            </View>
+          </View>
+        </ListItem>
+      )
+    })
+  }
+  
+  _getEndRoute() {
+    return this._getRoute(d=>{
+      const key = (
+        this.getEndLocation().type==='SAME_TO_START'
+        || this.getEndLocation().type === 'CURRENT_LOCATION' && this.getStartLocation().type === 'CURRENT_LOCATION'
+        )?'Start':'End'
+      return d.destination === key
+    }, this.getEndLocation())
+  }
+
+  _getRoute(condition: (object) => Boolean, stop) {
+    const dir = this.directions.find(d => condition(d))
+    if (typeof dir !== 'undefined'){
+      if(typeof dir.route.legs === 'undefined' || dir.route.legs.length === 0){
+        return(
+          <View style={{flex:1, flexDirection: 'row', justifyContent: 'center'}}>
+            <View><Text>Unable to get route</Text></View>
+          </View>
+        )
+      } else {
+        const leg = dir.route.legs[0]
+        const distance = leg.distance.text
+        const duration = leg.duration.text
+        return(
+          <View style={{flex:1, flexDirection: 'row', justifyContent: 'center', margin:5}}>
+            <View><Text>{(typeof stop.transit_mode === 'undefined')?'Driving':stop.transit_mode}</Text></View>
+            <View><Text> - {distance}</Text></View>
+            <View><Text> - {duration}</Text></View>
+          </View>
+        )
+      }
+    } else return(null)
   }
 }
 
@@ -185,17 +284,25 @@ const styles = StyleSheet.create({
 
   content: {
     flex: 1,
-    marginLeft: 10,
+    //marginLeft: 10,
+    margin: 10,
+  },
+
+  text: {
+    flex: 1,
+    flexWrap: 'wrap'
   },
 
   addButton: {
-    height: 60,
-    width: 100,
-    borderRadius:5,
-    bottom: 10,
+    height: 70,
+    width: 70,
+    borderRadius:35,
+    right: 10,
+    bottom: 20,
     borderWidth:1,
     borderColor:'lightgrey',
-    backgroundColor:'#f5f5f5',
-    justifyContent: 'center'
+    backgroundColor:'rgba(204, 204, 255, 0.5)',
+    justifyContent: 'center',
+    position: 'absolute'
   }
 })
