@@ -199,10 +199,19 @@ export default class EditPlan extends React.Component {
                 {this._getEndRoute()}
                 <View style={{flex:1, flexDirection: 'row'}}>
                   <Text>End: </Text>
-                  <Text>{this.endSameToStart()
+                  <Text>{this.isEndSameToStart()
                     ?'Same to start'
                     :(this.getEndLocation().type==='CURRENT_LOCATION'?'Current location':this.getEndLocation().describe)
                   }</Text>
+                  {
+                    (!this.isEndSameToStart()) && <TouchableOpacity onPress={() => {
+                        this.endLocation.type = 'SAME_TO_START'
+                        this.forceUpdate()
+                        this.reflashDirections().then(() => this.forceUpdate())
+                    }}>
+                      <Text style={{color: 'blue', textDecorationLine:'underline', left: 5}}>(Set to start)</Text>
+                    </TouchableOpacity>
+                  }
                 </View>
               </View>
             </ListItem>
@@ -222,7 +231,7 @@ export default class EditPlan extends React.Component {
               directions: () => this.getDirections(),
               setDirections: (directions) => this.setDirections(directions),
               updateDirections: (update) => this.updateDirections(update),
-              endSameToStart: () => this.endSameToStart(),
+              isEndSameToStart: () => this.isEndSameToStart(),
               getDirection: (origin, dest) => this.getDirection(origin, dest),
               reflashDirections: () => this.reflashDirections()
             })
@@ -258,7 +267,7 @@ export default class EditPlan extends React.Component {
   _renderItineraryItem = ({item, index, drag, isActive}) => {
     const title = item.stop.stopDetail.name || item.stop.stopDetail.formatted_address || item.stop.stopDetail.description
     return (
-      <ListItem 
+      <ListItem
         key={''+item.order}
         style={{
           flex: 1,
@@ -356,8 +365,7 @@ export default class EditPlan extends React.Component {
     }
   }
 
-
-  endSameToStart() {
+  isEndSameToStart() {
     return this.getEndLocation().type==='SAME_TO_START'
     || this.getEndLocation().type === 'CURRENT_LOCATION' && this.getStartLocation().type === 'CURRENT_LOCATION'
     || this.getEndLocation().stopDetail.place_id === this.getStartLocation().stopDetail.place_id
@@ -365,7 +373,7 @@ export default class EditPlan extends React.Component {
 
   _getEndRoute() {
     return this._getRoute(d=>{
-      const key = this.endSameToStart()?'Start':'End'
+      const key = this.isEndSameToStart()?'Start':'End'
       return d.destination === key
     }, this.getEndLocation())
   }

@@ -100,7 +100,7 @@ export default class GoogleMap extends React.Component<State> {
   updateDirections = this.props.navigation.state.params.updateDirections
   setDirections = this.props.navigation.state.params.setDirections
 
-  endSameToStart = this.props.navigation.state.params.endSameToStart
+  isEndSameToStart = this.props.navigation.state.params.isEndSameToStart
 
   getDirection = this.props.navigation.state.params.getDirection
   reflashDirections = this.props.navigation.state.params.reflashDirections
@@ -321,7 +321,7 @@ export default class GoogleMap extends React.Component<State> {
     const startLocation = this.startLocation()
     const endLocation = this.endLocation()
 
-    if(this.endSameToStart()) {
+    if(this.isEndSameToStart()) {
       this.setEndLocation({
         ...this.endLocation(),
         stopDetail: startLocation.stopDetail,
@@ -354,91 +354,6 @@ export default class GoogleMap extends React.Component<State> {
       this.stopMarkers
     )
   }
-
-  /*async reflashDirections() {
-    this.setDirections([])
-
-      const temp_stops = this.stops().map((stop, index) => {
-        return {
-          stop:stop,
-          index:index
-        }
-      })
-
-      let dest = null
-      let origin = { stop:this.startLocation() }  //temp_stops.shift()
-
-      if(temp_stops.length > 0) {
-        do{
-          dest = temp_stops.shift()
-          await this.getDirection(origin, dest)
-          origin = dest
-        }while(temp_stops.length > 0)
-      }
-
-      const end = this.endLocation()
-      if(end.type === 'SAME_TO_START' || ((end.type === this.startLocation().type) && (end.type === 'CURRENT_LOCATION'))) {
-        dest = { stop:this.startLocation() }  
-      } else {
-        dest = { stop:end }  
-      }
-      await this.getDirection(origin, dest)
-
-      this.update()
-  }*/
-
-  /*_generateFlightRoute(origin, dest) {
-    return {
-      route:[{
-        latitude:origin.stop.stopDetail.geometry.location.lat,
-        longitude:origin.stop.stopDetail.geometry.location.lng
-      },{
-        latitude:dest.stop.stopDetail.geometry.location.lat,
-        longitude:dest.stop.stopDetail.geometry.location.lng
-      }],
-      legs:[
-        {
-          distance: {text:null, value: null},
-          duration: {text:null, value: null}
-        }
-      ],
-      destination: (typeof dest.index==='undefined')?dest.stop.id:dest.index,
-      origin: (typeof origin.index==='undefined')?origin.stop.id:origin.index,
-      routeable: false,
-      privacy: (typeof origin.stop.privacy !== 'undefined' && origin.stop.privacy) || (typeof dest.stop.privacy !== 'undefined' && dest.stop.privacy)
-    }
-  }*/
-
-  /*async getDirection(origin, dest) {
-    if(origin.stop.stopDetail.place_id != dest.stop.stopDetail.place_id){
-      const mode = dest.stop.transit_mode?dest.stop.transit_mode:'driving'
-      switch(mode){
-        case 'flight':
-            this.updateDirections(directions => directions.push(generateFlightRoute(origin, dest)))
-            return
-        default:
-          return googleMapService("directions", `origin=${coordinate2string(origin.stop.stopDetail.geometry.location)}&destination=${coordinate2string(dest.stop.stopDetail.geometry.location)}&mode=${mode}`)
-            .then(resp => {
-              if (resp.routes.length > 0) {
-                this.updateDirections(directions => directions.push(
-                  {
-                    route:resp.routes[0], 
-                    destination: ((typeof dest.index !== 'undefined')?dest.index:dest.stop.id), 
-                    origin: ((typeof origin.index !== 'undefined')?origin.index:origin.stop.id), 
-                    routeable: true,
-                    privacy: (typeof origin.stop.privacy !== 'undefined' && origin.stop.privacy) || (typeof dest.stop.privacy !== 'undefined' && dest.stop.privacy)
-                  }
-                ))
-              } else {
-                this.updateDirections(directions => directions.push(generateFlightRoute(origin, dest)))
-              }
-            })
-            .catch(e => {
-              console.warn(e)
-            })
-       }
-    }
-  }*/
 
   _setTransitMode(stopIndex, mode) {
     if(Number.isInteger(stopIndex))
