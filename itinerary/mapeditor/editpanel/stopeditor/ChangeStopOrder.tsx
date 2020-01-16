@@ -45,7 +45,7 @@ export default class ChangeStopOrder extends React.Component{
         key={index}
         style={{
           flex: 1,
-          backgroundColor: isActive ? 'blue' : item.backgroundColor,
+          backgroundColor: isActive ? 'rgba(153,153,255, 1)' : item.backgroundColor,
           alignItems: 'flex-start', 
           justifyContent: 'center' 
         }}

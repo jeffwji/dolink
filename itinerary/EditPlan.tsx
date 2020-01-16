@@ -20,14 +20,23 @@ import {
   Alert,
   View,
   Text,
+  TouchableOpacity
 } from 'react-native'
 
 import PropTypes from 'prop-types'
+import DraggableFlatList from 'react-native-draggable-flatlist'
+
+import {askPermission, googleMapService, getLocation} from '../util/Global'
+import {coordinate2string, generateFlightRoute} from '../util/Location'
 
 
 class EditFloatButton extends React.Component {
   constructor(props) {
     super(props)
+  }
+
+  state = {
+    selected: -1
   }
 
   render(){
@@ -190,12 +199,9 @@ export default class EditPlan extends React.Component {
                 {this._getEndRoute()}
                 <View style={{flex:1, flexDirection: 'row'}}>
                   <Text>End: </Text>
-                  <Text>{(
-                    this.getEndLocation().type==='SAME_TO_START'
-                    || this.getEndLocation().type === 'CURRENT_LOCATION' && this.getStartLocation().type === 'CURRENT_LOCATION'
-                    || this.getEndLocation().stopDetail.place_id === this.getStartLocation().stopDetail.place_id
-                    )?'Same to start'
-                     :(this.getEndLocation().type==='CURRENT_LOCATION'?'Current location':this.getEndLocation().describe)
+                  <Text>{this.endSameToStart()
+                    ?'Same to start'
+                    :(this.getEndLocation().type==='CURRENT_LOCATION'?'Current location':this.getEndLocation().describe)
                   }</Text>
                 </View>
               </View>
@@ -215,7 +221,10 @@ export default class EditPlan extends React.Component {
               updateStops: (update) => this.updateStops(update),
               directions: () => this.getDirections(),
               setDirections: (directions) => this.setDirections(directions),
-              updateDirections: (update) => this.updateDirections(update)
+              updateDirections: (update) => this.updateDirections(update),
+              endSameToStart: () => this.endSameToStart(),
+              getDirection: (origin, dest) => this.getDirection(origin, dest),
+              reflashDirections: () => this.reflashDirections()
             })
           }}
         />
@@ -224,28 +233,139 @@ export default class EditPlan extends React.Component {
   }
 
   showItinerary() {
-    return this.getStops().map((stop, index) => {
-      const detail = stop.stopDetail
-      return(
-        <ListItem key={''+index}>
-          <View style={{flex:1, flexDirection: 'column'}}>
-            {this._getRoute(d => d.destination === index, stop)}
-            <View style={{flex:1, flexDirection: 'row'}}>
-                <Text>Stop {index+1}: </Text>
-                <Text style={styles.text}>{detail.description || detail.formatted_address || detail.name}</Text>
-            </View>
-          </View>
-        </ListItem>
-      )
-    })
+    let items = this.stops.map((stop, index) => ({
+      order: index,
+      stop: stop,
+      backgroundColor: `${index%2===0?'#F0DDF7':'#C4D2F7'}`
+    }))
+
+    return(
+      <DraggableFlatList
+          data={items}
+          renderItem={this._renderItineraryItem}
+          keyExtractor={(item, index) => `stop-order-${index}`}
+          onDragEnd={({ data, from, to }) => {
+            this.setStops(data.map(item => item.stop))
+            this.setState({
+              selected: to
+            })
+            this.reflashDirections().then(() => this.forceUpdate())
+          }}
+        />
+    )
   }
-  
+
+  _renderItineraryItem = ({item, index, drag, isActive}) => {
+    const title = item.stop.stopDetail.name || item.stop.stopDetail.formatted_address || item.stop.stopDetail.description
+    return (
+      <ListItem 
+        key={''+item.order}
+        style={{
+          flex: 1,
+          backgroundColor: isActive ? 'rgba(153,153,255, 1)' : item.backgroundColor,
+          alignItems: 'flex-start', 
+          justifyContent: 'center' 
+        }}
+        onLongPress={drag}
+        onPress={e => this.setState({
+          selected: item.order
+        })}
+      >
+        <View style={{flex:1, flexDirection: 'column'}}>
+          {this._getRoute(d => d.destination === item.order, item.stop)}
+          <View style={{flex:1, flexDirection: 'row'}}>
+              <View style={{flex:8}} onPress={e => alert("Stop information")}>
+                <Text>Stop {item.order+1}: </Text>
+                <Text style={styles.text}>{title}</Text>
+                {(item.order===this.state.selected) && 
+                  <View>
+                    <TouchableOpacity style={{flex:1}} onPress={e => alert("Show me!")}>
+                      <Text>Click me!</Text>
+                    </TouchableOpacity>
+                  </View>
+                }
+              </View>
+              <TouchableOpacity style={{flex:1}} onPress={e => alert("navigate to galary")}>
+                <Icon name='camera'/>
+              </TouchableOpacity>
+          </View>
+        </View>
+      </ListItem>
+    )
+  }
+
+  async reflashDirections() {
+    this.setDirections([])
+
+      const temp_stops = this.stops.map((stop, index) => {
+        return {
+          stop:stop,
+          index:index
+        }
+      })
+
+      let dest = null
+      let origin = { stop:this.startLocation }  //temp_stops.shift()
+
+      if(temp_stops.length > 0) {
+        do{
+          dest = temp_stops.shift()
+          await this.getDirection(origin, dest)
+          origin = dest
+        }while(temp_stops.length > 0)
+      }
+
+      const end = this.endLocation
+      if(end.type === 'SAME_TO_START' || ((end.type === this.startLocation.type) && (end.type === 'CURRENT_LOCATION'))) {
+        dest = { stop:this.startLocation }  
+      } else {
+        dest = { stop:end }  
+      }
+      await this.getDirection(origin, dest)
+  }
+
+
+  async getDirection(origin, dest) {
+    if(origin.stop.stopDetail.place_id != dest.stop.stopDetail.place_id){
+      const mode = dest.stop.transit_mode?dest.stop.transit_mode:'driving'
+      switch(mode){
+        case 'flight':
+            this.updateDirections(directions => directions.push(generateFlightRoute(origin, dest)))
+            return
+        default:
+          return googleMapService("directions", `origin=${coordinate2string(origin.stop.stopDetail.geometry.location)}&destination=${coordinate2string(dest.stop.stopDetail.geometry.location)}&mode=${mode}`)
+            .then(resp => {
+              if (resp.routes.length > 0) {
+                this.updateDirections(directions => directions.push(
+                  {
+                    route:resp.routes[0], 
+                    destination: ((typeof dest.index !== 'undefined')?dest.index:dest.stop.id), 
+                    origin: ((typeof origin.index !== 'undefined')?origin.index:origin.stop.id), 
+                    routeable: true,
+                    privacy: (typeof origin.stop.privacy !== 'undefined' && origin.stop.privacy) || (typeof dest.stop.privacy !== 'undefined' && dest.stop.privacy)
+                  }
+                ))
+              } else {
+                this.updateDirections(directions => directions.push(generateFlightRoute(origin, dest)))
+              }
+            })
+            .catch(e => {
+              console.warn(e)
+            })
+       }
+    }
+  }
+
+
+  endSameToStart() {
+    return this.getEndLocation().type==='SAME_TO_START'
+    || this.getEndLocation().type === 'CURRENT_LOCATION' && this.getStartLocation().type === 'CURRENT_LOCATION'
+    || this.getEndLocation().stopDetail.place_id === this.getStartLocation().stopDetail.place_id
+  }
+
   _getEndRoute() {
     return this._getRoute(d=>{
-      const key = (
-        this.getEndLocation().type==='SAME_TO_START'
-        || this.getEndLocation().type === 'CURRENT_LOCATION' && this.getStartLocation().type === 'CURRENT_LOCATION'
-        )?'Start':'End'
+      const key = this.endSameToStart()?'Start':'End'
       return d.destination === key
     }, this.getEndLocation())
   }
@@ -256,7 +376,9 @@ export default class EditPlan extends React.Component {
       if(typeof dir.route.legs === 'undefined' || dir.route.legs.length === 0){
         return(
           <View style={{flex:1, flexDirection: 'row', justifyContent: 'center'}}>
-            <View><Text>Unable to get route</Text></View>
+            <TouchableOpacity onPress={e => alert(dir.origin + '->' + dir.destination)}>
+              <Text>Unable to get route</Text>
+            </TouchableOpacity>
           </View>
         )
       } else {
@@ -265,7 +387,9 @@ export default class EditPlan extends React.Component {
         const duration = leg.duration.text
         return(
           <View style={{flex:1, flexDirection: 'row', justifyContent: 'center', margin:5}}>
-            <View><Text>{(typeof stop.transit_mode === 'undefined')?'Driving':stop.transit_mode}</Text></View>
+            <TouchableOpacity onPress={e => alert(dir.origin + '->' + dir.destination)}>
+              <Text>{(typeof stop.transit_mode === 'undefined')?'Driving':stop.transit_mode}</Text>
+            </TouchableOpacity>
             <View><Text> - {distance}</Text></View>
             <View><Text> - {duration}</Text></View>
           </View>

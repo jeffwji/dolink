@@ -40,8 +40,8 @@ export default class RouteEditView extends React.Component {
               value={this.props.mapView._getTransitMode(destination)}
               onValueChange={(v) => {
                 this.props.mapView._setTransitMode(destination, v)
-                this.setState({reload:!this.state.reload})
-                this.props.mapView.reflashDirections()
+                this.props.mapView.reflashDirections().then(() => this.props.mapView.update())
+                this.forceUpdate()
               }}
               items={modes}
             />

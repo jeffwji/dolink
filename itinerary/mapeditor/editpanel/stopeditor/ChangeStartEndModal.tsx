@@ -31,7 +31,7 @@ export default class ChangeStartEndModal extends ChangeStopModalAbstract {
           })
         }
         
-        this.props.mapView.reflashDirections()
+        this.props.mapView.reflashDirections().then(() => this.props.mapView.update())
         this.props.mapView._updateInitialLocation({
           latitude: this.stop.stopDetail.geometry.location.lat,
           longitude: this.stop.stopDetail.geometry.location.lng,
