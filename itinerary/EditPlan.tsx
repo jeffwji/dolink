@@ -362,7 +362,7 @@ export default class EditPlan extends React.Component {
   }
 
   getTransitMode(stop){
-    return (typeof stop.transit_mode === 'undefined')?'Driving':stop.transit_mode
+    return (typeof stop.transit_mode === 'undefined')?'driving':stop.transit_mode
   }
 
   async getDirection(origin, dest) {
