@@ -63,7 +63,6 @@ export default class MarkerEditView extends React.Component {
           daytime = {this.props.mapView.stops()[order].duration}
           updateNotify={(daytime) => {
             this.props.mapView.updateStops(stops => stops[order].duration = daytime)
-            //this.props.mapView.stops[order].duration = daytime
             this.props.mapView.update() 
           }}
         />

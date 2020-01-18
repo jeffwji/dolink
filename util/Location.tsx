@@ -39,8 +39,8 @@ module.exports = {
               duration: {text:null, value: null}
             }
           ],
-          destination: (typeof dest.index==='undefined')?dest.stop.id:dest.index,
-          origin: (typeof origin.index==='undefined')?origin.stop.id:origin.index,
+          destination: dest.stop.stopDetail.place_id,
+          origin: origin.stop.stopDetail.place_id,
           routeable: false,
           privacy: (typeof origin.stop.privacy !== 'undefined' && origin.stop.privacy) || (typeof dest.stop.privacy !== 'undefined' && dest.stop.privacy)
         }

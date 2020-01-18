@@ -213,7 +213,6 @@ export default class GoogleMap extends React.Component<State> {
               poi.place_id = poi.placeId
               this._setStopCandidate(poi)
                 .then(() => {
-                  //this._setCurrentEditPlaceId(poi.placeId)
                   this.setShowEditorMode("Marker")
                 })
                 .then(() => {
@@ -470,8 +469,6 @@ export default class GoogleMap extends React.Component<State> {
     } )
 
     this.stopCandidate=null
-
-    //this.update()
   }
 
   update() {

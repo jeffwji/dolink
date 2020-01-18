@@ -28,7 +28,7 @@ import DraggableFlatList from 'react-native-draggable-flatlist'
 
 import {askPermission, googleMapService, getLocation} from '../util/Global'
 import {coordinate2string, generateFlightRoute} from '../util/Location'
-
+// import { sha256 } from 'react-native-sha256'
 
 class EditFloatButton extends React.Component {
   constructor(props) {
@@ -72,31 +72,36 @@ export default class EditPlan extends React.Component {
       title: ''
   }
 
+  hash = null
+
   //////////////////////////////////////////
-  startLocation = {
-    mark: 'Start',
-    describe: 'Current location',
-    stopDetail: null,
-    type: 'CURRENT_LOCATION',
-    privacy: true
-  }
-  getStartLocation = () => {return this.startLocation}
-  setStartLocation = (location) => {
-    this.startLocation = location
-    //this.forceUpdate()
+  plan = {
+    itinary: null,
+    startLocation: {
+      mark: 'Start',
+      describe: 'Current location',
+      stopDetail: null,
+      type: 'CURRENT_LOCATION',
+      privacy: true
+    },
+    endLocation: {
+      mark: 'End',
+      describe: 'Same to start location',
+      stopDetail: null,
+      type: 'CURRENT_LOCATION', // 'SAME_TO_START',
+      privacy: true
+    }
   }
 
-  endLocation = {
-    mark: 'End',
-    describe: 'Same to start location',
-    stopDetail: null,
-    type: 'CURRENT_LOCATION', // 'SAME_TO_START',
-    privacy: true
+  //////////////////////////////////////////
+  getStartLocation = () => {return this.plan.startLocation}
+  setStartLocation = (location) => {
+    this.plan.startLocation = location
   }
-  getEndLocation = () => {return this.endLocation}
+
+  getEndLocation = () => {return this.plan.endLocation}
   setEndLocation = (location) => {
-    this.endLocation = location
-    //this.forceUpdate()
+    this.plan.endLocation = location
   }
 
   //////////////////////////////////////////
@@ -128,7 +133,32 @@ export default class EditPlan extends React.Component {
     update(this.directions)
   }
 
+  async save(){
+    this._saveItinary().then(id => this._savePlan(id))
+  }
+
+  _savePlan(id) {
+  }
+
+  async _saveItinary() {
+    if(this.stops.length > 0){
+      const json = JSON.stringify(this.stops)
+      const _hash = json.toString().hashCode()
+      if(this.hash != _hash){
+        console.log(_hash)
+        const id = _hash
+        this.hash = _hash
+        return id
+      } else {
+        return null
+      }
+    } else {
+      return null
+    }
+  }
+
   render() {
+    this.save()
     const {navigate, goBack} = this.props.navigation
 
     return (
@@ -166,10 +196,7 @@ export default class EditPlan extends React.Component {
           </Left>
           <Right>
             <Button transparent onPress={() =>{
-              Alert.alert(
-                'Info',
-                'Saved!',
-                null)
+              this.save()
             }}>
               <Text>Save</Text>
             </Button>
@@ -205,7 +232,7 @@ export default class EditPlan extends React.Component {
                   }</Text>
                   {
                     (!this.isEndSameToStart()) && <TouchableOpacity onPress={() => {
-                        this.endLocation.type = 'SAME_TO_START'
+                        this.plan.endLocation.type = 'SAME_TO_START'
                         this.forceUpdate()
                         this.reflashDirections().then(() => this.forceUpdate())
                     }}>
@@ -306,7 +333,6 @@ export default class EditPlan extends React.Component {
   }
 
   async reflashDirections() {
-    //this.setDirections([])
     const directions = []
 
     const temp_stops = this.stops.map((stop, index) => {
@@ -317,7 +343,7 @@ export default class EditPlan extends React.Component {
     })
 
     let dest = null
-    let origin = { stop: this.startLocation }  //temp_stops.shift()
+    let origin = { stop: this.plan.startLocation }  //temp_stops.shift()
 
     if(temp_stops.length > 0) {
       do{
@@ -325,27 +351,24 @@ export default class EditPlan extends React.Component {
         await this.getDirection(origin, dest)
           .then(direction => {
             if(direction != null)
-            //this.updateDirections(directions => directions.push(direction))
             directions.push(direction)
           })
         origin = dest
       }while(temp_stops.length > 0)
     }
 
-    const end = this.endLocation
-    if(end.type === 'SAME_TO_START' || ((end.type === this.startLocation.type) && (end.type === 'CURRENT_LOCATION'))) {
-      dest = { stop:this.startLocation }  
+    const end = this.plan.endLocation
+    if(end.type === 'SAME_TO_START' || ((end.type === this.plan.startLocation.type) && (end.type === 'CURRENT_LOCATION'))) {
+      dest = { stop:this.plan.startLocation }  
     } else {
       dest = { stop:end }  
     }
     await this.getDirection(origin, dest)
       .then(direction => {
         if(direction != null)
-        //this.updateDirections(directions => directions.push(direction))
         directions.push(direction)
       })
-
-    //this.updateDirections(directions => directions)
+  
     this.directions = directions
   }
 
@@ -447,6 +470,17 @@ export default class EditPlan extends React.Component {
   }
 }
 
+String.prototype.hashCode = function() {
+  var hash = 0, i, chr;
+  if (this.length === 0) return hash;
+  for (i = 0; i < this.length; i++) {
+    chr   = this.charCodeAt(i);
+    hash  = ((hash << 5) - hash) + chr;
+    hash |= 0; // Convert to 32bit integer
+  }
+  return hash;
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -456,7 +490,6 @@ const styles = StyleSheet.create({
 
   content: {
     flex: 1,
-    //marginLeft: 10,
     margin: 10,
   },
 

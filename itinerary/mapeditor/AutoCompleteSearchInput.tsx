@@ -38,7 +38,6 @@ export default class AutoComoleteSearchInput extends React.Component {
 			}
 			onBlur = {e => 
 				this.setState({
-					//items: this._getFixedOptions(),
 					hideResults: true
 				})
 			}
