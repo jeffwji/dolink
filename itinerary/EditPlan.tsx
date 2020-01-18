@@ -362,7 +362,7 @@ export default class EditPlan extends React.Component {
   }
 
   getTransitMode(stop){
-    return stop.transit_mode?stop.transit_mode:'driving'
+    return (typeof stop.transit_mode === 'undefined')?'Driving':stop.transit_mode
   }
 
   async getDirection(origin, dest) {
@@ -436,7 +436,7 @@ export default class EditPlan extends React.Component {
         return(
           <View style={{flex:1, flexDirection: 'row', justifyContent: 'center', margin:5}}>
             <TouchableOpacity onPress={e => alert(dir.origin + '->' + dir.destination)}>
-              <Text>{(typeof stop.transit_mode === 'undefined')?'Driving':stop.transit_mode}</Text>
+              <Text>{this.getTransitMode(stop)}</Text>
             </TouchableOpacity>
             <View><Text> - {distance}</Text></View>
             <View><Text> - {duration}</Text></View>
