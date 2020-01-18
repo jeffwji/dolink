@@ -308,7 +308,7 @@ export default class GoogleMap extends React.Component<State> {
     if(startLocation.stopDetail != null){
       return(
         <StartEndMarker 
-          type='Start' 
+          type='Start'
           location={startLocation}
           showDetail = {(marker:StartEndMarker) => {
             this.setShowEditorMode('StartEndMarker', {marker:marker})

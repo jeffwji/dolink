@@ -74,7 +74,7 @@ export default class EditPlan extends React.Component {
 
   //////////////////////////////////////////
   startLocation = {
-    id: 'Start',
+    mark: 'Start',
     describe: 'Current location',
     stopDetail: null,
     type: 'CURRENT_LOCATION',
@@ -87,7 +87,7 @@ export default class EditPlan extends React.Component {
   }
 
   endLocation = {
-    id: 'End',
+    mark: 'End',
     describe: 'Same to start location',
     stopDetail: null,
     type: 'CURRENT_LOCATION', // 'SAME_TO_START',
@@ -281,7 +281,9 @@ export default class EditPlan extends React.Component {
         })}
       >
         <View style={{flex:1, flexDirection: 'column'}}>
-          {this._getRoute(d => d.destination === item.order, item.stop)}
+          {this._getRoute(d => {
+            return d.destination === item.stop.stopDetail.place_id
+            }, item.stop)}
           <View style={{flex:1, flexDirection: 'row'}}>
               <View style={{flex:8}} onPress={e => alert("Stop information")}>
                 <Text>Stop {item.order+1}: </Text>
@@ -304,64 +306,102 @@ export default class EditPlan extends React.Component {
   }
 
   async reflashDirections() {
-    this.setDirections([])
+    //this.setDirections([])
+    const directions = []
 
-      const temp_stops = this.stops.map((stop, index) => {
-        return {
-          stop:stop,
-          index:index
-        }
+    const temp_stops = this.stops.map((stop, index) => {
+      return {
+        stop:stop,
+        index:index
+      }
+    })
+
+    let dest = null
+    let origin = { stop: this.startLocation }  //temp_stops.shift()
+
+    if(temp_stops.length > 0) {
+      do{
+        dest = temp_stops.shift()
+        await this.getDirection(origin, dest)
+          .then(direction => {
+            if(direction != null)
+            //this.updateDirections(directions => directions.push(direction))
+            directions.push(direction)
+          })
+        origin = dest
+      }while(temp_stops.length > 0)
+    }
+
+    const end = this.endLocation
+    if(end.type === 'SAME_TO_START' || ((end.type === this.startLocation.type) && (end.type === 'CURRENT_LOCATION'))) {
+      dest = { stop:this.startLocation }  
+    } else {
+      dest = { stop:end }  
+    }
+    await this.getDirection(origin, dest)
+      .then(direction => {
+        if(direction != null)
+        //this.updateDirections(directions => directions.push(direction))
+        directions.push(direction)
       })
 
-      let dest = null
-      let origin = { stop:this.startLocation }  //temp_stops.shift()
-
-      if(temp_stops.length > 0) {
-        do{
-          dest = temp_stops.shift()
-          await this.getDirection(origin, dest)
-          origin = dest
-        }while(temp_stops.length > 0)
-      }
-
-      const end = this.endLocation
-      if(end.type === 'SAME_TO_START' || ((end.type === this.startLocation.type) && (end.type === 'CURRENT_LOCATION'))) {
-        dest = { stop:this.startLocation }  
-      } else {
-        dest = { stop:end }  
-      }
-      await this.getDirection(origin, dest)
+    //this.updateDirections(directions => directions)
+    this.directions = directions
   }
 
+  getExistingDirection(origin, dest) {
+    return this.directions.find(d => {
+      if (( (d.origin===origin.stop.stopDetail.place_id) && (d.destination===dest.stop.stopDetail.place_id) )
+          && (this.getTransitMode(d) === this.getTransitMode(dest)) ){
+          return true
+        }
+      else {
+        return false
+      }
+    })
+  }
+
+  getTransitMode(stop){
+    return stop.transit_mode?stop.transit_mode:'driving'
+  }
 
   async getDirection(origin, dest) {
     if(origin.stop.stopDetail.place_id != dest.stop.stopDetail.place_id){
-      const mode = dest.stop.transit_mode?dest.stop.transit_mode:'driving'
+      
+      const f = this.getExistingDirection(origin, dest)
+      if(typeof f !== 'undefined' && f !== null) {
+        return Promise.resolve(f)
+      }
+
+      const mode = this.getTransitMode(dest)
       switch(mode){
         case 'flight':
-            this.updateDirections(directions => directions.push(generateFlightRoute(origin, dest)))
-            return
+          const direction = generateFlightRoute(origin, dest)
+          return Promise.resolve(direction)
         default:
           return googleMapService("directions", `origin=${coordinate2string(origin.stop.stopDetail.geometry.location)}&destination=${coordinate2string(dest.stop.stopDetail.geometry.location)}&mode=${mode}`)
             .then(resp => {
               if (resp.routes.length > 0) {
-                this.updateDirections(directions => directions.push(
-                  {
-                    route:resp.routes[0], 
-                    destination: ((typeof dest.index !== 'undefined')?dest.index:dest.stop.id), 
-                    origin: ((typeof origin.index !== 'undefined')?origin.index:origin.stop.id), 
-                    routeable: true,
-                    privacy: (typeof origin.stop.privacy !== 'undefined' && origin.stop.privacy) || (typeof dest.stop.privacy !== 'undefined' && dest.stop.privacy)
-                  }
-                ))
+                const direction = {
+                  route:resp.routes[0], 
+                  destination: ((typeof dest.stop.stopDetail.place_id !== 'undefined')?dest.stop.stopDetail.place_id:dest.stop.id),  //destination: ((typeof dest.index !== 'undefined')?dest.index:dest.stop.id), 
+                  origin: ((typeof origin.stop.stopDetail.place_id !== 'undefined')?origin.stop.stopDetail.place_id:origin.stop.id), //origin: ((typeof origin.index !== 'undefined')?origin.index:origin.stop.id), 
+                  routeable: true,
+                  privacy: (typeof origin.stop.privacy !== 'undefined' && origin.stop.privacy) || (typeof dest.stop.privacy !== 'undefined' && dest.stop.privacy)
+                }
+                return direction
               } else {
-                this.updateDirections(directions => directions.push(generateFlightRoute(origin, dest)))
+                const direction = generateFlightRoute(origin, dest)
+                return direction
               }
             })
             .catch(e => {
               console.warn(e)
+              return null
             })
        }
+    } else {
+      return Promise.resolve(null)
     }
   }
 
@@ -373,7 +413,7 @@ export default class EditPlan extends React.Component {
 
   _getEndRoute() {
     return this._getRoute(d=>{
-      const key = this.isEndSameToStart()?'Start':'End'
+      const key = this.isEndSameToStart()?this.getStartLocation().stopDetail.place_id:this.getEndLocation().stopDetail.place_id
       return d.destination === key
     }, this.getEndLocation())
   }
