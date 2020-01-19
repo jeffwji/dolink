@@ -72,6 +72,7 @@ export default class GoogleMap extends React.Component<State> {
   selectedRoute = null
   editView = null
 
+  //currentLocation = null
   initialLocationCoordinates = null
   routes = []
   stopMarkers = []
@@ -85,6 +86,9 @@ export default class GoogleMap extends React.Component<State> {
       this._getCurrentPosition()
     }
   }
+
+  currentLocation = this.props.navigation.state.params.currentLocation
+  setCurrentLocation = this.props.navigation.state.params.setCurrentLocation
 
   startLocation = this.props.navigation.state.params.startLocation
   setStartLocation = this.props.navigation.state.params.setStartLocation
@@ -148,7 +152,8 @@ export default class GoogleMap extends React.Component<State> {
     if(this.startLocation().type === 'CURRENT_LOCATION' || this.endLocation().type === 'CURRENT_LOCATION')
       googleMapService("geocode", `latlng=${coordinate2string(coordinate)}`)
         .then(detail => {
-          if(this.startLocation().type === 'CURRENT_LOCATION') {
+          this.setCurrentLocation({stopDetail: detail.results[0]})
+          /*if(this.startLocation().type === 'CURRENT_LOCATION') {
             this.setStartLocation({
               ...this.startLocation(),
               stopDetail: detail.results[0],
@@ -163,7 +168,8 @@ export default class GoogleMap extends React.Component<State> {
               describe: detail.results[0].formatted_address
             })
             this.update()
-          }
+          }*/
+          this.update()
         })
   }
 
@@ -303,8 +309,8 @@ export default class GoogleMap extends React.Component<State> {
   }
 
   _renderStartMarker(){
-    const startLocation = this.startLocation()
-    if(startLocation.stopDetail != null){
+    const startLocation = /*this.startLocation()*/  (this.startLocation().type==='CURRENT_LOCATION'?this.currentLocation():this.startLocation())
+    if(startLocation!==null && startLocation.stopDetail!==null ){
       return(
         <StartEndMarker 
           type='Start'
@@ -317,9 +323,7 @@ export default class GoogleMap extends React.Component<State> {
   }
   
   _renderEndMarker(){
-    const startLocation = this.startLocation()
-    const endLocation = this.endLocation()
-
+    /*const startLocation = this.startLocation()
     if(this.isEndSameToStart()) {
       this.setEndLocation({
         ...this.endLocation(),
@@ -327,9 +331,14 @@ export default class GoogleMap extends React.Component<State> {
         describe: startLocation.describe
       })
       return(null)
+    }*/
+
+    if(this.isEndSameToStart()) {
+      return(null)
     }
 
-    if(endLocation.stopDetail != null){
+    const endLocation = (this.endLocation().type==='CURRENT_LOCATION'?this.currentLocation():this.endLocation())
+    if(endLocation!==null && endLocation.stopDetail != null){
       return(
         <StartEndMarker 
           type='End'
@@ -354,7 +363,7 @@ export default class GoogleMap extends React.Component<State> {
     )
   }
 
-  _setTransitMode(stopIndex, mode) {
+  _setTransitModeByIndex(stopIndex, mode) {
     if(Number.isInteger(stopIndex))
       this.updateStops( stops => stops[stopIndex].transit_mode=mode )
     else if(stopIndex === 'End'){
@@ -365,7 +374,7 @@ export default class GoogleMap extends React.Component<State> {
     }
   }
 
-  _getTransitMode(stopIndex) {
+  _getTransitModeByIndex(stopIndex) {
     if(Number.isInteger(stopIndex))
       return this.stops()[stopIndex].transit_mode?this.stops()[stopIndex].transit_mode:'driving'
     else if(stopIndex === 'End')
@@ -611,7 +620,7 @@ export default class GoogleMap extends React.Component<State> {
   }
 
   setShowEditorMode(mode, parameters=null) {
-    this.editView = <EditView mapView = {this} parameters={parameters} />
+    this.editView = <EditView mapView={this} parameters={parameters} />
     this.setState({showEditor: mode})
   }
 

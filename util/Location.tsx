@@ -41,6 +41,8 @@ module.exports = {
           ],
           destination: dest.stop.stopDetail.place_id,
           origin: origin.stop.stopDetail.place_id,
+          originStopindex: origin.index,
+          destStopIndex: dest.index,
           routeable: false,
           privacy: (typeof origin.stop.privacy !== 'undefined' && origin.stop.privacy) || (typeof dest.stop.privacy !== 'undefined' && dest.stop.privacy)
         }

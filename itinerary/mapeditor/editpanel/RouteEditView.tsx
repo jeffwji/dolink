@@ -26,20 +26,20 @@ export default class RouteEditView extends React.Component {
 
   render(){
     if(this.props.mapView.selectedRoute!==null){
-      const {route, destination, origin, routeable} = this.props.mapView.routes[this.props.mapView.selectedRoute].polyline.props.direction
+      const {route, destStopIndex, originStopIndex, routeable} = this.props.mapView.routes[this.props.mapView.selectedRoute].polyline.props.direction
       if(routeable) {
         const {duration, distance, start_address, end_address} = route.legs[0]
         return(
           <View>
-            <Text>From: (Stop {origin+1}) {start_address}</Text>
-            <Text>To: (Stop {destination+1}) {end_address}</Text>
+            <Text>From: (Stop {originStopIndex+1}) {start_address}</Text>
+            <Text>To: (Stop {destStopIndex+1}) {end_address}</Text>
             <Text>Distance: {distance.text}</Text>
             <Text>Duration: {duration.text}</Text>
 
             <Text>Transit by: </Text><RNPickerSelect
-              value={this.props.mapView._getTransitMode(destination)}
+              value={this.props.mapView._getTransitModeByIndex(destStopIndex)}
               onValueChange={(v) => {
-                this.props.mapView._setTransitMode(destination, v)
+                this.props.mapView._setTransitModeByIndex(destStopIndex, v)
                 this.props.mapView.reflashDirections().then(() => this.props.mapView.update())
                 this.forceUpdate()
               }}

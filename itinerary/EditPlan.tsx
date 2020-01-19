@@ -69,13 +69,19 @@ export default class EditPlan extends React.Component {
 
   state = {
       modified: false,
-      title: ''
   }
 
   hash = null
+  planHash = null
+  currentLocation = null
+  getCurrentLocation = () => {return this.currentLocation}
+  setCurrentLocation = (location) => {
+    this.currentLocation = location
+  }
 
   //////////////////////////////////////////
   plan = {
+    title: '',
     itinary: null,
     startLocation: {
       mark: 'Start',
@@ -134,16 +140,26 @@ export default class EditPlan extends React.Component {
   }
 
   async save(){
-    this._saveItinary().then(id => this._savePlan(id))
+    const itinaryId = this._saveItinary()
+    this._savePlan(itinaryId)
   }
 
   _savePlan(id) {
+    if(null !== id && this.planHash.itinary !== id)
+      this.planHash.itinary = id
+
+    const json = JSON.stringify(this.plan)
+    const _planHash:String = json.toString().hashCode()
+    if(this.planHash != _planHash) {
+      console.log(_planHash)
+      this.planHash = _planHash
+    }
   }
 
-  async _saveItinary() {
+  _saveItinary() {
     if(this.stops.length > 0){
       const json = JSON.stringify(this.stops)
-      const _hash = json.toString().hashCode()
+      const _hash:String = json.toString().hashCode()
       if(this.hash != _hash){
         console.log(_hash)
         const id = _hash
@@ -206,9 +222,7 @@ export default class EditPlan extends React.Component {
         <Content style={styles.content}>
           <Form>
             <Input placeholder='Title' 
-              onChangeText={ (text) => {
-                this.setState({title: text})
-              } }
+              onChangeText={ (text) => this.plan.title = text }
             />
             <ListItem>
               <View style={{flex:1, flexDirection: 'column', marginTop: 3}}>
@@ -260,7 +274,9 @@ export default class EditPlan extends React.Component {
               updateDirections: (update) => this.updateDirections(update),
               isEndSameToStart: () => this.isEndSameToStart(),
               getDirection: (origin, dest) => this.getDirection(origin, dest),
-              reflashDirections: () => this.reflashDirections()
+              reflashDirections: () => this.reflashDirections(),
+              currentLocation: () => this.getCurrentLocation(),
+              setCurrentLocation: (location) => this.setCurrentLocation(location)
             })
           }}
         />
@@ -309,7 +325,7 @@ export default class EditPlan extends React.Component {
       >
         <View style={{flex:1, flexDirection: 'column'}}>
           {this._getRoute(d => {
-            return d.destination === item.stop.stopDetail.place_id
+            return (d.destStopIndex===item.order && d.destination === item.stop.stopDetail.place_id)
             }, item.stop)}
           <View style={{flex:1, flexDirection: 'row'}}>
               <View style={{flex:8}} onPress={e => alert("Stop information")}>
@@ -343,7 +359,7 @@ export default class EditPlan extends React.Component {
     })
 
     let dest = null
-    let origin = { stop: this.plan.startLocation }  //temp_stops.shift()
+    let origin = { stop: this._getStartLocationDetail(), index:'Start' }  //temp_stops.shift()
 
     if(temp_stops.length > 0) {
       do{
@@ -357,11 +373,9 @@ export default class EditPlan extends React.Component {
       }while(temp_stops.length > 0)
     }
 
-    const end = this.plan.endLocation
-    if(end.type === 'SAME_TO_START' || ((end.type === this.plan.startLocation.type) && (end.type === 'CURRENT_LOCATION'))) {
-      dest = { stop:this.plan.startLocation }  
-    } else {
-      dest = { stop:end }  
+    dest = {
+      stop: this._getEndLocationDetail(),
+      index:'End'
     }
     await this.getDirection(origin, dest)
       .then(direction => {
@@ -373,44 +387,59 @@ export default class EditPlan extends React.Component {
   }
 
   getExistingDirection(origin, dest) {
-    return this.directions.find(d => {
-      if (( (d.origin===origin.stop.stopDetail.place_id) && (d.destination===dest.stop.stopDetail.place_id) )
-          && (this.getTransitMode(d) === this.getTransitMode(dest)) ){
-          return true
-        }
-      else {
+    const dir =  this.directions.find(d => {
+      const tansit_mode = this.getTransitMode(dest)
+      if( (tansit_mode===d.transit_mode) && (d.origin===origin.stop.stopDetail.place_id) && (d.destination===dest.stop.stopDetail.place_id) )
+        return true
+      else
         return false
-      }
     })
+    return dir
   }
 
   getTransitMode(stop){
-    return (typeof stop.transit_mode === 'undefined')?'driving':stop.transit_mode
+    return (typeof stop.stop.transit_mode === 'undefined')?'driving':stop.stop.transit_mode
   }
 
   async getDirection(origin, dest) {
     if(origin.stop.stopDetail.place_id != dest.stop.stopDetail.place_id){
-      
-      const f = this.getExistingDirection(origin, dest)
-      if(typeof f !== 'undefined' && f !== null) {
-        return Promise.resolve(f)
+      const dir = this.getExistingDirection(origin, dest)
+
+      if(typeof dir !== 'undefined' && dir !== null) {
+        const _dir = {
+          route:dir.route, 
+          destination: dir.destination,
+          origin: dir.origin, 
+          originStopIndex: origin.index,
+          destStopIndex: dest.index,
+          routeable: dir.routeable,
+          privacy: dir.privacy,
+          transit_mode: dir.transit_mode
+        }
+
+        return Promise.resolve(_dir)
       }
 
       const mode = this.getTransitMode(dest)
+      
       switch(mode){
         case 'flight':
           const direction = generateFlightRoute(origin, dest)
           return Promise.resolve(direction)
         default:
-          return googleMapService("directions", `origin=${coordinate2string(origin.stop.stopDetail.geometry.location)}&destination=${coordinate2string(dest.stop.stopDetail.geometry.location)}&mode=${mode}`)
+          const param = `origin=${coordinate2string(origin.stop.stopDetail.geometry.location)}&destination=${coordinate2string(dest.stop.stopDetail.geometry.location)}&mode=${mode}`
+          return googleMapService("directions", param)
             .then(resp => {
               if (resp.routes.length > 0) {
                 const direction = {
                   route:resp.routes[0], 
                   destination: ((typeof dest.stop.stopDetail.place_id !== 'undefined')?dest.stop.stopDetail.place_id:dest.stop.id),  //destination: ((typeof dest.index !== 'undefined')?dest.index:dest.stop.id), 
                   origin: ((typeof origin.stop.stopDetail.place_id !== 'undefined')?origin.stop.stopDetail.place_id:origin.stop.id), //origin: ((typeof origin.index !== 'undefined')?origin.index:origin.stop.id), 
+                  originStopIndex: origin.index,
+                  destStopIndex: dest.index,
                   routeable: true,
-                  privacy: (typeof origin.stop.privacy !== 'undefined' && origin.stop.privacy) || (typeof dest.stop.privacy !== 'undefined' && dest.stop.privacy)
+                  privacy: (typeof origin.stop.privacy !== 'undefined' && origin.stop.privacy) || (typeof dest.stop.privacy !== 'undefined' && dest.stop.privacy),
+                  transit_mode: mode
                 }
                 return direction
               } else {
@@ -429,14 +458,36 @@ export default class EditPlan extends React.Component {
   }
 
   isEndSameToStart() {
-    return this.getEndLocation().type==='SAME_TO_START'
-    || this.getEndLocation().type === 'CURRENT_LOCATION' && this.getStartLocation().type === 'CURRENT_LOCATION'
-    || this.getEndLocation().stopDetail.place_id === this.getStartLocation().stopDetail.place_id
+    return ((this.getEndLocation().type==='SAME_TO_START')
+    || (this.getEndLocation().type === 'CURRENT_LOCATION' && this.getStartLocation().type === 'CURRENT_LOCATION')
+    || (this._getEndLocationDetail().stopDetail.place_id === this._getStartLocationDetail().stopDetail.place_id))
+  }
+
+  _getStartLocationDetail() {
+    if(this.getStartLocation().type === 'CURRENT_LOCATION')
+      return {
+        ...this.plan.startLocation,
+        stopDetail: this.currentLocation.stopDetail
+      }
+    else
+      return this.getStartLocation()
+  }
+
+  _getEndLocationDetail() {
+    if(this.getEndLocation().type === 'CURRENT_LOCATION')
+      return {
+        ...this.plan.endLocation,
+        stopDetail: this.currentLocation.stopDetail
+      }
+    else if(this.getEndLocation().type === 'SAME_TO_START')
+      return this._getStartLocationDetail()
+    else
+      return this.getEndLocation()
   }
 
   _getEndRoute() {
     return this._getRoute(d=>{
-      const key = this.isEndSameToStart()?this.getStartLocation().stopDetail.place_id:this.getEndLocation().stopDetail.place_id
+      const key = this._getEndLocationDetail().stopDetail.place_id
       return d.destination === key
     }, this.getEndLocation())
   }

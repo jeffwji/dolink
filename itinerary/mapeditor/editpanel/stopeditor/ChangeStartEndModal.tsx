@@ -15,20 +15,34 @@ export default class ChangeStartEndModal extends ChangeStopModalAbstract {
   _onClose(update) {
     if(update) {
       if(this.stop !== null){
-        if(this._getStopDetail().mark === 'Start'){
-          this.props.mapView.setStartLocation({
-            ...this.props.mapView.startLocation(),
-            stopDetail: this.stop.stopDetail,
-            describe: this.stop.stopDetail.formatted_address,
-            type: this.stop.type
-          })
-        } else if(this._getStopDetail().mark === 'End'){
-          this.props.mapView.setEndLocation({
-            ...this.props.mapView.endLocation(),
-            stopDetail: this.stop.stopDetail,
-            describe: this.stop.stopDetail.formatted_address,
-            type: this.stop.type
-          })
+        if(this.props.mark === 'Start'){
+          this.props.mapView.setStartLocation(
+            (this.stop.type!=='CURRENT_LOCATION')
+            ?{
+              ...this.props.mapView.startLocation(),
+              stopDetail: this.stop.stopDetail,
+              describe: this.stop.stopDetail.formatted_address,
+              type: this.stop.type
+            }:{
+              ...this.props.mapView.startLocation(),
+              stopDetail:null,
+              describe:'Current location',
+              type: this.stop.type
+            })
+        } else if(this.props.mark === 'End'){
+          this.props.mapView.setEndLocation(
+            (this.stop.type!=='CURRENT_LOCATION')
+            ?{
+              ...this.props.mapView.endLocation(),
+              stopDetail: this.stop.stopDetail,
+              describe: this.stop.stopDetail.formatted_address,
+              type: this.stop.type
+            }:{
+              ...this.props.mapView.endLocation(),
+              stopDetail: null,
+              describe: 'Current location',
+              type: this.stop.type
+            })
         }
         
         this.props.mapView.reflashDirections().then(() => this.props.mapView.update())
