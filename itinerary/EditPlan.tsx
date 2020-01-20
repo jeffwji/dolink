@@ -326,7 +326,7 @@ export default class EditPlan extends React.Component {
         <View style={{flex:1, flexDirection: 'column'}}>
           {this._getRoute(d => {
             return (d.destStopIndex===item.order && d.destination === item.stop.stopDetail.place_id)
-            }, item.stop)}
+            }, item)}
           <View style={{flex:1, flexDirection: 'row'}}>
               <View style={{flex:8}} onPress={e => alert("Stop information")}>
                 <Text>Stop {item.order+1}: </Text>
@@ -477,7 +477,7 @@ export default class EditPlan extends React.Component {
     if(this.getEndLocation().type === 'CURRENT_LOCATION')
       return {
         ...this.plan.endLocation,
-        stopDetail: this.currentLocation.stopDetail
+        stopDetail: (this.currentLocation===null)?null:this.currentLocation.stopDetail
       }
     else if(this.getEndLocation().type === 'SAME_TO_START')
       return this._getStartLocationDetail()
@@ -489,7 +489,10 @@ export default class EditPlan extends React.Component {
     return this._getRoute(d=>{
       const key = this._getEndLocationDetail().stopDetail.place_id
       return d.destination === key
-    }, this.getEndLocation())
+    }, {
+      stop: this._getEndLocationDetail(),
+      index:'End'
+    })
   }
 
   _getRoute(condition: (object) => Boolean, stop) {
