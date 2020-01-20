@@ -26,22 +26,28 @@ module.exports = {
 
     generateFlightRoute(origin, dest) {
         return {
-          route:[{
-            latitude:origin.stop.stopDetail.geometry.location.lat,
-            longitude:origin.stop.stopDetail.geometry.location.lng
-          },{
-            latitude:dest.stop.stopDetail.geometry.location.lat,
-            longitude:dest.stop.stopDetail.geometry.location.lng
-          }],
-          legs:[
-            {
-              distance: {text:null, value: null},
-              duration: {text:null, value: null}
-            }
-          ],
+          route:{
+            overview_polyline:{
+              points:[{
+                latitude:origin.stop.stopDetail.geometry.location.lat,
+                longitude:origin.stop.stopDetail.geometry.location.lng
+              },{
+                latitude:dest.stop.stopDetail.geometry.location.lat,
+                longitude:dest.stop.stopDetail.geometry.location.lng
+              }]
+            },
+            legs:[
+              {
+                distance: {text:null, value: null},
+                duration: {text:null, value: null},
+                start_address: origin.stop.stopDetail.formatted_address,
+                end_address: dest.stop.stopDetail.formatted_address
+              }
+            ]
+          },
           destination: dest.stop.stopDetail.place_id,
           origin: origin.stop.stopDetail.place_id,
-          originStopindex: origin.index,
+          originStopIndex: origin.index,
           destStopIndex: dest.index,
           routeable: false,
           privacy: (typeof origin.stop.privacy !== 'undefined' && origin.stop.privacy) || (typeof dest.stop.privacy !== 'undefined' && dest.stop.privacy)

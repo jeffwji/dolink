@@ -326,7 +326,7 @@ export default class EditPlan extends React.Component {
         <View style={{flex:1, flexDirection: 'column'}}>
           {this._getRoute(d => {
             return (d.destStopIndex===item.order && d.destination === item.stop.stopDetail.place_id)
-            }, item)}
+            }, item.stop)}
           <View style={{flex:1, flexDirection: 'row'}}>
               <View style={{flex:8}} onPress={e => alert("Stop information")}>
                 <Text>Stop {item.order+1}: </Text>
@@ -388,7 +388,7 @@ export default class EditPlan extends React.Component {
 
   getExistingDirection(origin, dest) {
     const dir =  this.directions.find(d => {
-      const tansit_mode = this.getTransitMode(dest)
+      const tansit_mode = this.getTransitMode(dest.stop)
       if( (tansit_mode===d.transit_mode) && (d.origin===origin.stop.stopDetail.place_id) && (d.destination===dest.stop.stopDetail.place_id) )
         return true
       else
@@ -398,7 +398,7 @@ export default class EditPlan extends React.Component {
   }
 
   getTransitMode(stop){
-    return (typeof stop.stop.transit_mode === 'undefined')?'driving':stop.stop.transit_mode
+    return (typeof stop.transit_mode === 'undefined')?'driving':stop.transit_mode
   }
 
   async getDirection(origin, dest) {
@@ -420,7 +420,7 @@ export default class EditPlan extends React.Component {
         return Promise.resolve(_dir)
       }
 
-      const mode = this.getTransitMode(dest)
+      const mode = this.getTransitMode(dest.stop)
       
       switch(mode){
         case 'flight':
@@ -489,10 +489,7 @@ export default class EditPlan extends React.Component {
     return this._getRoute(d=>{
       const key = this._getEndLocationDetail().stopDetail.place_id
       return d.destination === key
-    }, {
-      stop: this._getEndLocationDetail(),
-      index:'End'
-    })
+    }, this._getEndLocationDetail())
   }
 
   _getRoute(condition: (object) => Boolean, stop) {

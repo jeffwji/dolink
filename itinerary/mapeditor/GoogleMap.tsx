@@ -427,7 +427,7 @@ export default class GoogleMap extends React.Component<State> {
           polyline: <Polyline
             key={index}
             direction={direction}
-            coordinates={direction.route}
+            coordinates={direction.route.overview_polyline.points}
             strokeWidth={4}
             strokeColor={ this._getRouteColor(index, direction.routeable, direction.privacy)}
             tappable={true}

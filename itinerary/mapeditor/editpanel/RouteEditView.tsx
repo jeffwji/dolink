@@ -27,12 +27,12 @@ export default class RouteEditView extends React.Component {
   render(){
     if(this.props.mapView.selectedRoute!==null){
       const {route, destStopIndex, originStopIndex, routeable} = this.props.mapView.routes[this.props.mapView.selectedRoute].polyline.props.direction
-      if(routeable) {
-        const {duration, distance, start_address, end_address} = route.legs[0]
+      const {duration, distance, start_address, end_address} = route.legs[0]
+      //if(this.props.mapView._getTransitModeByIndex(destStopIndex)!=='flight') {
         return(
           <View>
-            <Text>From: (Stop {originStopIndex+1}) {start_address}</Text>
-            <Text>To: (Stop {destStopIndex+1}) {end_address}</Text>
+            <Text>From: (Stop {Number.isInteger(originStopIndex)?originStopIndex+1:originStopIndex}) {start_address}</Text>
+            <Text>To: (Stop {Number.isInteger(destStopIndex)?destStopIndex+1:destStopIndex}) {end_address}</Text>
             <Text>Distance: {distance.text}</Text>
             <Text>Duration: {duration.text}</Text>
 
@@ -47,19 +47,14 @@ export default class RouteEditView extends React.Component {
             />
           </View>
         )
-      } else {
-        const way_points = this.props.mapView.routes[this.props.mapView.selectedRoute].polyline.props.direction.way_points
-        console.log(way_points)
+      /*} else {
         return(
           <View>
           </View>
         )
-      }
+      }*/
     } else {
-      return(
-        <View>
-        </View>
-      )
+      this.props.mapView.setShowEditorMode(null)
     }
   }
 }
