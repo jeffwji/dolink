@@ -15,7 +15,7 @@ export default class ChangeStartEndModal extends ChangeStopModalAbstract {
   _onClose(update) {
     if(update) {
       if(this.stop !== null){
-        if(this.props.mark === 'Start'){
+        if(this.props.order === 'Start'){
           this.props.mapView.setStartLocation(
             (this.stop.type!=='CURRENT_LOCATION')
             ?{
@@ -29,7 +29,7 @@ export default class ChangeStartEndModal extends ChangeStopModalAbstract {
               describe:'Current location',
               type: this.stop.type
             })
-        } else if(this.props.mark === 'End'){
+        } else if(this.props.order === 'End'){
           this.props.mapView.setEndLocation(
             (this.stop.type!=='CURRENT_LOCATION')
             ?{

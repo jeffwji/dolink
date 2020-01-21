@@ -20,7 +20,8 @@ import {
   Alert,
   View,
   Text,
-  TouchableOpacity
+  TouchableOpacity,
+  Dimensions
 } from 'react-native'
 
 import PropTypes from 'prop-types'
@@ -28,7 +29,9 @@ import DraggableFlatList from 'react-native-draggable-flatlist'
 
 import {askPermission, googleMapService, getLocation} from '../util/Global'
 import {coordinate2string, generateFlightRoute} from '../util/Location'
-// import { sha256 } from 'react-native-sha256'
+import DaytimePicker from '../util/DaytimePicker'
+
+let planDetailViewHight = Dimensions.get('window').height*0.1
 
 class EditFloatButton extends React.Component {
   constructor(props) {
@@ -84,14 +87,14 @@ export default class EditPlan extends React.Component {
     title: '',
     itinary: null,
     startLocation: {
-      mark: 'Start',
+      order: 'Start',
       describe: 'Current location',
       stopDetail: null,
       type: 'CURRENT_LOCATION',
       privacy: true
     },
     endLocation: {
-      mark: 'End',
+      order: 'End',
       describe: 'Same to start location',
       stopDetail: null,
       type: 'CURRENT_LOCATION', // 'SAME_TO_START',
@@ -219,45 +222,12 @@ export default class EditPlan extends React.Component {
           </Right>
         </Header>
 
-        <Content style={styles.content}>
-          <Form>
-            <Input placeholder='Title' 
-              onChangeText={ (text) => this.plan.title = text }
-            />
-            <ListItem>
-              <View style={{flex:1, flexDirection: 'column', marginTop: 3}}>
-                <View style={{flex:1, flexDirection: 'row'}}>
-                  <Text>Start: </Text>
-                  <Text>{(this.getStartLocation().type==='CURRENT_LOCATION')?'Current location':this.getStartLocation().describe}</Text>
-                </View>
-              </View>
-            </ListItem>
-
-            {this.showItinerary()}
-
-            <ListItem>
-              <View style={{flex:1, flexDirection: 'column', marginTop: 3}}>
-                {this._getEndRoute()}
-                <View style={{flex:1, flexDirection: 'row'}}>
-                  <Text>End: </Text>
-                  <Text>{this.isEndSameToStart()
-                    ?'Same to start'
-                    :(this.getEndLocation().type==='CURRENT_LOCATION'?'Current location':this.getEndLocation().describe)
-                  }</Text>
-                  {
-                    (!this.isEndSameToStart()) && <TouchableOpacity onPress={() => {
-                        this.plan.endLocation.type = 'SAME_TO_START'
-                        this.forceUpdate()
-                        this.reflashDirections().then(() => this.forceUpdate())
-                    }}>
-                      <Text style={{color: 'blue', textDecorationLine:'underline', left: 5}}>(Set to start)</Text>
-                    </TouchableOpacity>
-                  }
-                </View>
-              </View>
-            </ListItem>
-          </Form>
-        </Content>
+        <View style={styles.planDetail}>
+          <Input placeholder='Title' 
+            onChangeText={ (text) => this.plan.title = text }
+          />
+        </View>
+        {this.showItinerary()}
 
         <EditFloatButton
           onPress={() => {
@@ -291,61 +261,115 @@ export default class EditPlan extends React.Component {
       backgroundColor: `${index%2===0?'#F0DDF7':'#C4D2F7'}`
     }))
 
+    items.unshift({order: 'Start'})
+    items.push({ order: 'End' })
+
     return(
       <DraggableFlatList
+        style={styles.planItinerary}
           data={items}
           renderItem={this._renderItineraryItem}
           keyExtractor={(item, index) => `stop-order-${index}`}
           onDragEnd={({ data, from, to }) => {
-            this.setStops(data.map(item => item.stop))
-            this.setState({
-              selected: to
-            })
-            this.reflashDirections().then(() => this.forceUpdate())
+            if(to === 0 || to === data.length-1) {
+              return
+            }
+            else {
+              this.setStops(data.slice(1, data.length-1).map(item => item.stop))
+              this.setState({
+                selected: to-1
+              })
+              this.reflashDirections().then(() => this.forceUpdate())
+            }
           }}
         />
     )
   }
 
   _renderItineraryItem = ({item, index, drag, isActive}) => {
-    const title = item.stop.stopDetail.name || item.stop.stopDetail.formatted_address || item.stop.stopDetail.description
-    return (
-      <ListItem
-        key={''+item.order}
-        style={{
-          flex: 1,
-          backgroundColor: isActive ? 'rgba(153,153,255, 1)' : item.backgroundColor,
-          alignItems: 'flex-start', 
-          justifyContent: 'center' 
-        }}
-        onLongPress={drag}
-        onPress={e => this.setState({
-          selected: item.order
-        })}
-      >
-        <View style={{flex:1, flexDirection: 'column'}}>
-          {this._getRoute(d => {
-            return (d.destStopIndex===item.order && d.destination === item.stop.stopDetail.place_id)
-            }, item.stop)}
-          <View style={{flex:1, flexDirection: 'row'}}>
-              <View style={{flex:8}} onPress={e => alert("Stop information")}>
-                <Text>Stop {item.order+1}: </Text>
-                <Text style={styles.text}>{title}</Text>
-                {(item.order===this.state.selected) && 
-                  <View>
-                    <TouchableOpacity style={{flex:1}} onPress={e => alert("Show me!")}>
-                      <Text>Click me!</Text>
-                    </TouchableOpacity>
-                  </View>
-                }
-              </View>
-              <TouchableOpacity style={{flex:1}} onPress={e => alert("navigate to galary")}>
-                <Icon name='camera'/>
-              </TouchableOpacity>
+    if(item.order==='Start'){
+      return(
+        <ListItem>
+          <View style={{flex:1, flexDirection: 'column', marginTop: 3}}>
+            <View style={{flex:1, flexDirection: 'row'}}>
+              <Text>Start: </Text>
+              <Text>{(this.getStartLocation().type==='CURRENT_LOCATION')?'Current location':this.getStartLocation().describe}</Text>
+            </View>
           </View>
-        </View>
-      </ListItem>
-    )
+        </ListItem>
+      )
+    }
+    else if(item.order==='End'){
+      return(
+        <ListItem>
+          <View style={{flex:1, flexDirection: 'column', marginTop: 3}}>
+            {this._getEndRoute()}
+            <View style={{flex:1, flexDirection: 'row'}}>
+              <Text>End: </Text>
+              <Text>{this.isEndSameToStart()
+                ?'Same to start'
+                :(this.getEndLocation().type==='CURRENT_LOCATION'?'Current location':this.getEndLocation().describe)
+              }</Text>
+              {
+                (!this.isEndSameToStart()) && <TouchableOpacity onPress={() => {
+                    this.plan.endLocation.type = 'SAME_TO_START'
+                    this.forceUpdate()
+                    this.reflashDirections().then(() => this.forceUpdate())
+                }}>
+                  <Text style={{color: 'blue', textDecorationLine:'underline', left: 5}}>(Set to start)</Text>
+                </TouchableOpacity>
+              }
+            </View>
+          </View>
+        </ListItem>
+      )
+    } else {
+      const title = item.stop.stopDetail.name || item.stop.stopDetail.formatted_address || item.stop.stopDetail.description
+      return (
+        <ListItem
+          key={''+item.order}
+          style={{
+            flex: 1,
+            backgroundColor: isActive ? 'rgba(153,153,255, 1)' : item.backgroundColor,
+            alignItems: 'flex-start', 
+            justifyContent: 'center' 
+          }}
+          onLongPress={drag}
+          onPress={e => this.setState({
+            selected: item.order
+          })}
+        >
+          <View style={{flex:1, flexDirection: 'column'}}>
+            {this._getRoute(d => {
+              return (d.destStopIndex===item.order && d.destination === item.stop.stopDetail.place_id)
+              }, item.stop)}
+            <View style={{flex:1, flexDirection: 'row'}}>
+                <View style={{flex:8}} onPress={e => alert("Stop information")}>
+                  <Text>Stop {item.order+1}: </Text>
+                  <Text style={styles.text}>{title}</Text>
+                  <DaytimePicker
+                    daytime = {this.stops[item.order].duration}
+                    updateNotify={(daytime) => {
+                      this.updateStops(stops => stops[item.order].duration = daytime)
+                      this.forceUpdate()
+                    }}
+                  />
+                  {(item.order===this.state.selected) && 
+                    <View>
+                      <TouchableOpacity style={{flex:1}} onPress={e => alert("Show me!")}>
+                        <Text>Click me!</Text>
+                      </TouchableOpacity>
+                    </View>
+                  }
+                </View>
+                <TouchableOpacity style={{flex:1}} onPress={e => alert("navigate to galary")}>
+                  <Icon name='camera'/>
+                </TouchableOpacity>
+            </View>
+          </View>
+        </ListItem>
+      )
+    }
   }
 
   async reflashDirections() {
@@ -539,10 +563,16 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0
   },
 
-  content: {
-    flex: 1,
+  planDetail: {
     margin: 10,
+    height: planDetailViewHight
   },
+
+  planItinerary: {
+    margin: 10,
+    //height: Dimensions.get('window').height-defaultHight
+  },
+
 
   text: {
     flex: 1,

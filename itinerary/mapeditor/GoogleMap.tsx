@@ -64,9 +64,11 @@ export default class GoogleMap extends React.Component<State> {
   find_food_entertainment = false
 
   defaultRouteColor = 'rgba(255, 20, 147, 0.4)'  // 'hotpink'
-  selectedRouteColor = 'blue'
-  invalidRouteColor = 'rgba(105,105,105,0.4)' //'gray'
+  selectedRouteColor = 'rgba(255, 20, 147, 1)'
   privacyRouteColor = 'rgba(153,51,255, 0.4)'  //'purple'
+  selectedPrivacyRouteColor = 'rgba(153,51,255, 1)'
+  invalidRouteColor = 'rgba(105,105,105,0.4)' //'gray'
+  selectedInvalidRouteColor = 'rgba(105, 105, 105, 1)' //'gray'
 
   editingPlaceId = null
   selectedRoute = null
@@ -309,7 +311,7 @@ export default class GoogleMap extends React.Component<State> {
   }
 
   _renderStartMarker(){
-    const startLocation = /*this.startLocation()*/  (this.startLocation().type==='CURRENT_LOCATION'?this.currentLocation():this.startLocation())
+    const startLocation = (this.startLocation().type==='CURRENT_LOCATION'?this.currentLocation():this.startLocation())
     if(startLocation!==null && startLocation.stopDetail!==null ){
       return(
         <StartEndMarker 
@@ -323,16 +325,6 @@ export default class GoogleMap extends React.Component<State> {
   }
   
   _renderEndMarker(){
-    /*const startLocation = this.startLocation()
-    if(this.isEndSameToStart()) {
-      this.setEndLocation({
-        ...this.endLocation(),
-        stopDetail: startLocation.stopDetail,
-        describe: startLocation.describe
-      })
-      return(null)
-    }*/
-
     if(this.isEndSameToStart()) {
       return(null)
     }
@@ -392,10 +384,16 @@ export default class GoogleMap extends React.Component<State> {
   }
 
   _getRouteColor(index, isValid=true, isPrivacy=false) {
-    if(isPrivacy) {
-      return this.privacyRouteColor
-    } else if(!isValid) {
-      return this.invalidRouteColor
+    if(!isValid) {
+      if (index === this.selectedRoute)
+        return this.selectedInvalidRouteColor
+      else
+        return this.invalidRouteColor
+    } else if(isPrivacy) {
+      if (index === this.selectedRoute)
+        return this.selectedPrivacyRouteColor
+      else
+        return this.privacyRouteColor
     } else {
       if (index === this.selectedRoute)
         return this.selectedRouteColor

@@ -76,9 +76,6 @@ export default class DaytimePicker extends React.Component {
 const pickerStyle = StyleSheet.create({
 	inputIOS: {
 		color: 'white',
-		//paddingTop: 13,
-		//paddingHorizontal: 10,
-    //paddingBottom: 12,
     paddingRight: 2
 	},
 	inputAndroid: {

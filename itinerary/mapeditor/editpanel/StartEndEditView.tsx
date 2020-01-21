@@ -109,7 +109,7 @@ export default class StartEndEditView extends React.Component {
   _createChangeStopModal(mode, parameters=null) {
     const modal = <ChangeStartEndModal
       mode={mode}
-      mark={this.props.parameters.marker.props.type}
+      order={this.props.parameters.marker.props.type}
       mapView = {this.props.mapView}
       location = {this.props.parameters.marker.props.location}
       close={() => this._closeChangeStopModal()}
