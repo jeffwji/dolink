@@ -32,6 +32,62 @@ module.exports = {
     })
   },
 
+  saveItinerary(itinerary, token) {
+    const re = /^[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$/
+    const t = (typeof token !== 'undefined')?token.trim():''
+
+    return axios({
+      method: 'POST',
+      url: 'http://192.168.10.112:8088/itinerary',
+      data: itinerary,
+      headers: {
+        Authorization: (t!=='')?((re.test(t)?'Bearer ':'Basic ') + t):t
+      }
+    })
+  },
+
+  updateItinerary(itinerary, token) {
+    const re = /^[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$/
+    const t = (typeof token !== 'undefined')?token.trim():''
+
+    return axios({
+      method: 'PUT',
+      url: 'http://192.168.10.112:8088/itinerary',
+      data: itinerary,
+      headers: {
+        Authorization: (t!=='')?((re.test(t)?'Bearer ':'Basic ') + t):t
+      }
+    })
+  },
+
+  saveTravelPlan(plan, token){
+    const re = /^[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$/
+    const t = (typeof token !== 'undefined')?token.trim():''
+
+    return axios({
+      method: 'POST',
+      url: 'http://192.168.10.112:8088/plan',
+      data: plan,
+      headers: {
+        Authorization: (t!=='')?((re.test(t)?'Bearer ':'Basic ') + t):t
+      }
+    })
+  },
+
+  updateTravelPlan(plan, token){
+    const re = /^[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$/
+    const t = (typeof token !== 'undefined')?token.trim():''
+
+    return axios({
+      method: 'PUT',
+      url: 'http://192.168.10.112:8088/plan',
+      data: plan,
+      headers: {
+        Authorization: (t!=='')?((re.test(t)?'Bearer ':'Basic ') + t):t
+      }
+    })
+  },
+
   googleMapService(serviceName, parameters) {
     const url = `https://maps.googleapis.com/maps/api/${serviceName}/json?${parameters}&key=AIzaSyBvVhXwTmCkzwKOxx_sjAi5qroJf_ZE7sc`
 

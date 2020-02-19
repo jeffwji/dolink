@@ -27,7 +27,7 @@ import {
 import PropTypes from 'prop-types'
 import DraggableFlatList from 'react-native-draggable-flatlist'
 
-import {askPermission, googleMapService, getLocation} from '../util/Global'
+import {askPermission, googleMapService, getLocation, saveItinerary, updateItinerary, saveTravelPlan, updateTravelPlan, token} from '../util/Global'
 import {coordinate2string, generateFlightRoute} from '../util/Location'
 import DaytimePicker from '../util/DaytimePicker'
 
@@ -74,8 +74,6 @@ export default class EditPlan extends React.Component {
       modified: false,
   }
 
-  hash = null
-  planHash = null
   currentLocation = null
   getCurrentLocation = () => {return this.currentLocation}
   setCurrentLocation = (location) => {
@@ -83,9 +81,11 @@ export default class EditPlan extends React.Component {
   }
 
   //////////////////////////////////////////
+  planId = null
+  planHash = null
   plan = {
     title: '',
-    itinary: null,
+    itinerary: null,
     startLocation: {
       order: 'Start',
       describe: 'Current location',
@@ -114,6 +114,8 @@ export default class EditPlan extends React.Component {
   }
 
   //////////////////////////////////////////
+  hash = null
+  itineraryId = null
   stops=[]
 
   getStops() {
@@ -143,36 +145,84 @@ export default class EditPlan extends React.Component {
   }
 
   async save(){
-    const itinaryId = this._saveItinary()
-    this._savePlan(itinaryId)
+    this._saveItinerary()
+      .then(itineraryId => {
+         return this._savePlan(itineraryId)
+      })
+      .then(planHash => this.planHash=planHash)
   }
 
-  _savePlan(id) {
-    if(null !== id && this.planHash.itinary !== id)
-      this.planHash.itinary = id
-
-    const json = JSON.stringify(this.plan)
-    const _planHash:String = json.toString().hashCode()
-    if(this.planHash != _planHash) {
-      console.log(_planHash)
-      this.planHash = _planHash
-    }
-  }
-
-  _saveItinary() {
+  async _saveItinerary() {
     if(this.stops.length > 0){
       const json = JSON.stringify(this.stops)
       const _hash:String = json.toString().hashCode()
       if(this.hash != _hash){
-        console.log(_hash)
-        const id = _hash
-        this.hash = _hash
-        return id
+        if(this.itineraryId != null) {
+          return updateItinerary({
+            "itinerary": this.stops,
+            "id": this.itineraryId
+          }, token)
+            .then(json => {
+              if(json.data.Result._id != null) {
+                this.hash = _hash
+              }
+              return this.itineraryId
+            })
+        } else {
+          return saveItinerary({
+            "itinerary": this.stops
+          }, token)
+            .then(json => {
+              if(json.data.Result._id != null) {
+                this.itineraryId = json.data.Result._id
+                this.hash = _hash
+              }
+              return this.itineraryId
+            })
+        }
       } else {
         return null
       }
     } else {
       return null
+    }
+  }
+
+  async _savePlan(itineraryId) {
+    if(itineraryId == null) {
+      console.log("No itinerary")
+      return
+    }
+
+    this.plan.itinerary=itineraryId
+
+    const json = JSON.stringify(this.plan)
+    const _planHash:String = json.toString().hashCode()
+    if(this.planHash != _planHash) {
+      if(this.planId == null)
+        return saveTravelPlan({
+          "hash": ""+_planHash,
+          "plan": this.plan,
+        }, token)
+          .then(json => {
+            if(json.data.Result._id != null) {
+              this.planId=json.data.Result._id
+              this.planHash = _planHash
+            }
+            return this.planHash
+          })
+      else
+        return updateTravelPlan({
+          "_id": this.planId,
+          "hash": ""+_planHash,
+          "plan": this.plan,
+        }, token)
+          .then(json => {
+            if(json.data.Result._id != null) {
+              this.planHash = _planHash
+            }
+            return this.planHash
+          })
     }
   }
 
