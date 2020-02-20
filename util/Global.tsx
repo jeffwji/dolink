@@ -74,13 +74,13 @@ module.exports = {
     })
   },
 
-  updateTravelPlan(plan, token){
+  updateTravelPlan(plan, id, token){
     const re = /^[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$/
     const t = (typeof token !== 'undefined')?token.trim():''
 
     return axios({
       method: 'PUT',
-      url: 'http://192.168.10.112:8088/plan',
+      url: 'http://192.168.10.112:8088/plan/' + id,
       data: plan,
       headers: {
         Authorization: (t!=='')?((re.test(t)?'Bearer ':'Basic ') + t):t

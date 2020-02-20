@@ -149,7 +149,6 @@ export default class EditPlan extends React.Component {
       .then(itineraryId => {
          return this._savePlan(itineraryId)
       })
-      .then(planHash => this.planHash=planHash)
   }
 
   async _saveItinerary() {
@@ -213,10 +212,9 @@ export default class EditPlan extends React.Component {
           })
       else
         return updateTravelPlan({
-          "_id": this.planId,
           "hash": ""+_planHash,
           "plan": this.plan,
-        }, token)
+        }, this.planId, token)
           .then(json => {
             if(json.data.Result._id != null) {
               this.planHash = _planHash
@@ -224,6 +222,8 @@ export default class EditPlan extends React.Component {
             return this.planHash
           })
     }
+    else
+      return this.planHash
   }
 
   render() {
