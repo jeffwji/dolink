@@ -35,7 +35,6 @@ export default class Person extends React.Component {
 
     const didBlurSubscription = this.props.navigation.addListener(
       'didFocus', payload => {
-        console.log('Home: didFocus')
          this.componentDidMount()
       }
     )
@@ -70,7 +69,11 @@ export default class Person extends React.Component {
         </Header>
 
         <Content refreshControl={this._renderRefreshControl()} >
-          {this.state.travelPlans.map( (plan, index) => this._renderRow(plan, index) )}
+          {
+            this.state.travelPlans.map( (plan, index) => 
+              this._renderRow(plan, index)
+            )
+          }
         </Content>
 
         <Footer>
@@ -94,12 +97,13 @@ export default class Person extends React.Component {
         style={styles.planRow}
         onPress={() => {
           if (navigate) {
-            navigate("Detail", {data: plan})
+            navigate("EditPlan", {data: plan})
           }
         }}>
           <View style={styles.planText}>
-            <Text style={styles.planTitle}>{plan.title}</Text>
-            <Text style={styles.planOwner}>{plan.ownerId}</Text>
+            <Text style={styles.planId}>{plan.planId}</Text>
+            <Text style={styles.planTitle}>{plan.plan.title}</Text>
+            <Text style={styles.planOwner}>{plan.owner}</Text>
           </View>
       </ListItem>
     )
@@ -126,9 +130,9 @@ export default class Person extends React.Component {
 
     this._getRecentPlans().then( resp => {
       const { data, status } = resp
-      if(data.Status == 'Ok') {
+      if(data.Status == 200) {
         this.setState({
-          travelPlans: data.Result
+          travelPlans: data.Result.plans
         })
       }
     }).catch( error => {
@@ -139,7 +143,7 @@ export default class Person extends React.Component {
   }
 
   _getRecentPlans() {
-    return query(BASE_URL+API.plans+'?ownerId='+GLOBAL.userInfo.id, 'GET', GLOBAL.token)
+    return query("http://192.168.10.112:8088/plan/", 'GET', GLOBAL.token)
   }
 }
 
@@ -152,6 +156,11 @@ const styles = StyleSheet.create({
   },
   planImage: {
     marginLeft: 10,
+  },
+  planId: {
+    flexDirection: 'column',
+    marginLeft: 10,
+    marginTop: 5
   },
   planText: {
     flexDirection: 'column',

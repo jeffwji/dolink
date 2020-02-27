@@ -32,8 +32,6 @@ export default class Main extends React.Component {
         if (GLOBAL.token == ''){
           const {navigate} = this.props.navigation
           navigate("Login")
-        } else if(this.state.selectedTab == 'Person') {
-          this.setState({selectedTab: 'Home'})
         }
       }
     )

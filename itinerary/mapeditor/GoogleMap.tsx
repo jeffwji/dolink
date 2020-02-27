@@ -111,6 +111,9 @@ export default class GoogleMap extends React.Component<State> {
   getDirection = this.props.navigation.state.params.getDirection
   reflashDirections = this.props.navigation.state.params.reflashDirections
 
+  _updateRoutes = this.props.navigation.state.params._updateRoutes
+  //_setStartEndLocationDetail = this.props.navigation.state.params._setStartEndLocationDetail
+
   getDefaultRadius() {
     return this.defaultRadius
   }
@@ -138,6 +141,7 @@ export default class GoogleMap extends React.Component<State> {
         getLocation(
           latlng => {
             this._setStartEndLocationDetail({latitude:latlng.coords.latitude, longitude: latlng.coords.longitude})
+              //.then( () => this.update())
             const region = getRegion(latlng.coords.latitude, latlng.coords.longitude, this.getDefaultRadius())
             this._updateInitialLocation(region, true)
           },
@@ -152,27 +156,14 @@ export default class GoogleMap extends React.Component<State> {
 
   _setStartEndLocationDetail(coordinate) {
     if(this.startLocation().type === 'CURRENT_LOCATION' || this.endLocation().type === 'CURRENT_LOCATION')
-      googleMapService("geocode", `latlng=${coordinate2string(coordinate)}`)
+      return googleMapService("geocode", `latlng=${coordinate2string(coordinate)}`)
         .then(detail => {
           this.setCurrentLocation({stopDetail: detail.results[0]})
-          /*if(this.startLocation().type === 'CURRENT_LOCATION') {
-            this.setStartLocation({
-              ...this.startLocation(),
-              stopDetail: detail.results[0],
-              describe: detail.results[0].formatted_address
-            })
-          }
-
-          if(this.endLocation().type === 'CURRENT_LOCATION') {
-            this.setEndLocation({
-              ...this.endLocation(),
-              stopDetail: detail.results[0],
-              describe: detail.results[0].formatted_address
-            })
-            this.update()
-          }*/
+        }).then( () => {
+          this._updateRoutes()
+        }).then( () => 
           this.update()
-        })
+        )
   }
 
   _updateInitialLocation(region, updateMap) {
@@ -446,6 +437,14 @@ export default class GoogleMap extends React.Component<State> {
       return this.routes.map(r => r.polyline)
     }
   }
+
+  /*
+  _updateRoutes() {
+    if (this.stops().length > 0 && this.directions.length == 0) {
+      this.reflashDirections()
+    }
+  }
+  */
 
   _updateMarker() {
     this.stopMarkers = []

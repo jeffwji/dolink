@@ -3,8 +3,6 @@ import React from 'react'
 import {
   Container,
   Header,
-  Form, 
-  Content,
   Input,
   Button, 
   Left,
@@ -27,7 +25,7 @@ import {
 import PropTypes from 'prop-types'
 import DraggableFlatList from 'react-native-draggable-flatlist'
 
-import {askPermission, googleMapService, getLocation, saveItinerary, updateItinerary, saveTravelPlan, updateTravelPlan, token} from '../util/Global'
+import {askPermission, googleMapService, getLocation, saveItinerary, updateItinerary, saveTravelPlan, updateTravelPlan, token, query} from '../util/Global'
 import {coordinate2string, generateFlightRoute} from '../util/Location'
 import DaytimePicker from '../util/DaytimePicker'
 
@@ -63,9 +61,24 @@ export default class EditPlan extends React.Component {
   constructor(props) {
     super(props)
 
+    if (props.navigation.state.params){
+      const data = props.navigation.state.params.data
+      this.planId = data._id
+      this.planHash = data.hash
+      this.plan = data.plan
+
+      this._retrieveItinerary(this.plan.itinerary)
+        .then( response => {
+          const itinerary = response.data.Result
+          this.itineraryId = itinerary._id
+          this.stops = itinerary.stops
+        })
+    }
+
     const didBlurSubscription = this.props.navigation.addListener(
       'didFocus', payload => {
-         this.forceUpdate()
+        this.componentDidMount()
+        //this.forceUpdate()
       }
     )
   }
@@ -78,6 +91,40 @@ export default class EditPlan extends React.Component {
   getCurrentLocation = () => {return this.currentLocation}
   setCurrentLocation = (location) => {
     this.currentLocation = location
+  }
+
+  _getCurrentPosition() {
+    return askPermission('LOCATION').then(permit => {
+      if(permit) {
+        getLocation(
+          latlng => {
+            this._setStartEndLocationDetail({latitude:latlng.coords.latitude, longitude: latlng.coords.longitude})
+          },
+          error => {
+            console.log(error)
+          }
+        )
+      }
+      else throw 'No permission to obtain location'
+    })
+  }
+
+  _setStartEndLocationDetail(coordinate) {
+    if(this.getStartLocation().type === 'CURRENT_LOCATION' || this.getEndLocation().type === 'CURRENT_LOCATION')
+      googleMapService("geocode", `latlng=${coordinate2string(coordinate)}`)
+        .then(detail => {
+          this.setCurrentLocation({stopDetail: detail.results[0]})
+        }).then( () => {
+          this._updateRoutes()
+        }).then( () => {
+          this.forceUpdate()
+        })
+  }
+
+  _updateRoutes() {
+    if (this.stops.length > 0 && this.directions.length == 0) {
+      this.reflashDirections()
+    }
   }
 
   //////////////////////////////////////////
@@ -103,7 +150,15 @@ export default class EditPlan extends React.Component {
   }
 
   //////////////////////////////////////////
-  getStartLocation = () => {return this.plan.startLocation}
+  componentDidMount () {
+    //if(this.plan.startLocation==null ) {
+      this._getCurrentPosition()
+    //}
+  }
+
+  getStartLocation = () => {
+    return this.plan.startLocation
+  }
   setStartLocation = (location) => {
     this.plan.startLocation = location
   }
@@ -159,6 +214,7 @@ export default class EditPlan extends React.Component {
         if(this.itineraryId != null) {
           return updateItinerary({
             "itinerary": this.stops,
+            "hash": _hash,
             "id": this.itineraryId
           }, token)
             .then(json => {
@@ -169,7 +225,8 @@ export default class EditPlan extends React.Component {
             })
         } else {
           return saveItinerary({
-            "itinerary": this.stops
+            "itinerary": this.stops,
+            "hash": _hash,
           }, token)
             .then(json => {
               if(json.data.Result._id != null) {
@@ -189,7 +246,6 @@ export default class EditPlan extends React.Component {
 
   async _savePlan(itineraryId) {
     if(itineraryId == null) {
-      console.log("No itinerary")
       return
     }
 
@@ -296,12 +352,19 @@ export default class EditPlan extends React.Component {
               getDirection: (origin, dest) => this.getDirection(origin, dest),
               reflashDirections: () => this.reflashDirections(),
               currentLocation: () => this.getCurrentLocation(),
-              setCurrentLocation: (location) => this.setCurrentLocation(location)
+              setCurrentLocation: (location) => this.setCurrentLocation(location),
+              _updateRoutes: () => this._updateRoutes(),
+              // _setStartEndLocationDetail: (coordinate) => this._setStartEndLocationDetail(coordinate)
+              // _getCurrentPosition: () => this._getCurrentPosition(),
             })
           }}
         />
       </Container>
     )
+  }
+
+  async _retrieveItinerary(id) {
+    return query("http://192.168.10.112:8088/itinerary/" + id + "/detail", 'GET', GLOBAL.token)
   }
 
   showItinerary() {
@@ -538,11 +601,13 @@ export default class EditPlan extends React.Component {
   }
 
   _getStartLocationDetail() {
-    if(this.getStartLocation().type === 'CURRENT_LOCATION')
+    if(this.getStartLocation().type === 'CURRENT_LOCATION'){
+      const detail = this.currentLocation!=null?this.currentLocation.stopDetail:null
       return {
         ...this.plan.startLocation,
-        stopDetail: this.currentLocation.stopDetail
+        stopDetail: detail
       }
+    }
     else
       return this.getStartLocation()
   }

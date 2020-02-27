@@ -88,6 +88,21 @@ module.exports = {
     })
   },
 
+  /*
+  listTravelPlan(token) {
+    const re = /^[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$/
+    const t = (typeof token !== 'undefined')?token.trim():''
+
+    return axios({
+      method: 'GET',
+      url: 'http://192.168.10.112:8088/plan/',
+      headers: {
+        Authorization: (t!=='')?((re.test(t)?'Bearer ':'Basic ') + t):t
+      }
+    })
+  },
+  */
+  
   googleMapService(serviceName, parameters) {
     const url = `https://maps.googleapis.com/maps/api/${serviceName}/json?${parameters}&key=AIzaSyBvVhXwTmCkzwKOxx_sjAi5qroJf_ZE7sc`
 

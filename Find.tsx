@@ -33,9 +33,6 @@ export default class Find extends React.Component {
     }
   }
 
-  componentDidMount () {
-  }
-
   render() {
     const {navigate} = this.props.navigation
 
